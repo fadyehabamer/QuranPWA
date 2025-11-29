@@ -1438,18 +1438,22 @@
 
             html += '<div class="ayahs-container">';
             page.ayahs.forEach((ayah, idx) => {
-                // Skip Bismillah text (it appears in some surahs as part of first ayah)
                 let ayahText = ayah.text;
                 
                 // Remove Bismillah from the first ayah of any surah (except Al-Fatiha and At-Tawbah)
                 // Al-Fatiha (1): Bismillah is part of the surah itself
                 // At-Tawbah (9): Has no Bismillah
                 if (ayah.numberInSurah === 1 && currentSurah !== 1 && currentSurah !== 9) {
-                    // Remove Bismillah - match any variation anywhere in the text
-                    // API sometimes puts Bismillah after the first ayah text
-                    ayahText = ayahText.replace(/\s*ب[ِْ]?س[ْۡ]?م[ِ]?\s*[ٱا]?لل[َّٰ]*ه[ِ]?\s*[ٱا]?لر[َّ]?ح[ْۡ]?م[َٰ]?[نٰ][ِ]?\s*[ٱا]?لر[َّ]?ح[ِ]?[يى]م[ِ]?\s*/g, ' ');
-                    ayahText = ayahText.replace(/﷽/g, ''); // Bismillah ligature
-                    ayahText = ayahText.trim();
+                    // Bismillah "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ " is 38 characters (including trailing space)
+                    // Check if text starts with بسم (with or without diacritics)
+                    if (ayahText.startsWith('بِسْمِ') || ayahText.startsWith('بِسم') || ayahText.startsWith('بسم')) {
+                        // Find the position after الرحيم
+                        const rahimIndex = ayahText.indexOf('لرَّحِيمِ');
+                        if (rahimIndex !== -1) {
+                            ayahText = ayahText.substring(rahimIndex + 'لرَّحِيمِ'.length).trim();
+                        }
+                    }
+                    ayahText = ayahText.replace(/﷽\s*/g, '');
                 }
 
                 html += `<span class="ayah" data-ayah-number="${ayah.number}" id="ayah-${ayah.number}">${ayahText} <span class="ayah-number">${ayah.numberInSurah}</span>`;
