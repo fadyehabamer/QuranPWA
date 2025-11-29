@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المسبحة الإلكترونية</title>
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1B5E20">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .masbaha-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 30px;
+        }
+
+        .counter-display {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-ring {
+            position: absolute;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.3s;
+            stroke: var(--primary-color);
+            stroke-width: 8;
+            fill: transparent;
+        }
+
+        .progress-ring-bg {
+            stroke: var(--border-color);
+            stroke-width: 8;
+            fill: transparent;
+        }
+
+        .counter-value {
+            font-size: 72px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-align: center;
+            z-index: 1;
+        }
+
+        .target-display {
+            text-align: center;
+            color: var(--text-color);
+            opacity: 0.7;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .tap-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+            border: none;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 24px var(--shadow-heavy);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tap-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 12px var(--shadow-heavy);
+        }
+
+        .tap-button.ripple {
+            animation: ripple 0.4s linear;
+        }
+
+        @keyframes ripple {
+            0% {
+                box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.4);
+            }
+
+            100% {
+                box-shadow: 0 0 0 20px rgba(var(--primary-rgb), 0);
+            }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--card-bg);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .control-btn:hover {
+            background: var(--bg-color);
+            border-color: var(--primary-color);
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .preset-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 20px;
+            background: var(--card-bg);
+            color: var(--primary-color);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover,
+        .preset-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .custom-target {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .custom-target input {
+            width: 100px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            text-align: center;
+            direction: ltr;
+        }
+
+        .custom-target button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .custom-target button:hover {
+            background: var(--primary-light);
+        }
+
+        .sound-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sound-toggle:hover {
+            background: var(--bg-color);
+        }
+
+        .sound-toggle.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .sound-selector {
+            margin-top: 10px;
+            width: 100%;
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px var(--shadow);
+            padding: 5px;
+        }
+
+        .sound-selector.show {
+            display: block;
+        }
+
+        .sound-select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            font-family: 'Amiri', serif;
+            cursor: pointer;
+        }
+
+        .history {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+
+        .history-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .history-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .history-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .history-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .history-count {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .clear-all-btn {
+            font-size: 14px;
+            color: #dc3545;
+            background: transparent;
+            border: 1px solid #dc3545;
+            padding: 4px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-all-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .lifetime-counter {
+            text-align: center;
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 16px;
+            background: var(--card-bg);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .dhikr-selector-container {
+            margin-bottom: 30px;
+            width: 100%;
+            overflow-x: auto;
+            padding: 5px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .dhikr-selector-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .dhikr-chips {
+            display: flex;
+            gap: 10px;
+            padding: 0 10px;
+            min-width: min-content;
+        }
+
+        .dhikr-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 14px;
+            font-family: 'Amiri', serif;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .dhikr-chip:hover {
+            background: var(--bg-color);
+            border-color: var(--primary-color);
+        }
+
+        .dhikr-chip.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Desktop Sidebar -->
+    <aside class="desktop-sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-text">القرآن الكريم</div>
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="sidebar-nav-item">
+                <i class="bi bi-house-fill" style="font-size: 22px; margin-left: 12px;"></i>
+                <span class="sidebar-nav-label">الرئيسية</span>
+            </a>
+            <a href="quran.html" class="sidebar-nav-item">
+                <i class="bi bi-book-fill" style="font-size: 22px; margin-left: 12px;"></i>
+                <span class="sidebar-nav-label">القرآن الكريم</span>
+            </a>
+            <a href="azkar.html" class="sidebar-nav-item">
+                <i class="bi bi-moon-stars-fill" style="font-size: 22px; margin-left: 12px;"></i>
+                <span class="sidebar-nav-label">الأذكار</span>
+            </a>
+            <a href="masbaha.html" class="sidebar-nav-item active">
+                <i class="bi bi-circle-fill" style="font-size: 22px; margin-left: 12px;"></i>
+                <span class="sidebar-nav-label">المسبحة</span>
+            </a>
+            <a href="sunan.html" class="sidebar-nav-item">
+                <i class="bi bi-sun-fill" style="font-size: 22px; margin-left: 12px;"></i>
+                <span class="sidebar-nav-label">سنن النبي</span>
+            </a>
+            <a href="settings.html" class="sidebar-nav-item">
+                <i class="bi bi-gear-fill" style="font-size: 22px; margin-left: 12px;"></i>
+                <span class="sidebar-nav-label">الإعدادات</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-version">الإصدار 1.0.0</div>
+        </div>
+    </aside>
+
+    <!-- Header -->
+    <header class="app-header">
+        <button class="menu-toggle-btn" onclick="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+        <h1>المسبحة الإلكترونية</h1>
+        <div class="header-left-buttons">
+            <button class="settings-btn" onclick="window.location.href='settings.html'">
+                <i class="bi bi-gear-fill"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+        <div class="masbaha-container">
+            <div class="lifetime-counter" id="lifetimeCounter">
+                <i class="bi bi-trophy-fill"></i>
+                <span>مجموع التسبيحات: 0</span>
+            </div>
+
+            <div class="dhikr-selector-container">
+                <div class="dhikr-chips">
+                    <div class="dhikr-chip" onclick="selectDhikr('subhan_allah', this)">سبحان الله (33)</div>
+                    <div class="dhikr-chip" onclick="selectDhikr('alhamdulillah', this)">الحمد لله (33)</div>
+                    <div class="dhikr-chip" onclick="selectDhikr('allahu_akbar', this)">الله أكبر (33)</div>
+                    <div class="dhikr-chip" onclick="selectDhikr('la_ilaha_illa_allah', this)">لا إله إلا الله (100)</div>
+                    <div class="dhikr-chip" onclick="selectDhikr('astaghfirullah', this)">أستغفر الله (100)</div>
+                    <div class="dhikr-chip" onclick="selectDhikr('salat_nabi', this)">صلى على النبي (10)</div>
+                    <div class="dhikr-chip active" onclick="selectDhikr('custom', this)">مخصص</div>
+                </div>
+            </div>
+
+            <div class="counter-display">
+                <svg class="progress-ring" width="250" height="250">
+                    <circle class="progress-ring-bg" cx="125" cy="125" r="110"></circle>
+                    <circle class="progress-ring-circle" id="progressCircle" cx="125" cy="125" r="110"></circle>
+                </svg>
+                <div class="counter-value" id="counterValue">0</div>
+            </div>
+            <div class="target-display" id="targetDisplay">الهدف: غير محدد</div>
+
+            <button class="tap-button" id="tapButton" onclick="increment()">
+                <i class="bi bi-hand-index-fill"></i>
+            </button>
+
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="setTarget(33)">33</button>
+                <button class="preset-btn" onclick="setTarget(99)">99</button>
+                <button class="preset-btn" onclick="setTarget(100)">100</button>
+                <button class="preset-btn" onclick="setTarget(500)">500</button>
+                <button class="preset-btn" onclick="setTarget(1000)">1000</button>
+            </div>
+
+            <div class="custom-target">
+                <input type="number" id="customTargetInput" placeholder="هدف مخصص" min="1">
+                <button onclick="setCustomTarget()">حفظ</button>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn" onclick="reset()">
+                    <i class="bi bi-arrow-clockwise"></i> إعادة تعيين
+                </button>
+                <button class="control-btn" onclick="saveCount()">
+                    <i class="bi bi-bookmark-fill"></i> حفظ في السجل
+                </button>
+                <div style="position: relative;">
+                    <button class="sound-toggle" id="soundToggle" onclick="toggleSoundMenu()">
+                        <span id="soundIcon">🔊</span> الصوت
+                    </button>
+                    <div class="sound-selector" id="soundSelector">
+                        <select class="sound-select" onchange="changeSound(this.value)">
+                            <option value="beep">صفير</option>
+                            <option value="click">نقرة</option>
+                            <option value="water">ماء</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="sound-toggle" id="vibrationToggle" onclick="toggleVibration()">
+                    <i class="bi bi-phone-vibrate"></i> الاهتزاز
+                </button>
+            </div>
+
+            <div class="history">
+                <div class="history-title">
+                    سجل التسبيح
+                    <button class="clear-all-btn" id="clearHistoryBtn" onclick="clearHistory()" style="display: none;">مسح الكل</button>
+                </div>
+                <div class="history-list" id="historyList"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <i class="bi bi-house-fill nav-icon"></i>
+            <span class="nav-label">الرئيسية</span>
+        </a>
+        <a href="quran.html" class="nav-item">
+            <i class="bi bi-book-fill nav-icon"></i>
+            <span class="nav-label">القرآن</span>
+        </a>
+        <a href="azkar.html" class="nav-item">
+            <i class="bi bi-moon-stars-fill nav-icon"></i>
+            <span class="nav-label">الأذكار</span>
+        </a>
+        <a href="masbaha.html" class="nav-item active">
+            <i class="bi bi-circle-fill nav-icon"></i>
+            <span class="nav-label">المسبحة</span>
+        </a>
+        <a href="sunan.html" class="nav-item">
+            <i class="bi bi-sun-fill nav-icon"></i>
+            <span class="nav-label">السنن</span>
+        </a>
+        <a href="settings.html" class="nav-item">
+            <i class="bi bi-gear-fill nav-icon"></i>
+            <span class="nav-label">الإعدادات</span>
+        </a>
+    </nav>
+
+    <!-- Custom Modal -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon" id="modalIcon"></div>
+                <div class="modal-title" id="modalTitle"></div>
+            </div>
+            <div class="modal-message" id="modalMessage"></div>
+            <div class="modal-actions" id="modalActions"></div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+    let count = 0;
+    let target = 0;
+    let soundEnabled = true;
+    let selectedSound = 'beep';
+    let vibrationEnabled = true;
+    let lifetimeCount = 0;
+    let history = [];
+    let audioContext = null;
+
+    const circle = document.getElementById('progressCircle');
+    const radius = circle.r.baseVal.value;
+    const circumference = radius * 2 * Math.PI;
+
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = circumference;
+
+    function initAudio() {
+    if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    }
+
+    function playClickSound() {
+    if (!soundEnabled) return;
+
+    initAudio();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    if (selectedSound === 'beep') {
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+    } else if (selectedSound === 'click') {
+    oscillator.frequency.value = 1200;
+    oscillator.type = 'square';
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.05);
+    } else if (selectedSound === 'water') {
+    oscillator.frequency.value = 600;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+    oscillator.frequency.linearRampToValueAtTime(300, audioContext.currentTime + 0.2);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+    }
+    }
+
+    function playSuccessSound() {
+    if (!soundEnabled) return;
+
+    initAudio();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.frequency.value = 600;
+    oscillator.type = 'sine';
+
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.2);
+    oscillator.stop(audioContext.currentTime + 0.5);
+    }
+
+    function updateDisplay() {
+    document.getElementById('counterValue').textContent = count;
+
+    if (target > 0) {
+    const progress = Math.min(count / target, 1);
+    const offset = circumference - (progress * circumference);
+    circle.style.strokeDashoffset = offset;
+    document.getElementById('targetDisplay').textContent = `الهدف: ${count} / ${target}`;
+    } else {
+    circle.style.strokeDashoffset = circumference;
+    document.getElementById('targetDisplay').textContent = 'الهدف: غير محدد';
+    }
+    }
+
+    function increment() {
+    count++;
+    lifetimeCount++;
+    updateDisplay();
+    playClickSound();
+
+    // Ripple effect
+    const btn = document.getElementById('tapButton');
+    btn.classList.remove('ripple');
+    void btn.offsetWidth; // Trigger reflow
+    btn.classList.add('ripple');
+
+    triggerVibration();
+    saveLifetimeCount();
+
+    if (target > 0 && count === target) {
+    playSuccessSound();
+    showModal({
+    type: 'success',
+    icon: '',
+    title: 'بارك الله فيك',
+    message: `أتممت ${target} تسبيحة!\nهل تريد البدء من جديد؟`,
+    confirmText: 'نعم',
+    cancelText: 'لا',
+    onConfirm: () => {
+    saveCount();
+    reset();
+    }
+    });
+    }
+    }
+
+    function reset() {
+    showModal({
+    type: 'warning',
+    icon: '⚠',
+    title: 'تأكيد',
+    message: 'هل تريد إعادة تعيين العداد؟',
+    confirmText: 'نعم',
+    cancelText: 'لا',
+    onConfirm: () => {
+    count = 0;
+    updateDisplay();
+    }
+    });
+    }
+
+    function setTarget(value) {
+    target = value;
+    updateDisplay();
+
+    // Update active preset button
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+    if (parseInt(btn.textContent) === value) {
+    btn.classList.add('active');
+    } else {
+    btn.classList.remove('active');
+    }
+    });
+    }
+
+    function setCustomTarget() {
+    const input = document.getElementById('customTargetInput');
+    const value = parseInt(input.value);
+
+    if (value && value > 0) {
+    target = value;
+    updateDisplay();
+    input.value = '';
+
+    // Remove active class from preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.classList.remove('active');
+    });
+    }
+    }
+
+    function toggleSoundMenu() {
+    const selector = document.getElementById('soundSelector');
+    if (selector.style.display === 'block') {
+    selector.style.display = 'none';
+    } else {
+    selector.style.display = 'block';
+    // Ensure sound is enabled when opening menu
+    if (!soundEnabled) {
+    toggleSound();
+    }
+    }
+    }
+
+    function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const toggle = document.getElementById('soundToggle');
+    const icon = document.getElementById('soundIcon');
+
+    if (soundEnabled) {
+    toggle.classList.add('active');
+    icon.textContent = '🔊';
+    } else {
+    toggle.classList.remove('active');
+    icon.textContent = '🔇';
+    }
+    localStorage.setItem('masbahaSound', soundEnabled);
+    }
+
+    function changeSound(value) {
+    selectedSound = value;
+    localStorage.setItem('masbahaSoundType', value);
+    playClickSound();
+    // Hide selector after selection
+    setTimeout(() => {
+    document.getElementById('soundSelector').style.display = 'none';
+    }, 200);
+    }
+
+    function toggleVibration() {
+    vibrationEnabled = !vibrationEnabled;
+    const toggle = document.getElementById('vibrationToggle');
+
+    if (vibrationEnabled) {
+    toggle.classList.add('active');
+    } else {
+    toggle.classList.remove('active');
+    }
+
+    localStorage.setItem('masbahaVibration', vibrationEnabled);
+    }
+
+    function triggerVibration() {
+    if (vibrationEnabled && navigator.vibrate) {
+    navigator.vibrate(30);
+    }
+    }
+
+    function saveLifetimeCount() {
+    localStorage.setItem('masbahaLifetime', lifetimeCount);
+    document.querySelector('#lifetimeCounter span').textContent = `مجموع التسبيحات: ${lifetimeCount}`;
+    }
+
+    function selectDhikr(value, element) {
+    const dhikrTargets = {
+    'subhan_allah': 33,
+    'alhamdulillah': 33,
+    'allahu_akbar': 33,
+    'la_ilaha_illa_allah': 100,
+    'astaghfirullah': 100,
+    'salat_nabi': 10
+    };
+
+    // Update active chip
+    if (element) {
+    document.querySelectorAll('.dhikr-chip').forEach(chip => chip.classList.remove('active'));
+    element.classList.add('active');
+    }
+
+    if (value === 'custom') {
+    // Keep current target or reset? Let's keep current for now or set to 0
+    // target = 0;
+    } else if (dhikrTargets[value]) {
+    setTarget(dhikrTargets[value]);
+    count = 0; // Reset count when changing dhikr? Usually yes.
+    }
+    updateDisplay();
+    }
+
+    function saveCount() {
+    if (count === 0) {
+    showModal({
+    type: 'info',
+    icon: 'ℹ',
+    title: 'تنبيه',
+    message: 'العداد فارغ، لا يوجد شيء للحفظ'
+    });
+    return;
+    }
+
+    const now = new Date();
+    const timeString = now.toLocaleString('ar-EG', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+    });
+
+    history.unshift({
+    count: count,
+    target: target,
+    time: timeString,
+    timestamp: now.getTime()
+    });
+
+    // Keep only last 10 entries
+    if (history.length > 10) {
+    history = history.slice(0, 10);
+    }
+
+    localStorage.setItem('masbahaHistory', JSON.stringify(history));
+    renderHistory();
+
+    showModal({
+    type: 'success',
+    icon: '',
+    title: 'تم الحفظ',
+    message: `تم حفظ ${count} تسبيحة في السجل`
+    });
+    }
+
+    function renderHistory() {
+    const list = document.getElementById('historyList');
+    const clearBtn = document.getElementById('clearHistoryBtn');
+
+    if (history.length === 0) {
+    list.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">لا يوجد سجل بعد</div>';
+    if (clearBtn) clearBtn.style.display = 'none';
+    return;
+    }
+
+    if (clearBtn) clearBtn.style.display = 'block';
+    let html = '';
+    history.forEach((item, index) => {
+    const targetText = item.target > 0 ? ` / ${item.target}` : '';
+    html += `
+    <div class="history-item">
+        <div class="history-info">
+            <div class="history-icon">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <div class="history-details">
+                <div class="history-count">${item.count}${targetText}</div>
+                <div class="history-time">${item.time}</div>
+            </div>
+        </div>
+        <div class="history-actions">
+            <button class="delete-btn" onclick="deleteHistoryItem(${index})">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+    `;
+    });
+
+    list.innerHTML = html;
+    }
+
+    function deleteHistoryItem(index) {
+    showModal({
+    type: 'warning',
+    icon: '🗑',
+    title: 'حذف',
+    message: 'هل أنت متأكد من حذف هذا السجل؟',
+    confirmText: 'حذف',
+    cancelText: 'إلغاء',
+    onConfirm: () => {
+    history.splice(index, 1);
+    localStorage.setItem('masbahaHistory', JSON.stringify(history));
+    renderHistory();
+    }
+    });
+    }
+
+    function clearHistory() {
+    showModal({
+    type: 'warning',
+    icon: '🗑',
+    title: 'مسح الكل',
+    message: 'هل أنت متأكد من مسح كل السجل؟',
+    confirmText: 'مسح',
+    cancelText: 'إلغاء',
+    onConfirm: () => {
+    history = [];
+    localStorage.setItem('masbahaHistory', JSON.stringify(history));
+    renderHistory();
+    }
+    });
+    }
+
+    function loadData() {
+    // Load sound preference
+    const savedSound = localStorage.getItem('masbahaSound');
+    if (savedSound !== null) {
+    soundEnabled = savedSound === 'true';
+    const toggle = document.getElementById('soundToggle');
+    const icon = document.getElementById('soundIcon');
+    if (soundEnabled) {
+    toggle.classList.add('active');
+    icon.textContent = '🔊';
+    } else {
+    toggle.classList.remove('active');
+    icon.textContent = '🔇';
+    }
+    }
+
+    // Load sound type
+    const savedSoundType = localStorage.getItem('masbahaSoundType');
+    if (savedSoundType) {
+    selectedSound = savedSoundType;
+    const selector = document.querySelector('.sound-select');
+    if (selector) selector.value = selectedSound;
+    }
+
+    // Load vibration preference
+    const savedVibration = localStorage.getItem('masbahaVibration');
+    if (savedVibration !== null) {
+    vibrationEnabled = savedVibration === 'true';
+    }
+    const vibToggle = document.getElementById('vibrationToggle');
+    if (vibrationEnabled) {
+    vibToggle.classList.add('active');
+    } else {
+    vibToggle.classList.remove('active');
+    }
+
+    // Load lifetime count
+    const savedLifetime = localStorage.getItem('masbahaLifetime');
+    if (savedLifetime) {
+    lifetimeCount = parseInt(savedLifetime);
+    document.querySelector('#lifetimeCounter span').textContent = `مجموع التسبيحات: ${lifetimeCount}`;
+    }
+
+    // Load history
+    const savedHistory = localStorage.getItem('masbahaHistory');
+    if (savedHistory) {
+    history = JSON.parse(savedHistory);
+    renderHistory();
+    }
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+    e.preventDefault();
+    increment();
+    }
+    });
+
+    function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+    } : {
+    r: 27,
+    g: 94,
+    b: 32
+    };
+    }
+
+    // Initialize
+    updateDisplay();
+    loadData();
+
+    // Load theme settings
+    (function () {
+    const darkMode = localStorage.getItem('darkMode') === 'true';
+    if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
+
+    const color = localStorage.getItem('primaryColor');
+    if (color) {
+    const num = parseInt(color.replace('#', ''), 16);
+    const amt = Math.round(2.55 * 30);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    const lightColor = '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + (G < 255 ? G < 1 ? 0 : G : 255) *
+        0x100 + (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+        document.documentElement.style.setProperty('--primary-color', color);
+        document.documentElement.style.setProperty('--primary-light', lightColor); // Update shadow colors const
+        rgb=hexToRgb(color); const shadowLight=`rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`; const
+        shadowHeavy=`rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
+        document.documentElement.style.setProperty('--shadow', shadowLight);
+        document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy); } const
+        fontSize=localStorage.getItem('fontSize'); if (fontSize !==null) { const fontSizes=[12, 14, 16, 18, 20, 24, 28];
+        const baseSize=fontSizes[parseInt(fontSize)] || 16;
+        document.documentElement.style.setProperty('--font-size-base', baseSize + 'px' );
+        document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px' );
+        document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px' ); } })(); if
+        ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); } function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active'); 
+    }
+    </script>
+</body>
+
+</html>
