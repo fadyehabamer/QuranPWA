@@ -1445,10 +1445,10 @@
                 // Al-Fatiha (1): Bismillah is part of the surah itself
                 // At-Tawbah (9): Has no Bismillah
                 if (ayah.numberInSurah === 1 && currentSurah !== 1 && currentSurah !== 9) {
-                    // Remove Bismillah - match any variation with flexible Unicode matching
-                    // This regex matches: بسم + الله + الرحمن + الرحيم with any diacritics/variations
-                    ayahText = ayahText.replace(/^[^\u0621-\u064A]*ب[ِْ]?س[ْۡ]?م[ِ]?\s*[ٱا]?لل[َّٰ]*ه[ِ]?\s*[ٱا]?لر[َّ]?ح[ْۡ]?م[َٰ]?[نٰ][ِ]?\s*[ٱا]?لر[َّ]?ح[ِ]?[يى]م[ِ]?\s*/g, '');
-                    ayahText = ayahText.replace(/^﷽\s*/g, ''); // Bismillah ligature
+                    // Remove Bismillah - match any variation anywhere in the text
+                    // API sometimes puts Bismillah after the first ayah text
+                    ayahText = ayahText.replace(/\s*ب[ِْ]?س[ْۡ]?م[ِ]?\s*[ٱا]?لل[َّٰ]*ه[ِ]?\s*[ٱا]?لر[َّ]?ح[ْۡ]?م[َٰ]?[نٰ][ِ]?\s*[ٱا]?لر[َّ]?ح[ِ]?[يى]م[ِ]?\s*/g, ' ');
+                    ayahText = ayahText.replace(/﷽/g, ''); // Bismillah ligature
                     ayahText = ayahText.trim();
                 }
 
