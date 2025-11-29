@@ -2,7 +2,7 @@
   "name": "القرآن الكريم - تطبيق إسلامي شامل",
   "short_name": "القرآن الكريم",
   "description": "تطبيق شامل للقرآن الكريم مع الأذكار والمسبحة الإلكترونية",
-  "start_url": "/index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f5f5",
   "theme_color": "#1B5E20",
