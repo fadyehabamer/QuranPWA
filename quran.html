@@ -814,14 +814,14 @@
 
         @media (max-width: 768px) {
             .audio-player-container {
-                bottom: 90px;
+                bottom: 78px;
                 padding: 10px 14px;
                 gap: 8px;
             }
 
             .audio-btn {
-                width: 40px;
-                height: 36px;
+                width: 30px;
+                height: 30px;
                 font-size: 18px;
             }
 
@@ -898,33 +898,33 @@
     <!-- Desktop Sidebar -->
     <aside class="desktop-sidebar" id="sidebar">
         <div class="sidebar-logo">
-            <div class="sidebar-logo-text">القرآن الكريم</div>
             <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+            <div class="sidebar-logo-text">القرآن الكريم</div>
         </div>
         <nav class="sidebar-nav">
             <a href="index.html" class="sidebar-nav-item">
-                <i class="bi bi-house-fill" style="font-size: 22px; margin-left: 12px;"></i>
-                <span class="sidebar-nav-label">الرئيسية</span>
+                <div class="sidebar-nav-label">الرئيسية</div>
             </a>
             <a href="quran.html" class="sidebar-nav-item active">
-                <i class="bi bi-book-fill" style="font-size: 22px; margin-left: 12px;"></i>
-                <span class="sidebar-nav-label">القرآن الكريم</span>
+                <div class="sidebar-nav-label">القرآن الكريم</div>
+            </a>
+            <a href="bookmarks.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">المواضع المحفوظة</div>
             </a>
             <a href="azkar.html" class="sidebar-nav-item">
-                <i class="bi bi-moon-stars-fill" style="font-size: 22px; margin-left: 12px;"></i>
-                <span class="sidebar-nav-label">الأذكار</span>
+                <div class="sidebar-nav-label">الأذكار</div>
             </a>
             <a href="masbaha.html" class="sidebar-nav-item">
-                <i class="bi bi-circle-fill" style="font-size: 22px; margin-left: 12px;"></i>
-                <span class="sidebar-nav-label">المسبحة</span>
+                <div class="sidebar-nav-label">المسبحة</div>
             </a>
             <a href="sunan.html" class="sidebar-nav-item">
-                <i class="bi bi-sun-fill" style="font-size: 22px; margin-left: 12px;"></i>
-                <span class="sidebar-nav-label">سنن النبي</span>
+                <div class="sidebar-nav-label">سنن النبي</div>
+            </a>
+            <a href="bio.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">عن المطور</div>
             </a>
             <a href="settings.html" class="sidebar-nav-item">
-                <i class="bi bi-gear-fill" style="font-size: 22px; margin-left: 12px;"></i>
-                <span class="sidebar-nav-label">الإعدادات</span>
+                <div class="sidebar-nav-label">الإعدادات</div>
             </a>
         </nav>
         <div class="sidebar-footer">
@@ -1440,14 +1440,15 @@
             page.ayahs.forEach((ayah, idx) => {
                 // Skip Bismillah text (it appears in some surahs as part of first ayah)
                 let ayahText = ayah.text;
-                if (currentPageIndex === 0 && idx === 0 && currentSurah !== 1 && currentSurah !== 9) {
-                    // Remove all variations of Bismillah if it's at the start of the first ayah
-                    // Surah 1 (Al-Fatiha) - Bismillah is part of the surah
-                    // Surah 9 (At-Tawbah) - No Bismillah
-                    ayahText = ayahText.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/g, '');
-                    ayahText = ayahText.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/g, '');
-                    ayahText = ayahText.replace(/^بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ\s*/g, '');
-                    ayahText = ayahText.replace(/^بسم الله الرحمن الرحيم\s*/g, '');
+                
+                // Remove Bismillah from the first ayah of any surah (except Al-Fatiha and At-Tawbah)
+                // Al-Fatiha (1): Bismillah is part of the surah itself
+                // At-Tawbah (9): Has no Bismillah
+                if (ayah.numberInSurah === 1 && currentSurah !== 1 && currentSurah !== 9) {
+                    // Remove Bismillah - match any variation with flexible Unicode matching
+                    // This regex matches: بسم + الله + الرحمن + الرحيم with any diacritics/variations
+                    ayahText = ayahText.replace(/^[^\u0621-\u064A]*ب[ِْ]?س[ْۡ]?م[ِ]?\s*[ٱا]?لل[َّٰ]*ه[ِ]?\s*[ٱا]?لر[َّ]?ح[ْۡ]?م[َٰ]?[نٰ][ِ]?\s*[ٱا]?لر[َّ]?ح[ِ]?[يى]م[ِ]?\s*/g, '');
+                    ayahText = ayahText.replace(/^﷽\s*/g, ''); // Bismillah ligature
                     ayahText = ayahText.trim();
                 }
 
