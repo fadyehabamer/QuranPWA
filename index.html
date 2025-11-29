@@ -113,9 +113,28 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 24px;
             text-align: center;
+        }
+        
+        .visitor-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .visitor-count .loading {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .stat-item {
@@ -462,6 +481,10 @@
                         <div class="stat-number">30</div>
                         <div class="stat-label">جزء</div>
                     </div>
+                    <div class="stat-item">
+                        <div class="stat-number visitor-count" id="visitorCount"><div class="loading"></div></div>
+                        <div class="stat-label">زائر</div>
+                    </div>
                 </div>
             </div>
 
@@ -648,10 +671,35 @@
             }
         }
 
+        // Fetch visitor count from GoatCounter
+        async function loadVisitorCount() {
+            try {
+                const response = await fetch('https://fadyehabamer.goatcounter.com/counter/?p=/');
+                const data = await response.json();
+                const count = data.count || 0;
+                document.getElementById('visitorCount').textContent = count.toLocaleString('ar-EG');
+            } catch (error) {
+                // Fallback: try alternative endpoint
+                try {
+                    const response = await fetch('https://fadyehabamer.goatcounter.com/counter/.json');
+                    const data = await response.json();
+                    const total = Object.values(data).reduce((sum, val) => sum + (val.count || 0), 0);
+                    document.getElementById('visitorCount').textContent = total.toLocaleString('ar-EG');
+                } catch (e) {
+                    document.getElementById('visitorCount').textContent = '—';
+                }
+            }
+        }
+
         // Initialize
         loadDailyVerse();
         checkResumeReading();
+        loadVisitorCount();
     </script>
+    
+    <!-- GoatCounter Analytics -->
+    <script data-goatcounter="https://fadyehabamer.goatcounter.com/count"
+            async src="//gc.zgo.at/count.js"></script>
 </body>
 
 </html>
