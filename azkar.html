@@ -218,7 +218,7 @@
 <body>
     <!-- App Header -->
     <header class="app-header">
-        <button class="icon-btn" id="backBtn" onclick="showCategories()" style="display: none;">
+        <button class="menu-toggle-btn" id="backBtn" onclick="showCategories()" style="display: none;">
             <i class="bi bi-arrow-right"></i>
         </button>
         <button class="icon-btn menu-toggle-btn" id="menuBtn" onclick="toggleSidebar()">
@@ -273,7 +273,7 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="app-content">
         <!-- Progress Bar -->
         <div class="progress-container" id="progressContainer">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -588,7 +588,7 @@
         }
 
         function showCategories() {
-            document.getElementById('categoryList').style.display = 'flex';
+            document.getElementById('categoryList').style.display = 'grid';
             document.getElementById('azkarList').classList.remove('active');
             document.getElementById('headerTitle').textContent = 'الأذكار';
             document.getElementById('backBtn').style.display = 'none';
