@@ -275,6 +275,10 @@
     <div class="app-header">
         <h1>المواضع المحفوظة</h1>
         <div class="header-left-buttons">
+            <div class="visitor-badge">
+                <i class="bi bi-people-fill"></i>
+                <span class="count" id="visitorCount">-</span>
+            </div>
             <button class="header-back-btn" onclick="window.location.href='index.html'">→</button>
             <button class="settings-btn" onclick="window.location.href='settings.html'"><i class="bi bi-gear-fill"></i></button>
             <button class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
@@ -530,6 +534,8 @@
             });
         }
 
+        let currentModalConfirm = null;
+
         function showModal({ type = 'info', icon = '', title = '', message = '', confirmText = 'حسناً', cancelText = '', onConfirm = null }) {
             const modal = document.getElementById('customModal');
             const modalIcon = document.getElementById('modalIcon');
@@ -540,12 +546,13 @@
             modalIcon.textContent = icon;
             modalTitle.textContent = title;
             modalMessage.textContent = message;
+            currentModalConfirm = onConfirm;
 
             let actionsHTML = '';
             if (cancelText && onConfirm) {
                 actionsHTML = `
                     <button class="modal-btn modal-btn-secondary" onclick="hideModal()">${cancelText}</button>
-                    <button class="modal-btn modal-btn-primary" onclick="hideModal(); (${onConfirm})()">${confirmText}</button>
+                    <button class="modal-btn modal-btn-primary" onclick="confirmModalAction()">${confirmText}</button>
                 `;
             } else {
                 actionsHTML = `<button class="modal-btn modal-btn-primary" onclick="hideModal()">${confirmText}</button>`;
@@ -553,6 +560,14 @@
             modalActions.innerHTML = actionsHTML;
 
             modal.classList.add('active');
+        }
+
+        function confirmModalAction() {
+            hideModal();
+            if (currentModalConfirm) {
+                currentModalConfirm();
+                currentModalConfirm = null;
+            }
         }
 
         function hideModal() {

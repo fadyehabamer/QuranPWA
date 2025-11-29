@@ -122,6 +122,30 @@ body {
     gap: 8px;
 }
 
+.visitor-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.visitor-badge i {
+    font-size: 14px;
+}
+
+.visitor-badge .count {
+    min-width: 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 .settings-btn {
     background: transparent;
     border: none;

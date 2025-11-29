@@ -69,4 +69,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    // Load visitor count
+    loadVisitorCount();
 });
+
+// Fetch visitor count from GoatCounter
+async function loadVisitorCount() {
+    const countElement = document.getElementById('visitorCount');
+    if (!countElement) return;
+    
+    try {
+        const response = await fetch('https://fadyehabamer.goatcounter.com/counter/' + encodeURIComponent(window.location.pathname) + '.json');
+        const data = await response.json();
+        countElement.textContent = (data.count || 0).toLocaleString('ar-EG');
+    } catch (error) {
+        try {
+            // Fallback: get total count
+            const response = await fetch('https://fadyehabamer.goatcounter.com/counter/.json');
+            const data = await response.json();
+            const total = Object.values(data).reduce((sum, val) => sum + (val.count || 0), 0);
+            countElement.textContent = total.toLocaleString('ar-EG');
+        } catch (e) {
+            countElement.textContent = '—';
+        }
+    }
+}
