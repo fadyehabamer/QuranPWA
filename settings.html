@@ -447,9 +447,17 @@
             <div class="setting-item">
                 <div class="setting-label">
                     <span>تثبيت التطبيق</span>
-                    <span class="setting-desc">تثبيت على الشاشة الرئيسية</span>
+                    <span class="setting-desc">تثبيت على الشاشة الرئيسية للوصول السريع</span>
                 </div>
-                <button class="font-size-btn" onclick="installApp()" id="installBtn" style="display: none;">📥</button>
+                <button class="font-size-btn" onclick="installApp()" id="installBtn">تحقق من التثبيت</button>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>مسح ذاكرة التخزين المؤقت</span>
+                    <span class="setting-desc">حذف البيانات المخزنة مؤقتاً لتوفير المساحة</span>
+                </div>
+                <button class="font-size-btn" onclick="clearCache()" style="background: #f44336; color: white; border-color: #f44336;">🗑️</button>
             </div>
         </div>
 
@@ -813,8 +821,22 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById('installBtn').style.display = 'block';
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.style.display = 'block';
+                installBtn.textContent = '📥';
+            }
         });
+
+        // Check if already installed
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.textContent = '✅ مثبت';
+                installBtn.disabled = true;
+                installBtn.style.opacity = '0.6';
+            }
+        }
 
         function installApp() {
             if (deferredPrompt) {
@@ -823,13 +845,99 @@
                     if (choiceResult.outcome === 'accepted') {
                         showModal({
                             type: 'success',
-                            icon: '',
+                            icon: '📱',
                             title: 'تم التثبيت',
-                            message: 'تم تثبيت التطبيق على جهازك'
+                            message: 'تم تثبيت التطبيق على جهازك بنجاح'
+                        });
+                    } else {
+                        showModal({
+                            type: 'info',
+                            icon: 'ℹ️',
+                            title: 'تم الإلغاء',
+                            message: 'تم إلغاء تثبيت التطبيق'
                         });
                     }
                     deferredPrompt = null;
                     document.getElementById('installBtn').style.display = 'none';
+                });
+            } else {
+                // Check if already installed
+                if (window.matchMedia('(display-mode: standalone)').matches) {
+                    showModal({
+                        type: 'info',
+                        icon: '✅',
+                        title: 'مثبت بالفعل',
+                        message: 'التطبيق مثبت بالفعل على جهازك'
+                    });
+                } else {
+                    showModal({
+                        type: 'warning',
+                        icon: '⚠️',
+                        title: 'غير متاح',
+                        message: 'تثبيت التطبيق غير متاح في هذا المتصفح. جرب استخدام Chrome أو Edge على الهاتف أو الكمبيوتر.'
+                    });
+                }
+            }
+        }
+
+        async function clearCache() {
+            try {
+                // Clear service worker caches
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    const registration = await navigator.serviceWorker.ready;
+                    const channel = new MessageChannel();
+                    
+                    const response = await new Promise((resolve, reject) => {
+                        channel.port1.onmessage = event => {
+                            if (event.data.success) {
+                                resolve();
+                            } else {
+                                reject(new Error(event.data.error));
+                            }
+                        };
+                        
+                        registration.active.postMessage({ type: 'CLEAR_CACHE' }, [channel.port2]);
+                        
+                        // Timeout after 5 seconds
+                        setTimeout(() => reject(new Error('Timeout')), 5000);
+                    });
+                } else {
+                    // Fallback: clear caches directly
+                    const cacheNames = await caches.keys();
+                    await Promise.all(
+                        cacheNames.map(cacheName => caches.delete(cacheName))
+                    );
+                }
+
+                // Clear localStorage (except for user preferences)
+                const keysToKeep = ['darkMode', 'primaryColor', 'fontSize', 'fontWeight', 'notificationsEnabled', 'notifications'];
+                const allKeys = Object.keys(localStorage);
+                
+                allKeys.forEach(key => {
+                    if (!keysToKeep.includes(key)) {
+                        localStorage.removeItem(key);
+                    }
+                });
+
+                showModal({
+                    type: 'success',
+                    icon: '🗑️',
+                    title: 'تم مسح الذاكرة',
+                    message: 'تم مسح جميع البيانات المخزنة مؤقتاً بنجاح'
+                });
+
+                // Reload the page after a short delay to ensure clean state
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error clearing cache:', error);
+                showModal({
+                    type: 'error',
+                    icon: '❌',
+                    title: 'خطأ',
+                    message: 'حدث خطأ أثناء مسح الذاكرة'
                 });
             }
         }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quran-app-v4';
+const CACHE_NAME = 'quran-app-v6';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -14,6 +14,8 @@ const urlsToCache = [
   '/bookmarks.html',
   '/sunan',
   '/sunan.html',
+  '/prayer-times',
+  '/prayer-times.html',
   '/bio',
   '/bio.html',
   '/styles.css',
@@ -133,4 +135,21 @@ self.addEventListener('activate', event => {
       );
     })
   );
+});
+
+// Message event - handle cache clearing requests
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }).then(() => {
+        event.ports[0].postMessage({ success: true });
+      }).catch(error => {
+        event.ports[0].postMessage({ success: false, error: error.message });
+      })
+    );
+  }
 });

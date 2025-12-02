@@ -29,6 +29,83 @@
             text-align: center;
         }
 
+        .location-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .location-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            flex: 1;
+            max-width: 200px;
+            justify-content: center;
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .location-btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .location-btn:active {
+            transform: translateY(0);
+        }
+
+        .location-btn.secondary {
+            background: var(--bg-color);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .location-btn.secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .location-selected {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .reset-location-btn {
+            background: var(--border-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Cairo', Courier, monospace;
+        }
+
+        .reset-location-btn:hover {
+            background: var(--text-secondary);
+            color: white;
+        }
+
         .location-text {
             font-size: 16px;
             color: var(--text-color);
@@ -187,6 +264,9 @@
             justify-content: center;
             padding: 40px;
             color: var(--text-secondary);
+            width: 100%;
+            min-height: 200px;
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .loading-spinner i {
@@ -380,9 +460,29 @@
         <div class="prayer-times-container">
             <!-- Location Section -->
             <div class="location-section" id="locationSection">
-                <div class="location-loading">
+                <div class="location-text">
                     <i class="bi bi-geo-alt-fill"></i>
-                    <span>جاري تحديد الموقع...</span>
+                    اختر طريقة تحديد الموقع
+                </div>
+                <div class="location-buttons" id="locationButtons">
+                    <button class="location-btn" onclick="selectAutomaticLocation()">
+                        <i class="bi bi-crosshair"></i>
+                        تلقائي
+                    </button>
+                    <button class="location-btn secondary" onclick="selectManualLocation()">
+                        <i class="bi bi-geo-alt"></i>
+                        يدوي
+                    </button>
+                </div>
+                <div class="location-selected" id="locationSelected" style="display: none;">
+                    <div class="location-info">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span id="locationText">تم تحديد الموقع</span>
+                    </div>
+                    <button class="reset-location-btn" onclick="resetLocation()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        تغيير
+                    </button>
                 </div>
             </div>
 
@@ -399,9 +499,7 @@
 
             <!-- Prayer Times Grid -->
             <div class="prayer-grid" id="prayerGrid">
-                <div class="loading-spinner">
-                    <i class="bi bi-clock-history"></i>
-                </div>
+                <!-- Prayer times will be loaded here after location selection -->
             </div>
 
             <!-- Error Message -->
@@ -461,6 +559,7 @@
         let userLocation = null;
         let prayerTimes = null;
         let updateInterval = null;
+        let locationMethod = null; // 'automatic' or 'manual'
 
         const prayerNames = {
             Fajr: 'الفجر',
@@ -672,36 +771,25 @@
                 document.getElementById('errorMessage').style.display = 'none';
                 document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner"><i class="bi bi-clock-history"></i></div>';
                 
-                // Get location
-                if (!userLocation && !lat && !lng) {
+                // Get location based on method
+                if (locationMethod === 'automatic' && !userLocation && !lat && !lng) {
                     try {
                         userLocation = await getUserLocation();
-                        document.getElementById('locationSection').innerHTML = `
-                            <div class="location-text">
-                                <i class="bi bi-geo-alt-fill"></i>
-                                تم تحديد موقعك
-                            </div>
-                        `;
+                        showLocationSelected('تم تحديد موقعك تلقائياً');
                     } catch (geoError) {
-                        // If geolocation fails, show country selection
-                        document.getElementById('locationSection').innerHTML = `
-                            <div class="location-text">
-                                <i class="bi bi-geo-alt-fill"></i>
-                                يرجى اختيار الدولة لعرض مواقيت الصلاة
-                            </div>
-                        `;
+                        console.error('Geolocation failed:', geoError);
+                        // If automatic fails, fall back to manual
+                        locationMethod = 'manual';
                         openCountryModal();
                         return;
                     }
+                } else if (locationMethod === 'manual' && !lat && !lng) {
+                    // Manual selection - country modal should be open
+                    return;
                 } else if (lat && lng) {
                     userLocation = { latitude: lat, longitude: lng };
                     const selectedCountry = JSON.parse(localStorage.getItem('selectedCountry'));
-                    document.getElementById('locationSection').innerHTML = `
-                        <div class="location-text">
-                            <i class="bi bi-geo-alt-fill"></i>
-                            ${selectedCountry ? selectedCountry.name : 'تم تحديد الموقع'}
-                        </div>
-                    `;
+                    showLocationSelected(selectedCountry ? selectedCountry.name : 'تم تحديد الموقع يدوياً');
                 }
                 
                 // Fetch prayer times
@@ -721,22 +809,73 @@
             } catch (error) {
                 console.error('Error loading prayer times:', error);
                 
-                document.getElementById('locationSection').innerHTML = `
-                    <div class="location-text">
-                        <i class="bi bi-geo-alt-fill"></i>
-                        حدث خطأ في تحميل مواقيت الصلاة
-                    </div>
-                `;
-                
+                hideLocationLoading();
+                showLocationSelected('حدث خطأ في تحميل مواقيت الصلاة');
                 document.getElementById('errorMessage').style.display = 'block';
                 document.getElementById('prayerGrid').innerHTML = '';
             }
         }
 
-        // Sidebar Toggle
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('sidebarOverlay').classList.toggle('active');
+        // Location selection functions
+        function selectAutomaticLocation() {
+            locationMethod = 'automatic';
+            showLocationLoading();
+            document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner"><i class="bi bi-clock-history"></i></div>';
+            loadPrayerTimes();
+        }
+
+        function selectManualLocation() {
+            locationMethod = 'manual';
+            openCountryModal();
+        }
+
+        function resetLocation() {
+            // Clear stored location data
+            userLocation = null;
+            locationMethod = null;
+            localStorage.removeItem('selectedCountry');
+            
+            // Reset UI to show buttons
+            document.getElementById('locationButtons').style.display = 'flex';
+            document.getElementById('locationSelected').style.display = 'none';
+            
+            // Clear prayer times
+            document.getElementById('prayerGrid').innerHTML = '';
+            document.getElementById('nextPrayerSection').style.display = 'none';
+            
+            // Clear any intervals
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+        }
+
+        function showLocationLoading() {
+            document.getElementById('locationButtons').style.display = 'none';
+            document.getElementById('locationSelected').style.display = 'none';
+            
+            // Add loading content to the location section
+            const locationSection = document.getElementById('locationSection');
+            locationSection.insertAdjacentHTML('beforeend', `
+                <div class="location-loading" id="locationLoading">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>جاري تحديد الموقع...</span>
+                </div>
+            `);
+        }
+
+        function hideLocationLoading() {
+            const loadingElement = document.getElementById('locationLoading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        }
+
+        function showLocationSelected(text) {
+            hideLocationLoading();
+            document.getElementById('locationText').textContent = text;
+            document.getElementById('locationButtons').style.display = 'none';
+            document.getElementById('locationSelected').style.display = 'flex';
         }
 
         // Initialize
@@ -762,13 +901,17 @@
                 navigator.serviceWorker.register('/sw.js');
             }
 
-            // Load prayer times
+            // Check if location was previously selected
             const selectedCountry = JSON.parse(localStorage.getItem('selectedCountry'));
             if (selectedCountry) {
+                locationMethod = 'manual';
+                userLocation = { latitude: selectedCountry.lat, longitude: selectedCountry.lng };
+                showLocationSelected(selectedCountry.name);
+                // Clear initial loading spinner and load prayer times
+                document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner"><i class="bi bi-clock-history"></i></div>';
                 loadPrayerTimes(selectedCountry.lat, selectedCountry.lng);
-            } else {
-                loadPrayerTimes();
             }
+            // If no previous selection, show location buttons (default state)
         })();
 
         // Country selection modal functions
@@ -781,6 +924,11 @@
         function closeCountryModal() {
             const modal = document.getElementById('countryModal');
             modal.style.display = 'none';
+            
+            // If no location method was set (user closed modal without selecting), reset to buttons
+            if (!locationMethod) {
+                resetLocation();
+            }
         }
 
         function populateCountryList() {
@@ -929,6 +1077,7 @@
         function selectCountry(country) {
             localStorage.setItem('selectedCountry', JSON.stringify(country));
             closeCountryModal();
+            document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner"><i class="bi bi-clock-history"></i></div>';
             loadPrayerTimes(country.lat, country.lng);
         }
 

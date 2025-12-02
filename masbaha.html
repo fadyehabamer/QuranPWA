@@ -24,8 +24,8 @@
 
         .counter-display {
             position: relative;
-            width: 250px;
-            height: 250px;
+            width: 200px;
+            height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -50,7 +50,7 @@
         }
 
         .counter-value {
-            font-size: 72px;
+            font-size: 48px;
             font-weight: 700;
             color: var(--primary-color);
             text-align: center;
@@ -66,13 +66,13 @@
         }
 
         .tap-button {
-            width: 200px;
-            height: 200px;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
             border: none;
             color: white;
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 600;
             cursor: pointer;
             box-shadow: 0 8px 24px var(--shadow-heavy);
@@ -410,6 +410,109 @@
             border-color: var(--primary-color);
             box-shadow: 0 4px 12px var(--shadow);
         }
+
+        @media (max-width: 768px) {
+            .masbaha-container {
+                padding: 15px;
+                gap: 20px;
+            }
+
+            .counter-display {
+                width: 200px;
+                height: 200px;
+            }
+
+            .progress-ring {
+                width: 200px;
+                height: 200px;
+            }
+
+            .counter-value {
+                font-size: 48px;
+            }
+
+            .tap-button {
+                width: 150px;
+                height: 150px;
+                font-size: 18px;
+            }
+
+            .target-display {
+                font-size: 14px;
+            }
+
+            .lifetime-counter {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+
+            .dhikr-chip {
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+
+            .preset-btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+
+            .control-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .custom-target input {
+                width: 80px;
+                padding: 8px;
+                font-size: 14px;
+            }
+
+            .custom-target button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+
+            .sound-toggle {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .history-item {
+                padding: 12px;
+            }
+
+            .history-count {
+                font-size: 16px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .counter-display {
+                width: 250px;
+                height: 250px;
+            }
+
+            .progress-ring {
+                width: 250px;
+                height: 250px;
+            }
+
+            .progress-ring circle {
+                cx: 125;
+                cy: 125;
+                r: 110;
+            }
+
+            .counter-value {
+                font-size: 72px;
+            }
+
+            .tap-button {
+                width: 200px;
+                height: 200px;
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
 
@@ -495,9 +598,9 @@
             </div>
 
             <div class="counter-display">
-                <svg class="progress-ring" width="250" height="250">
-                    <circle class="progress-ring-bg" cx="125" cy="125" r="110"></circle>
-                    <circle class="progress-ring-circle" id="progressCircle" cx="125" cy="125" r="110"></circle>
+                <svg class="progress-ring" width="200" height="200">
+                    <circle class="progress-ring-bg" cx="100" cy="100" r="85"></circle>
+                    <circle class="progress-ring-circle" id="progressCircle" cx="100" cy="100" r="85"></circle>
                 </svg>
                 <div class="counter-value" id="counterValue">0</div>
             </div>
@@ -606,11 +709,16 @@
     let audioContext = null;
 
     const circle = document.getElementById('progressCircle');
-    const radius = circle.r.baseVal.value;
-    const circumference = radius * 2 * Math.PI;
-
-    circle.style.strokeDasharray = `${circumference} ${circumference}`;
-    circle.style.strokeDashoffset = circumference;
+    
+    function updateCircumference() {
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference;
+        return circumference;
+    }
+    
+    let circumference = updateCircumference();
 
     function initAudio() {
     if (!audioContext) {
@@ -1040,6 +1148,12 @@
     // Initialize
     updateDisplay();
     loadData();
+
+    // Handle window resize to recalculate progress ring
+    window.addEventListener('resize', () => {
+        circumference = updateCircumference();
+        updateDisplay();
+    });
 
     // Load theme settings
     (function () {
