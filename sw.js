@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quran-app-v3';
+const CACHE_NAME = 'quran-app-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -44,6 +44,29 @@ self.addEventListener('fetch', event => {
   // Skip caching for chrome-extension and other unsupported schemes
   const url = new URL(event.request.url);
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return;
+  }
+
+  // Handle Quran API requests (including tafsir)
+  if (url.hostname === 'api.alquran.cloud') {
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => {
+          if (response) {
+            return response;
+          }
+          return fetch(event.request).then(networkResponse => {
+            // Cache API responses for better performance
+            if (networkResponse.status === 200) {
+              const responseClone = networkResponse.clone();
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, responseClone);
+              });
+            }
+            return networkResponse;
+          });
+        })
+    );
     return;
   }
 

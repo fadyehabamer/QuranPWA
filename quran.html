@@ -888,6 +888,97 @@
                 transform: translate(-50%, -50%) scale(0.8);
             }
         }
+
+        /* تفسير Styles */
+        .tafsir-mode .ayahs-container {
+            display: none;
+        }
+
+        .tafsir-mode .tafsir-container {
+            display: block;
+        }
+
+        .tafsir-container {
+            display: none;
+            line-height: 2.2;
+            font-family: 'Cairo', sans-serif;
+            direction: rtl;
+        }
+
+        .ayah-tafsir {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.15s ease;
+        }
+
+        .ayah-tafsir:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .tafsir-ayah-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .tafsir-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-color);
+            text-align: justify;
+            margin-top: 12px;
+        }
+
+        .tafsir-loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        .tafsir-error {
+            text-align: center;
+            padding: 40px;
+            color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+            border-radius: 12px;
+            margin: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .ayah-tafsir {
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .tafsir-text {
+                font-size: 15px;
+            }
+        }
+
+        /* Active button states */
+        .icon-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .icon-btn.active:hover {
+            background: var(--primary-light);
+            border-color: var(--primary-light);
+        }
     </style>
 </head>
 
@@ -973,6 +1064,9 @@
                     <p id="surahDescription"></p>
                 </div>
                 <div style="display: flex; gap: 8px;">
+                    <button class="icon-btn" id="tafsirBtn" onclick="toggleTafsir()" title="التفسير">
+                        <i class="bi bi-book-half"></i>
+                    </button>
                     <button class="icon-btn" id="reciterBtn" onclick="openReciterModal()" title="اختر القارئ">
                         <i class="bi bi-person-circle"></i>
                     </button>
@@ -1428,6 +1522,12 @@
 
         function renderCurrentPage() {
             if (pages.length === 0) return;
+
+            // If in tafsir mode, load tafsir instead
+            if (tafsirMode) {
+                loadTafsirForCurrentPage();
+                return;
+            }
 
             const page = pages[currentPageIndex];
             const content = document.getElementById('quranContent');
@@ -2116,6 +2216,97 @@
                 if (toggleBtn) {
                     toggleBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
                 }
+            }
+        }
+
+        // تفسير functionality
+        let tafsirMode = false;
+
+        function toggleTafsir() {
+            tafsirMode = !tafsirMode;
+            const content = document.getElementById('quranContent');
+            const tafsirBtn = document.getElementById('tafsirBtn');
+
+            if (tafsirMode) {
+                content.classList.add('tafsir-mode');
+                tafsirBtn.classList.add('active');
+                loadTafsirForCurrentPage();
+            } else {
+                content.classList.remove('tafsir-mode');
+                tafsirBtn.classList.remove('active');
+                renderCurrentPage(); // Restore Arabic text view
+            }
+        }
+
+        async function loadTafsirForCurrentPage() {
+            if (pages.length === 0 || currentPageIndex >= pages.length) return;
+
+            const page = pages[currentPageIndex];
+            const content = document.getElementById('quranContent');
+
+            // Show loading
+            content.innerHTML = '<div class="page-content"><div class="tafsir-loading"><div class="spinner"></div><p>جار تحميل التفسير...</p></div></div>';
+
+            try {
+                const tafsirPromises = page.ayahs.map(async (ayah) => {
+                    try {
+                        // Using Muyassar تفسير (simplified interpretation)
+                        const response = await fetch(`https://api.alquran.cloud/v1/ayah/${ayah.number}/ar.muyassar`);
+                        if (!response.ok) throw new Error('Failed to load tafsir');
+
+                        const data = await response.json();
+                        if (data.code !== 200) throw new Error('Invalid tafsir response');
+
+                        return {
+                            ayahNumber: ayah.numberInSurah,
+                            arabicText: ayah.text,
+                            tafsirText: data.data.text
+                        };
+                    } catch (error) {
+                        console.error('Error loading tafsir for ayah', ayah.number, error);
+                        return {
+                            ayahNumber: ayah.numberInSurah,
+                            arabicText: ayah.text,
+                            tafsirText: 'عذراً، لم نتمكن من تحميل تفسير هذه الآية'
+                        };
+                    }
+                });
+
+                const tafsirData = await Promise.all(tafsirPromises);
+
+                // Render tafsir
+                let html = '<div class="page-content">';
+
+                if (currentPageIndex === 0) {
+                    html += `
+                        <div class="page-header">
+                            <div class="surah-name">${page.surahName}</div>
+                            <div class="surah-info">${page.surahEnglish} • ${page.revelationType} • ${page.numberOfAyahs} آيات</div>
+                        </div>
+                    `;
+                }
+
+                html += '<div class="tafsir-container">';
+
+                tafsirData.forEach((item, index) => {
+                    html += `
+                        <div class="ayah-tafsir">
+                            <div class="tafsir-ayah-number">${item.ayahNumber}</div>
+                            <div class="ayah arabic-text" style="font-size: var(--font-size-ayah); margin-bottom: 12px; text-align: center; background: rgba(var(--primary-rgb, 27, 94, 32), 0.05); padding: 12px; border-radius: 8px;">${item.arabicText}</div>
+                            <div class="tafsir-text">${item.tafsirText}</div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                html += `<div class="page-number">صفحة ${page.pageNum} من ${totalPages}</div>`;
+                html += '</div>';
+
+                content.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading tafsir:', error);
+                content.innerHTML = '<div class="page-content"><div class="tafsir-error">خطأ في تحميل التفسير. يرجى المحاولة مرة أخرى.</div></div>';
             }
         }
     </script>
