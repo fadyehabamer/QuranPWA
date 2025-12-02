@@ -449,7 +449,7 @@
                     <span>تثبيت التطبيق</span>
                     <span class="setting-desc">تثبيت على الشاشة الرئيسية للوصول السريع</span>
                 </div>
-                <button class="font-size-btn" onclick="installApp()" id="installBtn">تحقق من التثبيت</button>
+                <button class="font-size-btn" onclick="installApp()" id="installBtn">📱</button>
             </div>
 
             <div class="setting-item">
@@ -824,7 +824,7 @@
             const installBtn = document.getElementById('installBtn');
             if (installBtn) {
                 installBtn.style.display = 'block';
-                installBtn.textContent = '📥';
+                installBtn.textContent = '⬇️';
             }
         });
 
@@ -832,7 +832,7 @@
         if (window.matchMedia('(display-mode: standalone)').matches) {
             const installBtn = document.getElementById('installBtn');
             if (installBtn) {
-                installBtn.textContent = '✅ مثبت';
+                installBtn.textContent = '✅';
                 installBtn.disabled = true;
                 installBtn.style.opacity = '0.6';
             }
@@ -870,12 +870,32 @@
                         message: 'التطبيق مثبت بالفعل على جهازك'
                     });
                 } else {
-                    showModal({
-                        type: 'warning',
-                        icon: '⚠️',
-                        title: 'غير متاح',
-                        message: 'تثبيت التطبيق غير متاح في هذا المتصفح. جرب استخدام Chrome أو Edge على الهاتف أو الكمبيوتر.'
-                    });
+                    // Provide manual installation instructions for mobile Chrome
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    const isChrome = /Chrome/i.test(navigator.userAgent);
+                    
+                    if (isMobile && isChrome) {
+                        showModal({
+                            type: 'info',
+                            icon: '📱',
+                            title: 'تثبيت يدوي',
+                            message: 'اضغط على ⋮ (القائمة) في أعلى اليمين ← ثم "إضافة إلى الشاشة الرئيسية"'
+                        });
+                    } else if (isMobile) {
+                        showModal({
+                            type: 'warning',
+                            icon: '⚠️',
+                            title: 'غير متاح',
+                            message: 'تثبيت التطبيق غير متاح في هذا المتصفح. جرب استخدام Chrome على الهاتف.'
+                        });
+                    } else {
+                        showModal({
+                            type: 'warning',
+                            icon: '⚠️',
+                            title: 'غير متاح',
+                            message: 'تثبيت التطبيق غير متاح في هذا المتصفح. جرب استخدام Chrome أو Edge على الهاتف أو الكمبيوتر.'
+                        });
+                    }
                 }
             }
         }
