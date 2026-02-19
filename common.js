@@ -583,7 +583,6 @@ function loadVisitorCount() {
     const STATIONS = [
         { name: 'إذاعة القرآن الكريم - السعودية',        url: 'https://n01.radiojar.com/8s5u5tpdtwzuv' },
         { name: 'إذاعة نور القرآن',                       url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
-        { name: 'إذاعة القرآن الكريم من القاهرة',         url: 'https://n05.radiojar.com/253ugsqnbnzuv' },
     ];
 
     let _audio = null;
