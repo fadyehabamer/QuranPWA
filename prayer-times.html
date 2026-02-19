@@ -556,6 +556,11 @@
 
     <script src="common.js"></script>
     <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
         let userLocation = null;
         let prayerTimes = null;
         let updateInterval = null;
