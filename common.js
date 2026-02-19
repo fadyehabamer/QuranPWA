@@ -76,9 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===== Ramadan Streak Tracker =====
 (function initRamadanStreak() {
-    // Ramadan 2026: ~Feb 28 – Mar 29 (adjust if needed)
-    const RAMADAN_START = new Date('2026-02-28');
-    const RAMADAN_END   = new Date('2026-03-29');
+    // Ramadan 2026: Feb 18 (Saudi) / Feb 19 (Egypt) – Mar 19/20
+    const RAMADAN_START = new Date('2026-02-18');
+    const RAMADAN_END   = new Date('2026-03-20');
 
     function toDateStr(d) {
         return d.toISOString().slice(0, 10); // YYYY-MM-DD
