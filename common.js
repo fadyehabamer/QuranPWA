@@ -74,6 +74,278 @@ document.addEventListener('DOMContentLoaded', () => {
     loadVisitorCount();
 });
 
+// ===== Ramadan Streak Tracker =====
+(function initRamadanStreak() {
+    // Ramadan 2026: ~Feb 28 – Mar 29 (adjust if needed)
+    const RAMADAN_START = new Date('2026-02-28');
+    const RAMADAN_END   = new Date('2026-03-29');
+
+    function toDateStr(d) {
+        return d.toISOString().slice(0, 10); // YYYY-MM-DD
+    }
+
+    function today() { return toDateStr(new Date()); }
+
+    function recordVisit() {
+        const todayStr = today();
+        const raw = localStorage.getItem('ramadanVisits');
+        const visits = raw ? JSON.parse(raw) : [];
+        if (!visits.includes(todayStr)) {
+            visits.push(todayStr);
+            localStorage.setItem('ramadanVisits', JSON.stringify(visits));
+        }
+        return visits;
+    }
+
+    function calcStreak(visits) {
+        const set = new Set(visits);
+        let streak = 0;
+        const d = new Date();
+        // if today not visited yet, start from yesterday
+        if (!set.has(toDateStr(d))) d.setDate(d.getDate() - 1);
+        while (set.has(toDateStr(d))) {
+            streak++;
+            d.setDate(d.getDate() - 1);
+        }
+        return streak;
+    }
+
+    function calcBest(visits) {
+        if (!visits.length) return 0;
+        const sorted = [...visits].sort();
+        let best = 1, cur = 1;
+        for (let i = 1; i < sorted.length; i++) {
+            const prev = new Date(sorted[i - 1]);
+            const curr = new Date(sorted[i]);
+            const diff = (curr - prev) / 86400000;
+            if (diff === 1) { cur++; best = Math.max(best, cur); }
+            else if (diff > 1) cur = 1;
+        }
+        return best;
+    }
+
+    function ramadanDay() {
+        const now = new Date();
+        const diff = Math.floor((now - RAMADAN_START) / 86400000) + 1;
+        return Math.max(1, Math.min(diff, 30));
+    }
+
+    function inRamadan() {
+        const now = new Date();
+        return now >= RAMADAN_START && now <= new Date(RAMADAN_END.getTime() + 86400000);
+    }
+
+    function buildCalendar(visits) {
+        const set = new Set(visits);
+        let html = '<div class="rstreak-cal">';
+        for (let i = 0; i < 30; i++) {
+            const d = new Date(RAMADAN_START);
+            d.setDate(d.getDate() + i);
+            const ds = toDateStr(d);
+            const now = new Date();
+            const isFuture = d > now;
+            const isVisited = set.has(ds);
+            const isToday = ds === today();
+            let cls = 'rscal-day';
+            if (isToday) cls += ' today';
+            else if (isFuture) cls += ' future';
+            else if (isVisited) cls += ' visited';
+            else cls += ' missed';
+            html += `<div class="${cls}" title="يوم ${i + 1}">${i + 1}</div>`;
+        }
+        html += '</div>';
+        return html;
+    }
+
+    const CSS = `
+        .rstreak-fab {
+            position: fixed;
+            bottom: 145px;
+            left: 20px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e65c00, #f9d423);
+            color: #fff;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(230,92,0,0.45);
+            z-index: 1100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: transform 0.2s;
+        }
+        .rstreak-fab:hover { transform: scale(1.1); }
+        .rstreak-fab-count {
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+            margin-top: 1px;
+        }
+        .rstreak-panel {
+            position: fixed;
+            bottom: 210px;
+            left: 20px;
+            width: 310px;
+            background: var(--card-bg, #fff);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            z-index: 1099;
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+            border: 1px solid var(--border-color, #e8e8e8);
+            font-family: 'Cairo', sans-serif;
+        }
+        .rstreak-panel.open { display: flex; }
+        .rstreak-header {
+            background: linear-gradient(135deg, #e65c00, #f9d423);
+            color: #fff;
+            padding: 12px 16px;
+            font-weight: 700;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rstreak-stats {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border-color, #e8e8e8);
+        }
+        .rstreak-stat {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            border-left: 1px solid var(--border-color, #e8e8e8);
+        }
+        .rstreak-stat:last-child { border-left: none; }
+        .rstreak-stat-val {
+            font-size: 26px;
+            font-weight: 700;
+            color: #e65c00;
+            line-height: 1;
+        }
+        .rstreak-stat-lbl {
+            font-size: 11px;
+            color: var(--text-secondary, #666);
+            margin-top: 3px;
+        }
+        .rstreak-cal-wrap { padding: 10px 12px 12px; }
+        .rstreak-cal-title {
+            font-size: 12px;
+            color: var(--text-secondary, #666);
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        .rstreak-cal {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
+        }
+        .rscal-day {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        .rscal-day.visited { background: #e65c00; color: #fff; }
+        .rscal-day.today   { background: #f9d423; color: #333; box-shadow: 0 0 0 2px #e65c00; }
+        .rscal-day.missed  { background: #f0f0f0; color: #aaa; }
+        .rscal-day.future  { background: transparent; border: 1px dashed #ddd; color: #ccc; }
+        .rstreak-msg {
+            text-align: center;
+            font-size: 12px;
+            padding: 0 12px 12px;
+            color: var(--text-secondary, #666);
+        }
+        [data-theme="dark"] .rscal-day.missed { background: #2a2a2a; color: #555; }
+        [data-theme="dark"] .rscal-day.future { border-color: #333; color: #444; }
+    `;
+
+    function inject() {
+        if (!inRamadan()) return;
+
+        const visits = recordVisit();
+        const streak = calcStreak(visits);
+        const best   = calcBest(visits);
+        const total  = visits.length;
+        const rDay   = ramadanDay();
+
+        const styleEl = document.createElement('style');
+        styleEl.textContent = CSS;
+        document.head.appendChild(styleEl);
+
+        const fab = document.createElement('button');
+        fab.className = 'rstreak-fab';
+        fab.id = 'rstreakFab';
+        fab.title = 'تتبع رمضان';
+        fab.innerHTML = `🔥<span class="rstreak-fab-count">${streak}</span>`;
+        fab.onclick = toggleStreakPanel;
+
+        const encouragements = [
+            'أنت رائع! واصل المسيرة 💪',
+            'استمر في القراءة! بارك الله فيك ✨',
+            'كل يوم خطوة نحو الله 🌙',
+            'رمضان فرصة، لا تضيّعها ⭐',
+        ];
+        const msg = encouragements[streak % encouragements.length];
+
+        const panel = document.createElement('div');
+        panel.className = 'rstreak-panel';
+        panel.id = 'rstreakPanel';
+        panel.innerHTML = `
+            <div class="rstreak-header">🔥 تتبع رمضان ${new Date().getFullYear()}</div>
+            <div class="rstreak-stats">
+                <div class="rstreak-stat">
+                    <div class="rstreak-stat-val">${streak}</div>
+                    <div class="rstreak-stat-lbl">الحالي 🔥</div>
+                </div>
+                <div class="rstreak-stat">
+                    <div class="rstreak-stat-val">${best}</div>
+                    <div class="rstreak-stat-lbl">الأفضل ⭐</div>
+                </div>
+                <div class="rstreak-stat">
+                    <div class="rstreak-stat-val">${total}</div>
+                    <div class="rstreak-stat-lbl">إجمالي أيام</div>
+                </div>
+                <div class="rstreak-stat">
+                    <div class="rstreak-stat-val">${rDay}</div>
+                    <div class="rstreak-stat-lbl">يوم رمضان</div>
+                </div>
+            </div>
+            <div class="rstreak-cal-wrap">
+                <div class="rstreak-cal-title">أيام رمضان الثلاثون</div>
+                ${buildCalendar(visits)}
+            </div>
+            <div class="rstreak-msg">${msg}</div>
+        `;
+
+        document.body.appendChild(fab);
+        document.body.appendChild(panel);
+    }
+
+    let _open = false;
+    function toggleStreakPanel() {
+        _open = !_open;
+        const panel = document.getElementById('rstreakPanel');
+        if (panel) panel.classList.toggle('open', _open);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inject);
+    } else {
+        inject();
+    }
+})();
+
 // ===== Ramadan Decorations =====
 (function initRamadanDecor() {
     const style = document.createElement('style');
