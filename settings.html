@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
@@ -281,10 +284,11 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-    
+
     <!-- Desktop Sidebar -->
     <div class="desktop-sidebar" id="sidebar">
         <div class="sidebar-logo">
@@ -353,7 +357,7 @@
         <!-- Theme Settings -->
         <div class="settings-section">
             <div class="settings-section-title">المظهر</div>
-            
+
             <div class="setting-item">
                 <div class="setting-label">
                     <span>الوضع الليلي</span>
@@ -371,19 +375,25 @@
                 </div>
             </div>
             <div class="color-picker-container">
-                <div class="color-option active" data-color="#1B5E20" style="background: #1B5E20;" onclick="changeColor('#1B5E20')"></div>
-                <div class="color-option" data-color="#2196F3" style="background: #2196F3;" onclick="changeColor('#2196F3')"></div>
-                <div class="color-option" data-color="#9C27B0" style="background: #9C27B0;" onclick="changeColor('#9C27B0')"></div>
-                <div class="color-option" data-color="#FF5722" style="background: #FF5722;" onclick="changeColor('#FF5722')"></div>
-                <div class="color-option" data-color="#795548" style="background: #795548;" onclick="changeColor('#795548')"></div>
-                <div class="color-option" data-color="#607D8B" style="background: #607D8B;" onclick="changeColor('#607D8B')"></div>
+                <div class="color-option active" data-color="#1B5E20" style="background: #1B5E20;"
+                    onclick="changeColor('#1B5E20')"></div>
+                <div class="color-option" data-color="#2196F3" style="background: #2196F3;"
+                    onclick="changeColor('#2196F3')"></div>
+                <div class="color-option" data-color="#9C27B0" style="background: #9C27B0;"
+                    onclick="changeColor('#9C27B0')"></div>
+                <div class="color-option" data-color="#FF5722" style="background: #FF5722;"
+                    onclick="changeColor('#FF5722')"></div>
+                <div class="color-option" data-color="#795548" style="background: #795548;"
+                    onclick="changeColor('#795548')"></div>
+                <div class="color-option" data-color="#607D8B" style="background: #607D8B;"
+                    onclick="changeColor('#607D8B')"></div>
             </div>
         </div>
 
         <!-- Font Settings -->
         <div class="settings-section">
             <div class="settings-section-title">الخط</div>
-            
+
             <div class="setting-item">
                 <div class="setting-label">
                     <span>حجم الخط</span>
@@ -416,7 +426,7 @@
         <!-- Notification Settings -->
         <div class="settings-section">
             <div class="settings-section-title">التنبيهات</div>
-            
+
             <div class="setting-item">
                 <div class="setting-label">
                     <span>تفعيل التنبيهات</span>
@@ -433,10 +443,28 @@
             </div>
         </div>
 
+        <!-- Ramadan Settings -->
+        <div class="settings-section">
+            <div class="settings-section-title">إعدادات رمضان</div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>بداية شهر رمضان</span>
+                    <span class="setting-desc">اختر بداية شهر رمضان لضبط العداد</span>
+                </div>
+                <div>
+                    <select id="ramadanStartSelect" onchange="changeRamadanStart()"
+                        style="padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); font-family: inherit; font-size: 14px;">
+                        <option value="2026-02-18">18 فبراير (السعودية ودول أخرى)</option>
+                        <option value="2026-02-19">19 فبراير (مصر ودول أخرى)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <!-- App Info -->
         <div class="settings-section">
             <div class="settings-section-title">حول التطبيق</div>
-            
+
             <div class="setting-item">
                 <div class="setting-label">
                     <span>الإصدار</span>
@@ -457,7 +485,8 @@
                     <span>مسح ذاكرة التخزين المؤقت</span>
                     <span class="setting-desc">حذف البيانات المخزنة مؤقتاً لتوفير المساحة</span>
                 </div>
-                <button class="font-size-btn" onclick="clearCache()" style="background: #f44336; color: white; border-color: #f44336;">🗑️</button>
+                <button class="font-size-btn" onclick="clearCache()"
+                    style="background: #f44336; color: white; border-color: #f44336;">🗑️</button>
             </div>
         </div>
 
@@ -500,7 +529,6 @@
         const fontSizeValues = [12, 14, 16, 18, 20, 24, 28];
         let currentFontSizeIndex = 2;
 
-        // Load settings
         function loadSettings() {
             // Dark mode
             const darkMode = localStorage.getItem('darkMode') === 'true';
@@ -530,20 +558,34 @@
 
             notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
             renderNotifications();
+
+            // Ramadan Start
+            const ramadanStart = localStorage.getItem('ramadanStartDate') || '2026-02-18';
+            const ramadanSelect = document.getElementById('ramadanStartSelect');
+            if (ramadanSelect) {
+                ramadanSelect.value = ramadanStart;
+            }
+        }
+
+        function changeRamadanStart() {
+            const select = document.getElementById('ramadanStartSelect');
+            if (select) {
+                localStorage.setItem('ramadanStartDate', select.value);
+            }
         }
 
         function toggleDarkMode() {
             const toggle = document.getElementById('darkModeToggle');
             const isDark = toggle.classList.toggle('active');
-            
+
             if (isDark) {
                 document.documentElement.setAttribute('data-theme', 'dark');
             } else {
                 document.documentElement.removeAttribute('data-theme');
             }
-            
+
             localStorage.setItem('darkMode', isDark);
-            
+
             // Update shadow colors when theme changes
             const currentColor = localStorage.getItem('primaryColor') || '#1B5E20';
             applyColor(currentColor);
@@ -556,7 +598,7 @@
                     opt.classList.add('active');
                 }
             });
-            
+
             applyColor(color);
             localStorage.setItem('primaryColor', color);
         }
@@ -565,7 +607,7 @@
             const lightColor = adjustColor(color, 30);
             document.documentElement.style.setProperty('--primary-color', color);
             document.documentElement.style.setProperty('--primary-light', lightColor);
-            
+
             // Update shadow colors based on theme color
             const rgb = hexToRgb(color);
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -573,7 +615,7 @@
             const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${isDark ? 0.45 : 0.35})`;
             document.documentElement.style.setProperty('--shadow', shadowLight);
             document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
-            
+
             // Update color picker active state
             document.querySelectorAll('.color-option').forEach(opt => {
                 opt.classList.toggle('active', opt.getAttribute('data-color') === color);
@@ -606,8 +648,8 @@
                 currentFontSizeIndex++;
                 updateFontSize();
 
-            // Font weight
-            loadFontWeight();
+                // Font weight
+                loadFontWeight();
             }
         }
 
@@ -616,8 +658,8 @@
                 currentFontSizeIndex--;
                 updateFontSize();
 
-            // Font weight
-            loadFontWeight();
+                // Font weight
+                loadFontWeight();
             }
         }
 
@@ -674,7 +716,7 @@
         async function toggleNotifications() {
             const toggle = document.getElementById('notificationsToggle');
             const isEnabled = toggle.classList.toggle('active');
-            
+
             if (isEnabled) {
                 // Request permission
                 const permission = await Notification.requestPermission();
@@ -699,7 +741,7 @@
         function showAddNotification() {
             const daysAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
             const selectedDays = [];
-            
+
             showModal({
                 type: 'info',
                 icon: '🔔',
@@ -725,7 +767,7 @@
                     document.querySelectorAll('#daysSelector .day-btn.active').forEach(btn => {
                         days.push(parseInt(btn.getAttribute('data-day')));
                     });
-                    
+
                     if (time && days.length > 0) {
                         notifications.push({ time, days });
                         localStorage.setItem('notifications', JSON.stringify(notifications));
@@ -736,7 +778,7 @@
             });
         }
 
-        window.toggleDay = function(dayIndex) {
+        window.toggleDay = function (dayIndex) {
             const buttons = document.querySelectorAll('#daysSelector .day-btn');
             const btn = buttons[dayIndex];
             btn.classList.toggle('active');
@@ -746,12 +788,12 @@
         function renderNotifications() {
             const list = document.getElementById('notificationList');
             const daysAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-            
+
             if (notifications.length === 0) {
                 list.innerHTML = '<div style="text-align: center; padding: 20px; opacity: 0.5;">لا توجد تنبيهات</div>';
                 return;
             }
-            
+
             list.innerHTML = notifications.map((notif, index) => `
                 <div class="notification-item">
                     <div class="notification-info">
@@ -787,9 +829,9 @@
                     notifications.forEach(notif => {
                         const [hours, minutes] = notif.time.split(':');
                         const now = new Date();
-                        const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 
+                        const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
                             parseInt(hours), parseInt(minutes));
-                        
+
                         if (scheduledTime > now && notif.days.includes(now.getDay())) {
                             const delay = scheduledTime - now;
                             setTimeout(() => {
@@ -873,7 +915,7 @@
                     // Provide manual installation instructions for mobile Chrome
                     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                     const isChrome = /Chrome/i.test(navigator.userAgent);
-                    
+
                     if (isMobile && isChrome) {
                         showModal({
                             type: 'info',
@@ -906,7 +948,7 @@
                 if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                     const registration = await navigator.serviceWorker.ready;
                     const channel = new MessageChannel();
-                    
+
                     const response = await new Promise((resolve, reject) => {
                         channel.port1.onmessage = event => {
                             if (event.data.success) {
@@ -915,9 +957,9 @@
                                 reject(new Error(event.data.error));
                             }
                         };
-                        
+
                         registration.active.postMessage({ type: 'CLEAR_CACHE' }, [channel.port2]);
-                        
+
                         // Timeout after 5 seconds
                         setTimeout(() => reject(new Error('Timeout')), 5000);
                     });
@@ -930,9 +972,9 @@
                 }
 
                 // Clear localStorage (except for user preferences)
-                const keysToKeep = ['darkMode', 'primaryColor', 'fontSize', 'fontWeight', 'notificationsEnabled', 'notifications'];
+                const keysToKeep = ['darkMode', 'primaryColor', 'fontSize', 'fontWeight', 'notificationsEnabled', 'notifications', 'ramadanStartDate'];
                 const allKeys = Object.keys(localStorage);
-                
+
                 allKeys.forEach(key => {
                     if (!keysToKeep.includes(key)) {
                         localStorage.removeItem(key);
@@ -965,16 +1007,12 @@
         // Initialize
         loadSettings();
         scheduleNotifications();
-        
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
     </script>
 </body>
+
 </html>
-
-
-
-
-
