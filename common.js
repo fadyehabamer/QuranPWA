@@ -20,7 +20,7 @@ function showModal(options) {
 
     // Set actions
     actions.innerHTML = '';
-
+    
     if (options.confirmText) {
         const confirmBtn = document.createElement('button');
         confirmBtn.className = 'modal-btn modal-btn-primary';
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
+    
     // Load visitor count
     loadVisitorCount();
 });
@@ -77,13 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== Ramadan Streak Tracker =====
 (function initRamadanStreak() {
     // Ramadan 2026: Feb 18 (Saudi) / Feb 19 (Egypt) – Mar 19/20
-    const storedDate = localStorage.getItem('ramadanStartDate');
-    const isConfigured = !!storedDate;
-    const RAMADAN_START_DATE = storedDate || '2026-02-18';
-    const RAMADAN_START = new Date(RAMADAN_START_DATE);
-
-    // Approximate End Date (30 days from start)
-    const RAMADAN_END = new Date(RAMADAN_START.getTime() + 29 * 86400000);
+    const RAMADAN_START = new Date('2026-02-18');
+    const RAMADAN_END   = new Date('2026-03-20');
 
     function toDateStr(d) {
         return d.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -280,9 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const visits = recordVisit();
         const streak = calcStreak(visits);
-        const best = calcBest(visits);
-        const total = visits.length;
-        const rDay = ramadanDay();
+        const best   = calcBest(visits);
+        const total  = visits.length;
+        const rDay   = ramadanDay();
 
         const styleEl = document.createElement('style');
         styleEl.textContent = CSS;
@@ -306,51 +301,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const panel = document.createElement('div');
         panel.className = 'rstreak-panel';
         panel.id = 'rstreakPanel';
-        let panelContent = '';
-        if (isConfigured) {
-            panelContent = `
-                <div class="rstreak-header">🔥 تتبع رمضان ${new Date().getFullYear()}</div>
-                <div class="rstreak-stats">
-                    <div class="rstreak-stat">
-                        <div class="rstreak-stat-val">${streak}</div>
-                        <div class="rstreak-stat-lbl">الحالي 🔥</div>
-                    </div>
-                    <div class="rstreak-stat">
-                        <div class="rstreak-stat-val">${best}</div>
-                        <div class="rstreak-stat-lbl">الأفضل ⭐</div>
-                    </div>
-                    <div class="rstreak-stat">
-                        <div class="rstreak-stat-val">${total}</div>
-                        <div class="rstreak-stat-lbl">إجمالي أيام</div>
-                    </div>
-                    <div class="rstreak-stat">
-                        <div class="rstreak-stat-val">${rDay}</div>
-                        <div class="rstreak-stat-lbl">يوم رمضان</div>
-                    </div>
+        panel.innerHTML = `
+            <div class="rstreak-header">🔥 تتبع رمضان ${new Date().getFullYear()}</div>
+            <div class="rstreak-stats">
+                <div class="rstreak-stat">
+                    <div class="rstreak-stat-val">${streak}</div>
+                    <div class="rstreak-stat-lbl">الحالي 🔥</div>
                 </div>
-                <div class="rstreak-cal-wrap">
-                    <div class="rstreak-cal-title">أيام رمضان الثلاثون</div>
-                    ${buildCalendar(visits)}
+                <div class="rstreak-stat">
+                    <div class="rstreak-stat-val">${best}</div>
+                    <div class="rstreak-stat-lbl">الأفضل ⭐</div>
                 </div>
-                <div class="rstreak-msg">${msg}</div>
-            `;
-        } else {
-            panelContent = `
-                <div class="rstreak-header" style="background:#e65c00;">⚠️ إعداد مطلوب</div>
-                <div style="padding: 24px 16px; text-align: center; color: var(--text-color);">
-                    <i class="bi bi-calendar-x" style="font-size: 32px; color: #e65c00; margin-bottom: 12px; display: block;"></i>
-                    <h3 style="font-size: 16px; margin-bottom: 8px;">لم تقم بتحديد بداية رمضان</h3>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
-                        يرجى الذهاب إلى الإعدادات وتحديد لتتمكن من تتبع عبادتك بشكل صحيح.
-                    </p>
-                    <a href="settings.html" style="display: inline-block; background: var(--primary-color); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold;">
-                        الذهاب للإعدادات <i class="bi bi-gear-fill"></i>
-                    </a>
+                <div class="rstreak-stat">
+                    <div class="rstreak-stat-val">${total}</div>
+                    <div class="rstreak-stat-lbl">إجمالي أيام</div>
                 </div>
-            `;
-        }
-
-        panel.innerHTML = panelContent;
+                <div class="rstreak-stat">
+                    <div class="rstreak-stat-val">${rDay}</div>
+                    <div class="rstreak-stat-lbl">يوم رمضان</div>
+                </div>
+            </div>
+            <div class="rstreak-cal-wrap">
+                <div class="rstreak-cal-title">أيام رمضان الثلاثون</div>
+                ${buildCalendar(visits)}
+            </div>
+            <div class="rstreak-msg">${msg}</div>
+        `;
 
         document.body.appendChild(fab);
         document.body.appendChild(panel);
@@ -481,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     starsRow.className = 'ramadan-stars';
     starsRow.innerHTML = '★✦★✦★'.split('').map(s => `<span class="ramadan-star">${s}</span>`).join('');
 
-    const leftCorner = makeCorner(lanterns[0], lanterns[1]);
+    const leftCorner  = makeCorner(lanterns[0], lanterns[1]);
     leftCorner.classList.add('ramadan-corner-left');
     const rightCorner = makeCorner(lanterns[2], lanterns[3]);
     rightCorner.classList.add('ramadan-corner-right');
@@ -605,9 +581,8 @@ function loadVisitorCount() {
     document.head.appendChild(style);
 
     const STATIONS = [
-        { name: 'إذاعة القرآن الكريم - القاهرة', url: 'https://n0c.radiojar.com/8s5u5tpdtwzuv?rj-ttl=5&rj-tok=AAABnH_ttlsAQUFCJgo3O4jiqg' },
-        { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://n01.radiojar.com/8s5u5tpdtwzuv' },
-        { name: 'إذاعة نور القرآن', url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
+        { name: 'إذاعة القرآن الكريم - السعودية',        url: 'https://n01.radiojar.com/8s5u5tpdtwzuv' },
+        { name: 'إذاعة نور القرآن',                       url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
     ];
 
     let _audio = null;
@@ -648,7 +623,7 @@ function loadVisitorCount() {
         document.body.appendChild(_audio);
 
         document.getElementById('radioPlayBtn').onclick = togglePlay;
-        document.getElementById('radioVolume').oninput = function () { if (_audio) _audio.volume = parseFloat(this.value); };
+        document.getElementById('radioVolume').oninput = function() { if (_audio) _audio.volume = parseFloat(this.value); };
 
         renderStations();
     }
@@ -662,7 +637,7 @@ function loadVisitorCount() {
             </li>`).join('');
     }
 
-    window._radioSelectStation = function (idx) {
+    window._radioSelectStation = function(idx) {
         _activeIdx = idx;
         const s = STATIONS[idx];
         const nowEl = document.getElementById('radioNowPlaying');
@@ -676,7 +651,7 @@ function loadVisitorCount() {
             if (playPromise) {
                 playPromise.catch(() => {
                     // stream might need retry
-                    setTimeout(() => _audio.play().catch(() => { }), 1000);
+                    setTimeout(() => _audio.play().catch(() => {}), 1000);
                 });
             }
         }
@@ -690,7 +665,7 @@ function loadVisitorCount() {
         if (_activeIdx === -1) { window._radioSelectStation(0); return; }
         if (!_audio) return;
         if (_audio.paused) {
-            _audio.play().catch(() => { });
+            _audio.play().catch(() => {});
             _playing = true;
             const icon = document.getElementById('radioPlayIcon');
             if (icon) icon.className = 'bi bi-pause-fill';
