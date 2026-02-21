@@ -77,8 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== Ramadan Streak Tracker =====
 (function initRamadanStreak() {
     // Ramadan 2026: Feb 18 (Saudi) / Feb 19 (Egypt) – Mar 19/20
-    const RAMADAN_START = new Date('2026-02-18');
-    const RAMADAN_END = new Date('2026-03-20');
+    const storedDate = localStorage.getItem('ramadanStartDate');
+    const isConfigured = !!storedDate;
+    const RAMADAN_START_DATE = storedDate || '2026-02-18';
+    const RAMADAN_START = new Date(RAMADAN_START_DATE);
+
+    // Approximate End Date (30 days from start)
+    const RAMADAN_END = new Date(RAMADAN_START.getTime() + 29 * 86400000);
 
     function toDateStr(d) {
         return d.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -301,32 +306,51 @@ document.addEventListener('DOMContentLoaded', () => {
         const panel = document.createElement('div');
         panel.className = 'rstreak-panel';
         panel.id = 'rstreakPanel';
-        panel.innerHTML = `
-            <div class="rstreak-header">🔥 تتبع رمضان ${new Date().getFullYear()}</div>
-            <div class="rstreak-stats">
-                <div class="rstreak-stat">
-                    <div class="rstreak-stat-val">${streak}</div>
-                    <div class="rstreak-stat-lbl">الحالي 🔥</div>
+        let panelContent = '';
+        if (isConfigured) {
+            panelContent = `
+                <div class="rstreak-header">🔥 تتبع رمضان ${new Date().getFullYear()}</div>
+                <div class="rstreak-stats">
+                    <div class="rstreak-stat">
+                        <div class="rstreak-stat-val">${streak}</div>
+                        <div class="rstreak-stat-lbl">الحالي 🔥</div>
+                    </div>
+                    <div class="rstreak-stat">
+                        <div class="rstreak-stat-val">${best}</div>
+                        <div class="rstreak-stat-lbl">الأفضل ⭐</div>
+                    </div>
+                    <div class="rstreak-stat">
+                        <div class="rstreak-stat-val">${total}</div>
+                        <div class="rstreak-stat-lbl">إجمالي أيام</div>
+                    </div>
+                    <div class="rstreak-stat">
+                        <div class="rstreak-stat-val">${rDay}</div>
+                        <div class="rstreak-stat-lbl">يوم رمضان</div>
+                    </div>
                 </div>
-                <div class="rstreak-stat">
-                    <div class="rstreak-stat-val">${best}</div>
-                    <div class="rstreak-stat-lbl">الأفضل ⭐</div>
+                <div class="rstreak-cal-wrap">
+                    <div class="rstreak-cal-title">أيام رمضان الثلاثون</div>
+                    ${buildCalendar(visits)}
                 </div>
-                <div class="rstreak-stat">
-                    <div class="rstreak-stat-val">${total}</div>
-                    <div class="rstreak-stat-lbl">إجمالي أيام</div>
+                <div class="rstreak-msg">${msg}</div>
+            `;
+        } else {
+            panelContent = `
+                <div class="rstreak-header" style="background:#e65c00;">⚠️ إعداد مطلوب</div>
+                <div style="padding: 24px 16px; text-align: center; color: var(--text-color);">
+                    <i class="bi bi-calendar-x" style="font-size: 32px; color: #e65c00; margin-bottom: 12px; display: block;"></i>
+                    <h3 style="font-size: 16px; margin-bottom: 8px;">لم تقم بتحديد بداية رمضان</h3>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                        يرجى الذهاب إلى الإعدادات وتحديد لتتمكن من تتبع عبادتك بشكل صحيح.
+                    </p>
+                    <a href="settings.html" style="display: inline-block; background: var(--primary-color); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold;">
+                        الذهاب للإعدادات <i class="bi bi-gear-fill"></i>
+                    </a>
                 </div>
-                <div class="rstreak-stat">
-                    <div class="rstreak-stat-val">${rDay}</div>
-                    <div class="rstreak-stat-lbl">يوم رمضان</div>
-                </div>
-            </div>
-            <div class="rstreak-cal-wrap">
-                <div class="rstreak-cal-title">أيام رمضان الثلاثون</div>
-                ${buildCalendar(visits)}
-            </div>
-            <div class="rstreak-msg">${msg}</div>
-        `;
+            `;
+        }
+
+        panel.innerHTML = panelContent;
 
         document.body.appendChild(fab);
         document.body.appendChild(panel);
