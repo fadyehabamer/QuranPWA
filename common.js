@@ -20,7 +20,7 @@ function showModal(options) {
 
     // Set actions
     actions.innerHTML = '';
-
+    
     if (options.confirmText) {
         const confirmBtn = document.createElement('button');
         confirmBtn.className = 'modal-btn modal-btn-primary';
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
+    
     // Load visitor count
     loadVisitorCount();
 });
@@ -77,18 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== Ramadan Streak Tracker =====
 (function initRamadanStreak() {
     // Ramadan 2026: Feb 18 (Saudi) / Feb 19 (Egypt) – Mar 19/20
-    function getRamadanStart() {
-        const saved = localStorage.getItem('ramadanStartDate');
-        return saved ? new Date(saved) : new Date('2026-02-18');
-    }
-
-    function getRamadanEnd() {
-        const start = getRamadanStart();
-        // Ramadan is usually 29 or 30 days. Let's set end as start + 30 days
-        const end = new Date(start);
-        end.setDate(start.getDate() + 29);
-        return end;
-    }
+    const RAMADAN_START = new Date('2026-02-18');
+    const RAMADAN_END   = new Date('2026-03-20');
 
     function toDateStr(d) {
         return d.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -100,13 +90,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const todayStr = today();
         const raw = localStorage.getItem('ramadanVisits');
         const visits = raw ? JSON.parse(raw) : [];
-        let isNewVisit = false;
         if (!visits.includes(todayStr)) {
             visits.push(todayStr);
             localStorage.setItem('ramadanVisits', JSON.stringify(visits));
-            isNewVisit = true;
         }
-        return { visits, isNewVisit };
+        return visits;
     }
 
     function calcStreak(visits) {
@@ -138,25 +126,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function ramadanDay() {
         const now = new Date();
-        const start = getRamadanStart();
-        // Start date is day 1, so difference + 1
-        const diff = Math.floor((now - start) / 86400000) + 1;
+        const diff = Math.floor((now - RAMADAN_START) / 86400000) + 1;
         return Math.max(1, Math.min(diff, 30));
     }
 
     function inRamadan() {
         const now = new Date();
-        const start = getRamadanStart();
-        const end = getRamadanEnd();
-        return now >= start && now <= new Date(end.getTime() + 86400000);
+        return now >= RAMADAN_START && now <= new Date(RAMADAN_END.getTime() + 86400000);
     }
 
     function buildCalendar(visits) {
         const set = new Set(visits);
         let html = '<div class="rstreak-cal">';
-        const start = getRamadanStart();
         for (let i = 0; i < 30; i++) {
-            const d = new Date(start);
+            const d = new Date(RAMADAN_START);
             d.setDate(d.getDate() + i);
             const ds = toDateStr(d);
             const now = new Date();
@@ -290,11 +273,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function inject() {
         if (!inRamadan()) return;
 
-        const { visits, isNewVisit } = recordVisit();
+        const visits = recordVisit();
         const streak = calcStreak(visits);
-        const best = calcBest(visits);
-        const total = visits.length;
-        const rDay = ramadanDay();
+        const best   = calcBest(visits);
+        const total  = visits.length;
+        const rDay   = ramadanDay();
 
         const styleEl = document.createElement('style');
         styleEl.textContent = CSS;
@@ -347,12 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.body.appendChild(fab);
         document.body.appendChild(panel);
-
-        if (isNewVisit) {
-            setTimeout(() => {
-                if (!_open) toggleStreakPanel();
-            }, 800);
-        }
     }
 
     let _open = false;
@@ -480,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     starsRow.className = 'ramadan-stars';
     starsRow.innerHTML = '★✦★✦★'.split('').map(s => `<span class="ramadan-star">${s}</span>`).join('');
 
-    const leftCorner = makeCorner(lanterns[0], lanterns[1]);
+    const leftCorner  = makeCorner(lanterns[0], lanterns[1]);
     leftCorner.classList.add('ramadan-corner-left');
     const rightCorner = makeCorner(lanterns[2], lanterns[3]);
     rightCorner.classList.add('ramadan-corner-right');
@@ -604,9 +581,8 @@ function loadVisitorCount() {
     document.head.appendChild(style);
 
     const STATIONS = [
-        { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://n01.radiojar.com/8s5u5tpdtwzuv' },
-        { name: 'إذاعة نور القرآن', url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
-        { name: 'إذاعة القرآن الكريم من القاهرة', url: 'https://n0c.radiojar.com/8s5u5tpdtwzuv?rj-ttl=5&rj-tok=AAABnH_ttlsAQUFCJgo3O4jiqg' },
+        { name: 'إذاعة القرآن الكريم - السعودية',        url: 'https://n01.radiojar.com/8s5u5tpdtwzuv' },
+        { name: 'إذاعة نور القرآن',                       url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
     ];
 
     let _audio = null;
@@ -647,7 +623,7 @@ function loadVisitorCount() {
         document.body.appendChild(_audio);
 
         document.getElementById('radioPlayBtn').onclick = togglePlay;
-        document.getElementById('radioVolume').oninput = function () { if (_audio) _audio.volume = parseFloat(this.value); };
+        document.getElementById('radioVolume').oninput = function() { if (_audio) _audio.volume = parseFloat(this.value); };
 
         renderStations();
     }
@@ -661,7 +637,7 @@ function loadVisitorCount() {
             </li>`).join('');
     }
 
-    window._radioSelectStation = function (idx) {
+    window._radioSelectStation = function(idx) {
         _activeIdx = idx;
         const s = STATIONS[idx];
         const nowEl = document.getElementById('radioNowPlaying');
@@ -675,7 +651,7 @@ function loadVisitorCount() {
             if (playPromise) {
                 playPromise.catch(() => {
                     // stream might need retry
-                    setTimeout(() => _audio.play().catch(() => { }), 1000);
+                    setTimeout(() => _audio.play().catch(() => {}), 1000);
                 });
             }
         }
@@ -689,7 +665,7 @@ function loadVisitorCount() {
         if (_activeIdx === -1) { window._radioSelectStation(0); return; }
         if (!_audio) return;
         if (_audio.paused) {
-            _audio.play().catch(() => { });
+            _audio.play().catch(() => {});
             _playing = true;
             const icon = document.getElementById('radioPlayIcon');
             if (icon) icon.className = 'bi bi-pause-fill';
