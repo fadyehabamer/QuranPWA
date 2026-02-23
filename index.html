@@ -427,13 +427,27 @@
                 <div class="hero-icon" style="animation: float 4s ease-in-out infinite;">📖</div>
                 <h1 class="hero-title">القرآن الكريم</h1>
                 <p class="hero-subtitle">تطبيق القرآن الكريم الشامل</p>
-                <p class="hero-description">
-                    اقرأ القرآن الكريم، واستمع إليه، واحفظ موضع قراءتك. مع ميزات الأذكار والمسبحة الإلكترونية
-                </p>
+            </div>
+
+            <!-- Prayer Times Widget -->
+            <div class="prayer-widget glass-card animate-fade-up delay-1" id="homePrayerWidget">
+                <div class="pw-header">
+                    <div class="pw-title">
+                        <i class="bi bi-clock-fill"></i>
+                        <span>مواقيت الصلاة</span>
+                    </div>
+                    <div class="pw-location" id="pwLocation">جاري تحديد الموقع...</div>
+                </div>
+                <div class="pw-body" id="pwBody">
+                    <!-- Loaded via JS -->
+                </div>
+                <div class="pw-footer" id="pwNextPrayer">
+                    --:--
+                </div>
             </div>
 
             <!-- Resume Reading Section -->
-            <div class="resume-reading-section animate-fade-up delay-1" id="resumeReadingSection"
+            <div class="resume-reading-section animate-fade-up delay-2" id="resumeReadingSection"
                 style="display: none;">
                 <div class="resume-card glass-card" onclick="resumeReading()">
                     <div class="resume-icon">
@@ -450,17 +464,25 @@
             </div>
 
             <!-- Daily Verse Section -->
-            <div class="daily-verse-section animate-fade-up delay-2" id="dailyVerseSection" style="display: none;">
-                <div class="daily-verse-card glass-card">
-                    <div class="daily-verse-header">
-                        <i class="bi bi-star-fill"></i>
-                        <span>آية اليوم</span>
-                    </div>
+            <div class="daily-verse-section animate-fade-up delay-3" id="dailyVerseSection">
+                <div class="verse-card glass-card">
+                    <div class="verse-label">آية اليوم</div>
                     <div class="daily-verse-content" id="dailyVerseText">
                         جاري التحميل...
                     </div>
-                    <div class="daily-verse-info" id="dailyVerseInfo">
+                    <div class="verse-ref" id="dailyVerseInfo"></div>
+                </div>
+            </div>
 
+            <!-- Daily Hadith Section -->
+            <div class="hadith-section animate-fade-up delay-3">
+                <div class="hadith-card glass-card">
+                    <div class="hadith-label">
+                        <i class="bi bi-chat-quote-fill"></i>
+                        <span>حديث اليوم</span>
+                    </div>
+                    <div class="hadith-text" id="dailyHadith">
+                        جاري التحميل...
                     </div>
                 </div>
             </div>
@@ -496,6 +518,22 @@
                     <h3 class="feature-title">الإعدادات</h3>
                     <p class="feature-description">خصص تجربتك مع الوضع الليلي والألوان وحجم الخط</p>
                 </a>
+            </div>
+
+            <!-- Quick Tools -->
+            <div class="quick-tools animate-fade-up delay-3">
+                <button class="tool-btn" onclick="toggleTheme()">
+                    <i class="bi bi-circle-half"></i>
+                    <span class="tool-label">المظهر</span>
+                </button>
+                <button class="tool-btn" onclick="location.href='settings.html'">
+                    <i class="bi bi-type"></i>
+                    <span class="tool-label">الخط</span>
+                </button>
+                <button class="tool-btn" onclick="location.href='bookmarks.html'">
+                    <i class="bi bi-bookmark-fill"></i>
+                    <span class="tool-label">المحفوظات</span>
+                </button>
             </div>
 
             <!-- Stats Section -->

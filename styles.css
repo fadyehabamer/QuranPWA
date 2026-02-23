@@ -324,7 +324,7 @@ body {
     font-size: 16px;
     opacity: 0.8;
     max-width: 600px;
-    margin: 0 auto;
+    margin: 0 auto 30px;
     line-height: 1.8;
 }
 
@@ -390,30 +390,250 @@ body {
     font-weight: 600;
 }
 
-/* Daily Verse & Resume */
-.daily-verse-card,
+/* Daily Verse & Resume Reading */
+.verse-card,
 .resume-card {
-    padding: 30px;
+    padding: 36px 24px;
     margin-bottom: 32px;
     position: relative;
+    text-align: center;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
 }
 
-.daily-verse-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+.verse-card::before {
+    content: '"';
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 80px;
+    font-family: serif;
     color: var(--primary-color);
+    opacity: 0.1;
+}
+
+.verse-label {
+    font-size: 13px;
     font-weight: 700;
-    margin-bottom: 20px;
-    font-size: 18px;
+    color: var(--primary-color);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: block;
 }
 
 .daily-verse-content {
     font-family: 'Amiri', serif;
-    font-size: 28px;
-    line-height: 2;
-    margin-bottom: 20px;
+    font-size: clamp(24px, 5vw, 30px);
+    line-height: 1.8;
+    margin-bottom: 24px;
+    color: var(--text-color);
+    position: relative;
+    z-index: 1;
+}
+
+.verse-ref {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(var(--primary-rgb), 0.08);
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 20px;
+}
+
+.resume-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    text-align: right;
+    padding: 24px;
+    cursor: pointer;
+    border-right: 4px solid var(--primary-color);
+}
+
+.resume-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.resume-content {
+    flex: 1;
+}
+
+.resume-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 4px;
+}
+
+.resume-details {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.resume-arrow {
+    font-size: 20px;
+    color: var(--primary-color);
+    opacity: 0.5;
+}
+
+.resume-card:hover .resume-arrow {
+    transform: translateX(-5px);
+    opacity: 1;
+}
+
+/* Hadith Card */
+.hadith-card {
+    padding: 32px;
+    margin-bottom: 32px;
+    border-right: 4px solid var(--secondary-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.hadith-card::before {
+    content: '\F2AB';
+    /* bi-chat-quote */
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    font-size: 80px;
+    color: var(--secondary-color);
+    opacity: 0.05;
+}
+
+.hadith-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.hadith-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* Prayer Times Widget */
+.prayer-widget {
+    margin-bottom: 32px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pw-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pw-title {
+    font-weight: 700;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pw-location {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.pw-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 12px;
+}
+
+.pw-item {
+    text-align: center;
+    padding: 12px 8px;
+    border-radius: var(--radius-md);
+    background: rgba(var(--primary-rgb), 0.05);
+    transition: all var(--transition-fast);
+}
+
+.pw-item.active {
+    background: var(--primary-color);
+    color: white;
+    transform: scale(1.05);
+    box-shadow: var(--shadow);
+}
+
+.pw-name {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.pw-time {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.pw-footer {
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Quick Tools */
+.quick-tools {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.tool-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.tool-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-4px);
+}
+
+.tool-btn i {
+    font-size: 20px;
+}
+
+.tool-label {
+    font-size: 12px;
+    font-weight: 600;
 }
 
 /* Sidebar */
@@ -537,6 +757,31 @@ body {
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-heavy);
     z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 20px;
+    transition: all var(--transition-fast);
+    flex: 1;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.nav-label {
+    font-size: 11px;
+    font-weight: 600;
 }
 
 @media (max-width: 768px) {

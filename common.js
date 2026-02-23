@@ -268,6 +268,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         [data-theme="dark"] .rscal-day.missed { background: #2a2a2a; color: #555; }
         [data-theme="dark"] .rscal-day.future { border-color: #333; color: #444; }
+
+        @media (max-width: 768px) {
+            .rstreak-fab, .rstreak-panel { display: none !important; }
+        }
     `;
 
     function inject() {
@@ -577,6 +581,10 @@ function loadVisitorCount() {
         .radio-stations li.active .rdot { background: var(--primary-color, #1B5E20); animation: rdotPulse 1.2s ease infinite; }
         .radio-loading { text-align: center; padding: 16px; color: var(--text-secondary, #666); font-size: 13px; }
         @keyframes rdotPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:0.5} }
+
+        @media (max-width: 768px) {
+            .radio-fab, .radio-panel { display: none !important; }
+        }
     `;
     document.head.appendChild(style);
 
@@ -690,3 +698,163 @@ function loadVisitorCount() {
         inject();
     }
 })();
+// Theme & Settings Management
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('darkMode', 'false');
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('darkMode', 'true');
+    }
+}
+
+function initTheme() {
+    const darkMode = localStorage.getItem('darkMode') === 'true';
+    if (darkMode) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    // Apply primary color if set
+    const primaryColor = localStorage.getItem('primaryColor');
+    if (primaryColor) {
+        document.documentElement.style.setProperty('--primary-color', primaryColor);
+        // Also update RGB for transparency if needed
+    }
+}
+
+// Initialize on Every Page
+initTheme();
+
+// ===== New Landing Page Features =====
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Hadith of the Day
+    initHadith();
+
+    // 2. Home Prayer Widget
+    if (document.getElementById('homePrayerWidget')) {
+        initHomePrayerWidget();
+    }
+
+    // 3. Hero Search
+    const heroSearch = document.getElementById('heroSearch');
+    if (heroSearch) {
+        heroSearch.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = e.target.value.trim();
+                if (query) {
+                    location.href = `quran.html?search=${encodeURIComponent(query)}`;
+                }
+            }
+        });
+    }
+});
+
+// Prayer Utils (Extracted for reuse)
+function formatTime(time24) {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'م' : 'ص';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+}
+
+function calculateRemainingTime(prayerTime) {
+    const now = new Date();
+    const [hours, minutes] = prayerTime.split(':');
+    const prayerDate = new Date();
+    prayerDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    if (prayerDate <= now) prayerDate.setDate(prayerDate.getDate() + 1);
+    const diff = prayerDate - now;
+    const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
+    const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return hoursLeft > 0 ? `${hoursLeft} س و ${minutesLeft} د` : `${minutesLeft} د`;
+}
+
+function getNextPrayer(timings) {
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const prayers = [
+        { name: 'Fajr', label: 'الفجر', time: timings.Fajr },
+        { name: 'Dhuhr', label: 'الظهر', time: timings.Dhuhr },
+        { name: 'Asr', label: 'العصر', time: timings.Asr },
+        { name: 'Maghrib', label: 'المغرب', time: timings.Maghrib },
+        { name: 'Isha', label: 'العشاء', time: timings.Isha }
+    ];
+    for (const prayer of prayers) {
+        const [h, m] = prayer.time.split(':');
+        if ((parseInt(h) * 60 + parseInt(m)) > currentTime) return prayer;
+    }
+    return { ...prayers[0], tomorrow: true };
+}
+
+function initHadith() {
+    const HADITHS = [
+        "قال رسول الله صلى الله عليه وسلم: (خيركم من تعلم القرآن وعلمه)",
+        "قال رسول الله صلى الله عليه وسلم: (الدال على الخير كفاعله)",
+        "قال رسول الله صلى الله عليه وسلم: (إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى)",
+        "قال رسول الله صلى الله عليه وسلم: (اتق الله حيثما كنت، وأتبع السيئة الحسنة تمحها، وخالق الناس بخلق حسن)",
+        "قال رسول الله صلى الله عليه وسلم: (لا يؤمن أحدكم حتى يحب لأخيه ما يحب لنفسه)"
+    ];
+    const el = document.getElementById('dailyHadith');
+    if (el) {
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+        el.textContent = HADITHS[dayOfYear % HADITHS.length];
+    }
+}
+
+async function initHomePrayerWidget() {
+    const body = document.getElementById('pwBody');
+    const locationEl = document.getElementById('pwLocation');
+    const nextEl = document.getElementById('pwNextPrayer');
+
+    let location = localStorage.getItem('userLocation');
+    if (!location) {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+                localStorage.setItem('userLocation', JSON.stringify(loc));
+                updatePrayerUI(loc);
+            }, () => {
+                locationEl.textContent = 'الموقع غير محدد';
+                body.innerHTML = '<a href="prayer-times.html" style="font-size:12px;color:var(--primary-color);text-decoration:none">اضغط لتحديد موقعك</a>';
+            });
+        }
+    } else {
+        updatePrayerUI(JSON.parse(location));
+    }
+
+    async function updatePrayerUI(loc) {
+        try {
+            const prayerNames = { Fajr: 'الفجر', Dhuhr: 'الظهر', Asr: 'العصر', Maghrib: 'المغرب', Isha: 'العشاء' };
+            const today = new Date().toISOString().split('T')[0];
+            const response = await fetch(`https://api.aladhan.com/v1/timings/${today}?latitude=${loc.latitude}&longitude=${loc.longitude}&method=2`);
+            const data = await response.json();
+
+            if (data.code === 200) {
+                const timings = data.data.timings;
+                locationEl.textContent = localStorage.getItem('locationText') || 'موقعك المكتشف';
+
+                const next = getNextPrayer(timings);
+                const remaining = calculateRemainingTime(next.time);
+
+                let html = '';
+                Object.keys(prayerNames).forEach(key => {
+                    const isActive = next.name === key;
+                    html += `
+                        <div class="pw-item ${isActive ? 'active' : ''}">
+                            <div class="pw-name">${prayerNames[key]}</div>
+                            <div class="pw-time">${timings[key]}</div>
+                        </div>
+                    `;
+                });
+                body.innerHTML = html;
+                nextEl.innerHTML = `الصلاة القادمة: <strong>${next.label}</strong> خلال ${remaining}`;
+            }
+        } catch (e) {
+            body.innerHTML = '<p style="font-size:12px;opacity:0.5">فشل تحميل المواقيت</p>';
+        }
+    }
+}
