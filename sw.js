@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quran-app-v7';
+const CACHE_NAME = 'quran-app-v8';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -49,10 +49,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Skip caching for radio streams (mp3quran, radiojar, qurango)
-  if (url.hostname.includes('mp3quran.net') ||
+  // Skip caching for radio streams and any large audio playback
+  if (url.pathname.includes('radio') ||
+    url.pathname.includes('stream') ||
+    url.hostname.includes('mp3quran.net') ||
     url.hostname.includes('radiojar.com') ||
-    url.hostname.includes('qurango.net')) {
+    url.hostname.includes('qurango.net') ||
+    url.hostname.includes('radio.co')) {
     return;
   }
 

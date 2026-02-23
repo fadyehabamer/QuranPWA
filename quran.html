@@ -146,27 +146,90 @@
         .reader-header {
             background: var(--card-bg);
             border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
+            padding: 10px 12px;
+            margin-bottom: 16px;
             display: flex;
-            align-items: center;
-            gap: 15px;
+            flex-direction: column;
+            gap: 12px;
             border: 1px solid var(--border-color);
         }
 
+        .reader-header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .reader-header-actions {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+        }
+
+        @media (min-width: 769px) {
+            .reader-header {
+                flex-direction: row;
+                align-items: center;
+                padding: 12px 14px;
+            }
+
+            .reader-header-top {
+                width: auto;
+                flex: 1;
+            }
+
+            .reader-header-actions {
+                width: auto;
+                border-top: none;
+                padding-top: 0;
+            }
+        }
+
         .reader-header .icon-btn {
-            background: rgba(27, 94, 32, 0.1);
+            background: rgba(27, 94, 32, 0.05);
             border: none;
             color: var(--primary-color);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            padding: 6px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .reader-header .icon-btn-back {
+            background: rgba(27, 94, 32, 0.05);
+            border: none;
+            color: var(--primary-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 20px;
-            transition: all 0.2s;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .reader-header .icon-btn i {
+            font-size: 16px;
+        }
+
+        .reader-header .icon-btn span {
+            font-size: 9px;
+            font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+            opacity: 0.9;
         }
 
         .reader-header .icon-btn:hover {
@@ -176,19 +239,21 @@
 
         .reader-info {
             flex: 1;
+            min-width: 0;
         }
 
         .reader-info h2 {
-            margin: 0 0 5px 0;
+            margin: 0;
             color: var(--primary-color);
-            font-size: 20px;
+            font-size: 17px;
+            font-weight: 700;
         }
 
         .reader-info p {
             margin: 0;
             color: var(--text-color);
-            opacity: 0.7;
-            font-size: 14px;
+            opacity: 0.6;
+            font-size: 11px;
         }
 
         .surah-list {
@@ -569,20 +634,20 @@
 
         .audio-player-container {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(0, 0, 0, 0.08);
-            padding: 10px 14px;
-            z-index: 96;
+            bottom: 200px;
+            left: 20px;
+            width: 300px;
+            background: var(--card-bg, #fff);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+            border: 1px solid var(--border-color, #e8e8e8);
+            padding: 16px;
+            z-index: 1099;
             display: none;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
             direction: rtl;
+            animation: modalSlideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
         }
 
         [data-theme="dark"] .audio-player-container {
@@ -1056,25 +1121,31 @@
         <!-- Surah Reader View -->
         <div id="surahReaderView" class="surah-reader-view">
             <div class="reader-header">
-                <button class="icon-btn" onclick="showSurahList()">
-                    <i class="bi bi-arrow-right"></i>
-                </button>
-                <div class="reader-info">
-                    <h2 id="surahTitle"></h2>
-                    <p id="surahDescription"></p>
+                <div class="reader-header-top">
+                    <button class="icon-btn-back" onclick="showSurahList()">
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <div class="reader-info">
+                        <h2 id="surahTitle"></h2>
+                        <p id="surahDescription"></p>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div class="reader-header-actions">
                     <button class="icon-btn" id="tafsirBtn" onclick="toggleTafsir()" title="التفسير">
                         <i class="bi bi-book-half"></i>
+                        <span>التفسير</span>
                     </button>
                     <button class="icon-btn" id="reciterBtn" onclick="openReciterModal()" title="اختر القارئ">
                         <i class="bi bi-person-circle"></i>
+                        <span>القارئ</span>
                     </button>
-                    <button class="icon-btn" id="audioToggleBtn" onclick="toggleAudioPlayer()">
+                    <button class="icon-btn" id="playerToggleBtn" onclick="toggleAudioPlayer()" title="تشغيل الصوت">
                         <i class="bi bi-music-note-beamed"></i>
+                        <span>الصوت</span>
                     </button>
-                    <button class="icon-btn" id="bookmarkBtn" onclick="toggleBookmark()">
+                    <button class="icon-btn" id="headerBookmarkBtn" onclick="toggleBookmark()" title="حفظ العلامة">
                         <i class="bi bi-bookmark"></i>
+                        <span>حفظ</span>
                     </button>
                 </div>
             </div>
@@ -1087,11 +1158,6 @@
             </button>
             <button class="floating-nav-btn floating-nav-left" id="nextPageBtn" onclick="nextPage()">
                 <i class="bi bi-chevron-left"></i>
-            </button>
-
-            <!-- Audio Toggle Button -->
-            <button class="audio-toggle-btn" id="audioToggleBtn" onclick="toggleAudioPlayer()">
-                <i class="bi bi-volume-down"></i>
             </button>
 
             <!-- Audio Player -->
@@ -1446,7 +1512,7 @@
         function showSurahReader() {
             document.getElementById('surahListView').classList.remove('active');
             document.getElementById('surahReaderView').classList.add('active');
-            document.getElementById('audioPlayer').classList.add('active');
+            // Don't auto-show player anymore, let user toggle it
         }
 
         async function loadSurah(surahNumber) {
@@ -1466,11 +1532,6 @@
             removeAyahHighlight();
             updatePlayButton();
 
-            // Show audio toggle button
-            const toggleBtn = document.getElementById('audioToggleBtn');
-            if (toggleBtn) {
-                toggleBtn.style.display = 'flex';
-            }
 
             const content = document.getElementById('quranContent');
             content.innerHTML = '<div class="loading"><div class="spinner"></div><p>جار التحميل...</p></div>';
@@ -1667,7 +1728,7 @@
             if (!currentSurah) return;
 
             const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
-            const btn = document.getElementById('bookmarkBtn');
+            const btn = document.getElementById('headerBookmarkBtn');
 
             if (!btn) return; // Guard against null element
 
@@ -2200,12 +2261,13 @@
 
         function toggleAudioPlayer() {
             const player = document.getElementById('audioPlayer');
-            const toggleBtn = document.getElementById('audioToggleBtn');
+            const toggleBtn = document.getElementById('playerToggleBtn');
 
             if (player.classList.contains('active')) {
                 player.classList.remove('active');
                 if (toggleBtn) {
-                    toggleBtn.innerHTML = '<i class="bi bi-music-note-beamed"></i>';
+                    toggleBtn.querySelector('i').className = 'bi bi-music-note-beamed';
+                    toggleBtn.querySelector('span').textContent = 'الصوت';
                 }
                 // Pause audio if playing
                 if (isPlaying) {
@@ -2214,7 +2276,8 @@
             } else {
                 player.classList.add('active');
                 if (toggleBtn) {
-                    toggleBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+                    toggleBtn.querySelector('i').className = 'bi bi-x-lg';
+                    toggleBtn.querySelector('span').textContent = 'إغلاق';
                 }
             }
         }

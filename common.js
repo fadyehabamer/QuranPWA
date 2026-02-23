@@ -652,9 +652,9 @@ function loadVisitorCount() {
     document.head.appendChild(style);
 
     const STATIONS = [
-        { name: 'إذاعة القرآن الكريم - القاهرة', url: 'https://n05.radiojar.com/8s5u5tpdtwzuv' },
-        { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://live.mp3quran.net/saudi' },
-        { name: 'إذاعة نور القرآن', url: 'https://qurango.net/radio/tarabeel' },
+        { name: 'إذاعة القرآن الكريم - القاهرة', url: 'https://n02.radiojar.com/8s5u5tpdtwzuv' },
+        { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://qurango.net/radio/mix' },
+        { name: 'إذاعة نور القرآن', url: 'https://qurango.net/radio/noor' },
     ];
 
     let _audio = null;
