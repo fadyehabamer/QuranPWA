@@ -643,6 +643,9 @@ function loadVisitorCount() {
         .radio-stations li.active .rdot { background: var(--primary-color, #1B5E20); animation: rdotPulse 1.2s ease infinite; }
         .radio-loading { text-align: center; padding: 16px; color: var(--text-secondary, #666); font-size: 13px; }
         @keyframes rdotPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:0.5} }
+        @keyframes radio-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .radio-fab.loading i { display: inline-block; animation: radio-spin 2s linear infinite; }
+        .radio-play-btn.loading i { display: inline-block; animation: radio-spin 1s linear infinite; opacity: 0.7; }
 
 
     `;
@@ -692,6 +695,21 @@ function loadVisitorCount() {
         document.body.appendChild(fab);
         document.body.appendChild(panel);
         document.body.appendChild(_audio);
+
+        _audio.onwaiting = () => {
+            fab.classList.add('loading');
+            document.getElementById('radioPlayBtn')?.classList.add('loading');
+        };
+        _audio.onplaying = () => {
+            fab.classList.remove('loading');
+            document.getElementById('radioPlayBtn')?.classList.remove('loading');
+        };
+        _audio.onerror = () => {
+            fab.classList.remove('loading');
+            document.getElementById('radioPlayBtn')?.classList.remove('loading');
+            const nowEl = document.getElementById('radioNowPlaying');
+            if (nowEl) nowEl.innerHTML = '<span style="color:#f44336">خطأ في الاتصال بالمحطة</span>';
+        };
 
         document.getElementById('radioPlayBtn').onclick = togglePlay;
         document.getElementById('radioVolume').oninput = function () { if (_audio) _audio.volume = parseFloat(this.value); };

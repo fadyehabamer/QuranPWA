@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quran-app-v6';
+const CACHE_NAME = 'quran-app-v7';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -49,6 +49,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Skip caching for radio streams (mp3quran, radiojar, qurango)
+  if (url.hostname.includes('mp3quran.net') ||
+    url.hostname.includes('radiojar.com') ||
+    url.hostname.includes('qurango.net')) {
+    return;
+  }
+
   // Handle Quran API requests (including tafsir)
   if (url.hostname === 'api.alquran.cloud') {
     event.respondWith(
@@ -79,7 +86,7 @@ self.addEventListener('fetch', event => {
         if (response) {
           return response;
         }
-        
+
         // Try matching with .html extension for clean URLs
         const urlPath = url.pathname;
         if (!urlPath.endsWith('.html') && !urlPath.includes('.')) {
