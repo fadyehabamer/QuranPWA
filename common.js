@@ -20,7 +20,7 @@ function showModal(options) {
 
     // Set actions
     actions.innerHTML = '';
-    
+
     if (options.confirmText) {
         const confirmBtn = document.createElement('button');
         confirmBtn.className = 'modal-btn modal-btn-primary';
@@ -69,16 +69,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     // Load visitor count
     loadVisitorCount();
 });
 
 // ===== Ramadan Streak Tracker =====
 (function initRamadanStreak() {
-    // Ramadan 2026: Feb 18 (Saudi) / Feb 19 (Egypt) – Mar 19/20
-    const RAMADAN_START = new Date('2026-02-18');
-    const RAMADAN_END   = new Date('2026-03-20');
+    const savedStart = localStorage.getItem('ramadanStartDate') || '2026-02-18';
+    const RAMADAN_START = new Date(savedStart);
+    const RAMADAN_END = new Date(RAMADAN_START.getTime() + 30 * 86400000);
 
     function toDateStr(d) {
         return d.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -275,9 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const visits = recordVisit();
         const streak = calcStreak(visits);
-        const best   = calcBest(visits);
-        const total  = visits.length;
-        const rDay   = ramadanDay();
+        const best = calcBest(visits);
+        const total = visits.length;
+        const rDay = ramadanDay();
 
         const styleEl = document.createElement('style');
         styleEl.textContent = CSS;
@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     starsRow.className = 'ramadan-stars';
     starsRow.innerHTML = '★✦★✦★'.split('').map(s => `<span class="ramadan-star">${s}</span>`).join('');
 
-    const leftCorner  = makeCorner(lanterns[0], lanterns[1]);
+    const leftCorner = makeCorner(lanterns[0], lanterns[1]);
     leftCorner.classList.add('ramadan-corner-left');
     const rightCorner = makeCorner(lanterns[2], lanterns[3]);
     rightCorner.classList.add('ramadan-corner-right');
@@ -581,8 +581,8 @@ function loadVisitorCount() {
     document.head.appendChild(style);
 
     const STATIONS = [
-        { name: 'إذاعة القرآن الكريم - السعودية',        url: 'https://n01.radiojar.com/8s5u5tpdtwzuv' },
-        { name: 'إذاعة نور القرآن',                       url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
+        { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://n01.radiojar.com/8s5u5tpdtwzuv' },
+        { name: 'إذاعة نور القرآن', url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
     ];
 
     let _audio = null;
@@ -623,7 +623,7 @@ function loadVisitorCount() {
         document.body.appendChild(_audio);
 
         document.getElementById('radioPlayBtn').onclick = togglePlay;
-        document.getElementById('radioVolume').oninput = function() { if (_audio) _audio.volume = parseFloat(this.value); };
+        document.getElementById('radioVolume').oninput = function () { if (_audio) _audio.volume = parseFloat(this.value); };
 
         renderStations();
     }
@@ -637,7 +637,7 @@ function loadVisitorCount() {
             </li>`).join('');
     }
 
-    window._radioSelectStation = function(idx) {
+    window._radioSelectStation = function (idx) {
         _activeIdx = idx;
         const s = STATIONS[idx];
         const nowEl = document.getElementById('radioNowPlaying');
@@ -651,7 +651,7 @@ function loadVisitorCount() {
             if (playPromise) {
                 playPromise.catch(() => {
                     // stream might need retry
-                    setTimeout(() => _audio.play().catch(() => {}), 1000);
+                    setTimeout(() => _audio.play().catch(() => { }), 1000);
                 });
             }
         }
@@ -665,7 +665,7 @@ function loadVisitorCount() {
         if (_activeIdx === -1) { window._radioSelectStation(0); return; }
         if (!_audio) return;
         if (_audio.paused) {
-            _audio.play().catch(() => {});
+            _audio.play().catch(() => { });
             _playing = true;
             const icon = document.getElementById('radioPlayIcon');
             if (icon) icon.className = 'bi bi-pause-fill';
