@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .ramadan-corner {
             position: fixed;
             top: 0;
-            z-index: 9998;
+            z-index: 50;
             pointer-events: none;
             display: flex;
             align-items: flex-start;
@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
             display: flex;
             gap: 18px;
             pointer-events: none;
-            z-index: 9997;
+            z-index: 40;
         }
         .ramadan-star {
             font-size: 14px;
@@ -581,7 +581,8 @@ function loadVisitorCount() {
     document.head.appendChild(style);
 
     const STATIONS = [
-        { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://n01.radiojar.com/8s5u5tpdtwzuv' },
+        { name: 'إذاعة القرآن الكريم - القاهرة', url: 'https://n05.radiojar.com/8s5u5tpdtwzuv?rj-ttl=5&rj-tok=AAABnItaNF8Ast9L_3iEQzei5w' },
+        { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://live.mp3quran.net/saudi' },
         { name: 'إذاعة نور القرآن', url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
     ];
 
