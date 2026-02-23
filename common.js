@@ -305,9 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         .rstreak-btn:hover { opacity: 0.9; }
 
-        @media (max-width: 768px) {
-            .rstreak-fab, .rstreak-panel { display: none !important; }
-        }
+
     `;
 
     function inject() {
@@ -643,9 +641,7 @@ function loadVisitorCount() {
         .radio-loading { text-align: center; padding: 16px; color: var(--text-secondary, #666); font-size: 13px; }
         @keyframes rdotPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:0.5} }
 
-        @media (max-width: 768px) {
-            .radio-fab, .radio-panel { display: none !important; }
-        }
+
     `;
     document.head.appendChild(style);
 
