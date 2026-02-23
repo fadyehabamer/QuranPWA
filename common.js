@@ -76,9 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===== Ramadan Streak Tracker =====
 (function initRamadanStreak() {
-    const savedStart = localStorage.getItem('ramadanStartDate') || '2026-02-18';
-    const RAMADAN_START = new Date(savedStart);
-    const RAMADAN_END = new Date(RAMADAN_START.getTime() + 30 * 86400000);
+    const savedStart = localStorage.getItem('ramadanStartDate');
+    const RAMADAN_START = savedStart ? new Date(savedStart) : null;
+    const RAMADAN_END = RAMADAN_START ? new Date(RAMADAN_START.getTime() + 30 * 86400000) : null;
 
     function toDateStr(d) {
         return d.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -125,17 +125,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function ramadanDay() {
+        if (!RAMADAN_START) return 1;
         const now = new Date();
         const diff = Math.floor((now - RAMADAN_START) / 86400000) + 1;
         return Math.max(1, Math.min(diff, 30));
     }
 
     function inRamadan() {
+        if (!RAMADAN_START) return true; // Always show if not configured
         const now = new Date();
         return now >= RAMADAN_START && now <= new Date(RAMADAN_END.getTime() + 86400000);
     }
 
     function buildCalendar(visits) {
+        if (!RAMADAN_START) return '';
         const set = new Set(visits);
         let html = '<div class="rstreak-cal">';
         for (let i = 0; i < 30; i++) {
@@ -269,6 +272,39 @@ document.addEventListener('DOMContentLoaded', () => {
         [data-theme="dark"] .rscal-day.missed { background: #2a2a2a; color: #555; }
         [data-theme="dark"] .rscal-day.future { border-color: #333; color: #444; }
 
+        .rstreak-setup {
+            padding: 20px 16px;
+            text-align: center;
+        }
+        .rstreak-setup-desc {
+            font-size: 13px;
+            color: var(--text-secondary, #666);
+            margin-bottom: 16px;
+        }
+        .rstreak-select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color, #e8e8e8);
+            background: var(--card-bg, #fff);
+            color: var(--text-color, #333);
+            font-family: inherit;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .rstreak-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #e65c00, #f9d423);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .rstreak-btn:hover { opacity: 0.9; }
+
         @media (max-width: 768px) {
             .rstreak-fab, .rstreak-panel { display: none !important; }
         }
@@ -305,32 +341,57 @@ document.addEventListener('DOMContentLoaded', () => {
         const panel = document.createElement('div');
         panel.className = 'rstreak-panel';
         panel.id = 'rstreakPanel';
-        panel.innerHTML = `
-            <div class="rstreak-header">🔥 تتبع رمضان ${new Date().getFullYear()}</div>
-            <div class="rstreak-stats">
-                <div class="rstreak-stat">
-                    <div class="rstreak-stat-val">${streak}</div>
-                    <div class="rstreak-stat-lbl">الحالي 🔥</div>
+
+        if (!RAMADAN_START) {
+            panel.innerHTML = `
+                <div class="rstreak-header">🔥 إعداد تتبع رمضان</div>
+                <div class="rstreak-setup">
+                    <div class="rstreak-setup-desc">اختر بداية شهر رمضان المبارك لضبط عداد التتبع</div>
+                    <select class="rstreak-select" id="rstreakDateSelect">
+                        <option value="2026-02-18">18 فبراير (السعودية ودول أخرى)</option>
+                        <option value="2026-02-19">19 فبراير (مصر ودول أخرى)</option>
+                    </select>
+                    <button class="rstreak-btn" id="rstreakSaveBtn">حفظ وضبط</button>
                 </div>
-                <div class="rstreak-stat">
-                    <div class="rstreak-stat-val">${best}</div>
-                    <div class="rstreak-stat-lbl">الأفضل ⭐</div>
+            `;
+            setTimeout(() => {
+                const saveBtn = document.getElementById('rstreakSaveBtn');
+                if (saveBtn) {
+                    saveBtn.onclick = () => {
+                        const select = document.getElementById('rstreakDateSelect');
+                        localStorage.setItem('ramadanStartDate', select.value);
+                        location.reload();
+                    };
+                }
+            }, 0);
+        } else {
+            panel.innerHTML = `
+                <div class="rstreak-header">🔥 تتبع رمضان ${new Date().getFullYear()}</div>
+                <div class="rstreak-stats">
+                    <div class="rstreak-stat">
+                        <div class="rstreak-stat-val">${streak}</div>
+                        <div class="rstreak-stat-lbl">الحالي 🔥</div>
+                    </div>
+                    <div class="rstreak-stat">
+                        <div class="rstreak-stat-val">${best}</div>
+                        <div class="rstreak-stat-lbl">الأفضل ⭐</div>
+                    </div>
+                    <div class="rstreak-stat">
+                        <div class="rstreak-stat-val">${total}</div>
+                        <div class="rstreak-stat-lbl">إجمالي أيام</div>
+                    </div>
+                    <div class="rstreak-stat">
+                        <div class="rstreak-stat-val">${rDay}</div>
+                        <div class="rstreak-stat-lbl">يوم رمضان</div>
+                    </div>
                 </div>
-                <div class="rstreak-stat">
-                    <div class="rstreak-stat-val">${total}</div>
-                    <div class="rstreak-stat-lbl">إجمالي أيام</div>
+                <div class="rstreak-cal-wrap">
+                    <div class="rstreak-cal-title">أيام رمضان الثلاثون</div>
+                    ${buildCalendar(visits)}
                 </div>
-                <div class="rstreak-stat">
-                    <div class="rstreak-stat-val">${rDay}</div>
-                    <div class="rstreak-stat-lbl">يوم رمضان</div>
-                </div>
-            </div>
-            <div class="rstreak-cal-wrap">
-                <div class="rstreak-cal-title">أيام رمضان الثلاثون</div>
-                ${buildCalendar(visits)}
-            </div>
-            <div class="rstreak-msg">${msg}</div>
-        `;
+                <div class="rstreak-msg">${msg}</div>
+            `;
+        }
 
         document.body.appendChild(fab);
         document.body.appendChild(panel);
@@ -744,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') {
                 const query = e.target.value.trim();
                 if (query) {
-                    location.href = `quran.html?search=${encodeURIComponent(query)}`;
+                    location.href = `quran?search=${encodeURIComponent(query)}`;
                 }
             }
         });
@@ -819,7 +880,7 @@ async function initHomePrayerWidget() {
                 updatePrayerUI(loc);
             }, () => {
                 locationEl.textContent = 'الموقع غير محدد';
-                body.innerHTML = '<a href="prayer-times.html" style="font-size:12px;color:var(--primary-color);text-decoration:none">اضغط لتحديد موقعك</a>';
+                body.innerHTML = '<a href="prayer-times" style="font-size:12px;color:var(--primary-color);text-decoration:none">اضغط لتحديد موقعك</a>';
             });
         }
     } else {

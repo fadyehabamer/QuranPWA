@@ -10,7 +10,9 @@
     <meta name="theme-color" content="#1B5E20">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -530,28 +532,28 @@
             <a href="/" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الرئيسية</div>
             </a>
-            <a href="quran.html" class="sidebar-nav-item">
+            <a href="quran" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">القرآن الكريم</div>
             </a>
-            <a href="bookmarks.html" class="sidebar-nav-item">
+            <a href="bookmarks" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">المواضع المحفوظة</div>
             </a>
-            <a href="azkar.html" class="sidebar-nav-item">
+            <a href="azkar" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الأذكار</div>
             </a>
-            <a href="masbaha.html" class="sidebar-nav-item active">
+            <a href="masbaha" class="sidebar-nav-item active">
                 <div class="sidebar-nav-label">المسبحة</div>
             </a>
-            <a href="sunan.html" class="sidebar-nav-item">
+            <a href="sunan" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">سنن النبي</div>
             </a>
-            <a href="prayer-times.html" class="sidebar-nav-item">
+            <a href="prayer-times" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">مواقيت الصلاة</div>
             </a>
             <a href="/bio" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">عن المطور</div>
             </a>
-            <a href="settings.html" class="sidebar-nav-item">
+            <a href="settings" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الإعدادات</div>
             </a>
         </nav>
@@ -571,7 +573,7 @@
                 <i class="bi bi-people-fill"></i>
                 <span class="count" id="visitorCount">-</span>
             </div>
-            <button class="settings-btn" onclick="window.location.href='settings.html'">
+            <button class="settings-btn" onclick="window.location.href='settings'">
                 <i class="bi bi-gear-fill"></i>
             </button>
         </div>
@@ -590,7 +592,8 @@
                     <div class="dhikr-chip" onclick="selectDhikr('subhan_allah', this)">سبحان الله (33)</div>
                     <div class="dhikr-chip" onclick="selectDhikr('alhamdulillah', this)">الحمد لله (33)</div>
                     <div class="dhikr-chip" onclick="selectDhikr('allahu_akbar', this)">الله أكبر (33)</div>
-                    <div class="dhikr-chip" onclick="selectDhikr('la_ilaha_illa_allah', this)">لا إله إلا الله (100)</div>
+                    <div class="dhikr-chip" onclick="selectDhikr('la_ilaha_illa_allah', this)">لا إله إلا الله (100)
+                    </div>
                     <div class="dhikr-chip" onclick="selectDhikr('astaghfirullah', this)">أستغفر الله (100)</div>
                     <div class="dhikr-chip" onclick="selectDhikr('salat_nabi', this)">صلى على النبي (10)</div>
                     <div class="dhikr-chip active" onclick="selectDhikr('custom', this)">مخصص</div>
@@ -650,7 +653,8 @@
             <div class="history">
                 <div class="history-title">
                     سجل التسبيح
-                    <button class="clear-all-btn" id="clearHistoryBtn" onclick="clearHistory()" style="display: none;">مسح الكل</button>
+                    <button class="clear-all-btn" id="clearHistoryBtn" onclick="clearHistory()"
+                        style="display: none;">مسح الكل</button>
                 </div>
                 <div class="history-list" id="historyList"></div>
             </div>
@@ -663,23 +667,23 @@
             <i class="bi bi-house-fill nav-icon"></i>
             <span class="nav-label">الرئيسية</span>
         </a>
-        <a href="quran.html" class="nav-item">
+        <a href="quran" class="nav-item">
             <i class="bi bi-book-fill nav-icon"></i>
             <span class="nav-label">القرآن</span>
         </a>
-        <a href="azkar.html" class="nav-item">
+        <a href="azkar" class="nav-item">
             <i class="bi bi-moon-stars-fill nav-icon"></i>
             <span class="nav-label">الأذكار</span>
         </a>
-        <a href="masbaha.html" class="nav-item active">
+        <a href="masbaha" class="nav-item active">
             <i class="bi bi-circle-fill nav-icon"></i>
             <span class="nav-label">المسبحة</span>
         </a>
-        <a href="prayer-times.html" class="nav-item">
+        <a href="prayer-times" class="nav-item">
             <i class="bi bi-clock-fill nav-icon"></i>
             <span class="nav-label">الصلاة</span>
         </a>
-        <a href="settings.html" class="nav-item">
+        <a href="settings" class="nav-item">
             <i class="bi bi-gear-fill nav-icon"></i>
             <span class="nav-label">الإعدادات</span>
         </a>
@@ -699,326 +703,326 @@
 
     <script src="common.js"></script>
     <script>
-    let count = 0;
-    let target = 0;
-    let soundEnabled = true;
-    let selectedSound = 'beep';
-    let vibrationEnabled = true;
-    let lifetimeCount = 0;
-    let history = [];
-    let audioContext = null;
+        let count = 0;
+        let target = 0;
+        let soundEnabled = true;
+        let selectedSound = 'beep';
+        let vibrationEnabled = true;
+        let lifetimeCount = 0;
+        let history = [];
+        let audioContext = null;
 
-    const circle = document.getElementById('progressCircle');
-    
-    function updateCircumference() {
-        const radius = circle.r.baseVal.value;
-        const circumference = radius * 2 * Math.PI;
-        circle.style.strokeDasharray = `${circumference} ${circumference}`;
-        circle.style.strokeDashoffset = circumference;
-        return circumference;
-    }
-    
-    let circumference = updateCircumference();
+        const circle = document.getElementById('progressCircle');
 
-    function initAudio() {
-    if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    }
+        function updateCircumference() {
+            const radius = circle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = circumference;
+            return circumference;
+        }
 
-    function playClickSound() {
-    if (!soundEnabled) return;
+        let circumference = updateCircumference();
 
-    initAudio();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+        function playClickSound() {
+            if (!soundEnabled) return;
 
-    if (selectedSound === 'beep') {
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
-    } else if (selectedSound === 'click') {
-    oscillator.frequency.value = 1200;
-    oscillator.type = 'square';
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.05);
-    } else if (selectedSound === 'water') {
-    oscillator.frequency.value = 600;
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
-    oscillator.frequency.linearRampToValueAtTime(300, audioContext.currentTime + 0.2);
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.2);
-    }
-    }
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
 
-    function playSuccessSound() {
-    if (!soundEnabled) return;
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
 
-    initAudio();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+            if (selectedSound === 'beep') {
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } else if (selectedSound === 'click') {
+                oscillator.frequency.value = 1200;
+                oscillator.type = 'square';
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.05);
+            } else if (selectedSound === 'water') {
+                oscillator.frequency.value = 600;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+                oscillator.frequency.linearRampToValueAtTime(300, audioContext.currentTime + 0.2);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            }
+        }
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+        function playSuccessSound() {
+            if (!soundEnabled) return;
 
-    oscillator.frequency.value = 600;
-    oscillator.type = 'sine';
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
 
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
 
-    oscillator.start(audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.2);
-    oscillator.stop(audioContext.currentTime + 0.5);
-    }
+            oscillator.frequency.value = 600;
+            oscillator.type = 'sine';
 
-    function updateDisplay() {
-    document.getElementById('counterValue').textContent = count;
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
 
-    if (target > 0) {
-    const progress = Math.min(count / target, 1);
-    const offset = circumference - (progress * circumference);
-    circle.style.strokeDashoffset = offset;
-    document.getElementById('targetDisplay').textContent = `الهدف: ${count} / ${target}`;
-    } else {
-    circle.style.strokeDashoffset = circumference;
-    document.getElementById('targetDisplay').textContent = 'الهدف: غير محدد';
-    }
-    }
+            oscillator.start(audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.2);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
 
-    function increment() {
-    count++;
-    lifetimeCount++;
-    updateDisplay();
-    playClickSound();
+        function updateDisplay() {
+            document.getElementById('counterValue').textContent = count;
 
-    // Ripple effect
-    const btn = document.getElementById('tapButton');
-    btn.classList.remove('ripple');
-    void btn.offsetWidth; // Trigger reflow
-    btn.classList.add('ripple');
+            if (target > 0) {
+                const progress = Math.min(count / target, 1);
+                const offset = circumference - (progress * circumference);
+                circle.style.strokeDashoffset = offset;
+                document.getElementById('targetDisplay').textContent = `الهدف: ${count} / ${target}`;
+            } else {
+                circle.style.strokeDashoffset = circumference;
+                document.getElementById('targetDisplay').textContent = 'الهدف: غير محدد';
+            }
+        }
 
-    triggerVibration();
-    saveLifetimeCount();
+        function increment() {
+            count++;
+            lifetimeCount++;
+            updateDisplay();
+            playClickSound();
 
-    if (target > 0 && count === target) {
-    playSuccessSound();
-    showModal({
-    type: 'success',
-    icon: '',
-    title: 'بارك الله فيك',
-    message: `أتممت ${target} تسبيحة!\nهل تريد البدء من جديد؟`,
-    confirmText: 'نعم',
-    cancelText: 'لا',
-    onConfirm: () => {
-    saveCount();
-    reset();
-    }
-    });
-    }
-    }
+            // Ripple effect
+            const btn = document.getElementById('tapButton');
+            btn.classList.remove('ripple');
+            void btn.offsetWidth; // Trigger reflow
+            btn.classList.add('ripple');
 
-    function reset() {
-    showModal({
-    type: 'warning',
-    icon: '⚠',
-    title: 'تأكيد',
-    message: 'هل تريد إعادة تعيين العداد؟',
-    confirmText: 'نعم',
-    cancelText: 'لا',
-    onConfirm: () => {
-    count = 0;
-    updateDisplay();
-    }
-    });
-    }
+            triggerVibration();
+            saveLifetimeCount();
 
-    function setTarget(value) {
-    target = value;
-    updateDisplay();
+            if (target > 0 && count === target) {
+                playSuccessSound();
+                showModal({
+                    type: 'success',
+                    icon: '',
+                    title: 'بارك الله فيك',
+                    message: `أتممت ${target} تسبيحة!\nهل تريد البدء من جديد؟`,
+                    confirmText: 'نعم',
+                    cancelText: 'لا',
+                    onConfirm: () => {
+                        saveCount();
+                        reset();
+                    }
+                });
+            }
+        }
 
-    // Update active preset button
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-    if (parseInt(btn.textContent) === value) {
-    btn.classList.add('active');
-    } else {
-    btn.classList.remove('active');
-    }
-    });
-    }
+        function reset() {
+            showModal({
+                type: 'warning',
+                icon: '⚠',
+                title: 'تأكيد',
+                message: 'هل تريد إعادة تعيين العداد؟',
+                confirmText: 'نعم',
+                cancelText: 'لا',
+                onConfirm: () => {
+                    count = 0;
+                    updateDisplay();
+                }
+            });
+        }
 
-    function setCustomTarget() {
-    const input = document.getElementById('customTargetInput');
-    const value = parseInt(input.value);
+        function setTarget(value) {
+            target = value;
+            updateDisplay();
 
-    if (value && value > 0) {
-    target = value;
-    updateDisplay();
-    input.value = '';
+            // Update active preset button
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                if (parseInt(btn.textContent) === value) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
 
-    // Remove active class from preset buttons
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.classList.remove('active');
-    });
-    }
-    }
+        function setCustomTarget() {
+            const input = document.getElementById('customTargetInput');
+            const value = parseInt(input.value);
 
-    function toggleSoundMenu() {
-    const selector = document.getElementById('soundSelector');
-    if (selector.style.display === 'block') {
-    selector.style.display = 'none';
-    } else {
-    selector.style.display = 'block';
-    // Ensure sound is enabled when opening menu
-    if (!soundEnabled) {
-    toggleSound();
-    }
-    }
-    }
+            if (value && value > 0) {
+                target = value;
+                updateDisplay();
+                input.value = '';
 
-    function toggleSound() {
-    soundEnabled = !soundEnabled;
-    const toggle = document.getElementById('soundToggle');
-    const icon = document.getElementById('soundIcon');
+                // Remove active class from preset buttons
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+            }
+        }
 
-    if (soundEnabled) {
-    toggle.classList.add('active');
-    icon.textContent = '🔊';
-    } else {
-    toggle.classList.remove('active');
-    icon.textContent = '🔇';
-    }
-    localStorage.setItem('masbahaSound', soundEnabled);
-    }
+        function toggleSoundMenu() {
+            const selector = document.getElementById('soundSelector');
+            if (selector.style.display === 'block') {
+                selector.style.display = 'none';
+            } else {
+                selector.style.display = 'block';
+                // Ensure sound is enabled when opening menu
+                if (!soundEnabled) {
+                    toggleSound();
+                }
+            }
+        }
 
-    function changeSound(value) {
-    selectedSound = value;
-    localStorage.setItem('masbahaSoundType', value);
-    playClickSound();
-    // Hide selector after selection
-    setTimeout(() => {
-    document.getElementById('soundSelector').style.display = 'none';
-    }, 200);
-    }
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const toggle = document.getElementById('soundToggle');
+            const icon = document.getElementById('soundIcon');
 
-    function toggleVibration() {
-    vibrationEnabled = !vibrationEnabled;
-    const toggle = document.getElementById('vibrationToggle');
+            if (soundEnabled) {
+                toggle.classList.add('active');
+                icon.textContent = '🔊';
+            } else {
+                toggle.classList.remove('active');
+                icon.textContent = '🔇';
+            }
+            localStorage.setItem('masbahaSound', soundEnabled);
+        }
 
-    if (vibrationEnabled) {
-    toggle.classList.add('active');
-    } else {
-    toggle.classList.remove('active');
-    }
+        function changeSound(value) {
+            selectedSound = value;
+            localStorage.setItem('masbahaSoundType', value);
+            playClickSound();
+            // Hide selector after selection
+            setTimeout(() => {
+                document.getElementById('soundSelector').style.display = 'none';
+            }, 200);
+        }
 
-    localStorage.setItem('masbahaVibration', vibrationEnabled);
-    }
+        function toggleVibration() {
+            vibrationEnabled = !vibrationEnabled;
+            const toggle = document.getElementById('vibrationToggle');
 
-    function triggerVibration() {
-    if (vibrationEnabled && navigator.vibrate) {
-    navigator.vibrate(30);
-    }
-    }
+            if (vibrationEnabled) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
 
-    function saveLifetimeCount() {
-    localStorage.setItem('masbahaLifetime', lifetimeCount);
-    document.querySelector('#lifetimeCounter span').textContent = `مجموع التسبيحات: ${lifetimeCount}`;
-    }
+            localStorage.setItem('masbahaVibration', vibrationEnabled);
+        }
 
-    function selectDhikr(value, element) {
-    const dhikrTargets = {
-    'subhan_allah': 33,
-    'alhamdulillah': 33,
-    'allahu_akbar': 33,
-    'la_ilaha_illa_allah': 100,
-    'astaghfirullah': 100,
-    'salat_nabi': 10
-    };
+        function triggerVibration() {
+            if (vibrationEnabled && navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
 
-    // Update active chip
-    if (element) {
-    document.querySelectorAll('.dhikr-chip').forEach(chip => chip.classList.remove('active'));
-    element.classList.add('active');
-    }
+        function saveLifetimeCount() {
+            localStorage.setItem('masbahaLifetime', lifetimeCount);
+            document.querySelector('#lifetimeCounter span').textContent = `مجموع التسبيحات: ${lifetimeCount}`;
+        }
 
-    if (value === 'custom') {
-    // Keep current target or reset? Let's keep current for now or set to 0
-    // target = 0;
-    } else if (dhikrTargets[value]) {
-    setTarget(dhikrTargets[value]);
-    count = 0; // Reset count when changing dhikr? Usually yes.
-    }
-    updateDisplay();
-    }
+        function selectDhikr(value, element) {
+            const dhikrTargets = {
+                'subhan_allah': 33,
+                'alhamdulillah': 33,
+                'allahu_akbar': 33,
+                'la_ilaha_illa_allah': 100,
+                'astaghfirullah': 100,
+                'salat_nabi': 10
+            };
 
-    function saveCount() {
-    if (count === 0) {
-    showModal({
-    type: 'info',
-    icon: 'ℹ',
-    title: 'تنبيه',
-    message: 'العداد فارغ، لا يوجد شيء للحفظ'
-    });
-    return;
-    }
+            // Update active chip
+            if (element) {
+                document.querySelectorAll('.dhikr-chip').forEach(chip => chip.classList.remove('active'));
+                element.classList.add('active');
+            }
 
-    const now = new Date();
-    const timeString = now.toLocaleString('ar-EG', {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-    });
+            if (value === 'custom') {
+                // Keep current target or reset? Let's keep current for now or set to 0
+                // target = 0;
+            } else if (dhikrTargets[value]) {
+                setTarget(dhikrTargets[value]);
+                count = 0; // Reset count when changing dhikr? Usually yes.
+            }
+            updateDisplay();
+        }
 
-    history.unshift({
-    count: count,
-    target: target,
-    time: timeString,
-    timestamp: now.getTime()
-    });
+        function saveCount() {
+            if (count === 0) {
+                showModal({
+                    type: 'info',
+                    icon: 'ℹ',
+                    title: 'تنبيه',
+                    message: 'العداد فارغ، لا يوجد شيء للحفظ'
+                });
+                return;
+            }
 
-    // Keep only last 10 entries
-    if (history.length > 10) {
-    history = history.slice(0, 10);
-    }
+            const now = new Date();
+            const timeString = now.toLocaleString('ar-EG', {
+                hour: '2-digit',
+                minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
 
-    localStorage.setItem('masbahaHistory', JSON.stringify(history));
-    renderHistory();
+            history.unshift({
+                count: count,
+                target: target,
+                time: timeString,
+                timestamp: now.getTime()
+            });
 
-    showModal({
-    type: 'success',
-    icon: '',
-    title: 'تم الحفظ',
-    message: `تم حفظ ${count} تسبيحة في السجل`
-    });
-    }
+            // Keep only last 10 entries
+            if (history.length > 10) {
+                history = history.slice(0, 10);
+            }
 
-    function renderHistory() {
-    const list = document.getElementById('historyList');
-    const clearBtn = document.getElementById('clearHistoryBtn');
+            localStorage.setItem('masbahaHistory', JSON.stringify(history));
+            renderHistory();
 
-    if (history.length === 0) {
-    list.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">لا يوجد سجل بعد</div>';
-    if (clearBtn) clearBtn.style.display = 'none';
-    return;
-    }
+            showModal({
+                type: 'success',
+                icon: '',
+                title: 'تم الحفظ',
+                message: `تم حفظ ${count} تسبيحة في السجل`
+            });
+        }
 
-    if (clearBtn) clearBtn.style.display = 'block';
-    let html = '';
-    history.forEach((item, index) => {
-    const targetText = item.target > 0 ? ` / ${item.target}` : '';
-    html += `
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            const clearBtn = document.getElementById('clearHistoryBtn');
+
+            if (history.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">لا يوجد سجل بعد</div>';
+                if (clearBtn) clearBtn.style.display = 'none';
+                return;
+            }
+
+            if (clearBtn) clearBtn.style.display = 'block';
+            let html = '';
+            history.forEach((item, index) => {
+                const targetText = item.target > 0 ? ` / ${item.target}` : '';
+                html += `
     <div class="history-item">
         <div class="history-info">
             <div class="history-icon">
@@ -1036,157 +1040,159 @@
         </div>
     </div>
     `;
-    });
+            });
 
-    list.innerHTML = html;
-    }
+            list.innerHTML = html;
+        }
 
-    function deleteHistoryItem(index) {
-    showModal({
-    type: 'warning',
-    icon: '🗑',
-    title: 'حذف',
-    message: 'هل أنت متأكد من حذف هذا السجل؟',
-    confirmText: 'حذف',
-    cancelText: 'إلغاء',
-    onConfirm: () => {
-    history.splice(index, 1);
-    localStorage.setItem('masbahaHistory', JSON.stringify(history));
-    renderHistory();
-    }
-    });
-    }
+        function deleteHistoryItem(index) {
+            showModal({
+                type: 'warning',
+                icon: '🗑',
+                title: 'حذف',
+                message: 'هل أنت متأكد من حذف هذا السجل؟',
+                confirmText: 'حذف',
+                cancelText: 'إلغاء',
+                onConfirm: () => {
+                    history.splice(index, 1);
+                    localStorage.setItem('masbahaHistory', JSON.stringify(history));
+                    renderHistory();
+                }
+            });
+        }
 
-    function clearHistory() {
-    showModal({
-    type: 'warning',
-    icon: '🗑',
-    title: 'مسح الكل',
-    message: 'هل أنت متأكد من مسح كل السجل؟',
-    confirmText: 'مسح',
-    cancelText: 'إلغاء',
-    onConfirm: () => {
-    history = [];
-    localStorage.setItem('masbahaHistory', JSON.stringify(history));
-    renderHistory();
-    }
-    });
-    }
+        function clearHistory() {
+            showModal({
+                type: 'warning',
+                icon: '🗑',
+                title: 'مسح الكل',
+                message: 'هل أنت متأكد من مسح كل السجل؟',
+                confirmText: 'مسح',
+                cancelText: 'إلغاء',
+                onConfirm: () => {
+                    history = [];
+                    localStorage.setItem('masbahaHistory', JSON.stringify(history));
+                    renderHistory();
+                }
+            });
+        }
 
-    function loadData() {
-    // Load sound preference
-    const savedSound = localStorage.getItem('masbahaSound');
-    if (savedSound !== null) {
-    soundEnabled = savedSound === 'true';
-    const toggle = document.getElementById('soundToggle');
-    const icon = document.getElementById('soundIcon');
-    if (soundEnabled) {
-    toggle.classList.add('active');
-    icon.textContent = '🔊';
-    } else {
-    toggle.classList.remove('active');
-    icon.textContent = '🔇';
-    }
-    }
+        function loadData() {
+            // Load sound preference
+            const savedSound = localStorage.getItem('masbahaSound');
+            if (savedSound !== null) {
+                soundEnabled = savedSound === 'true';
+                const toggle = document.getElementById('soundToggle');
+                const icon = document.getElementById('soundIcon');
+                if (soundEnabled) {
+                    toggle.classList.add('active');
+                    icon.textContent = '🔊';
+                } else {
+                    toggle.classList.remove('active');
+                    icon.textContent = '🔇';
+                }
+            }
 
-    // Load sound type
-    const savedSoundType = localStorage.getItem('masbahaSoundType');
-    if (savedSoundType) {
-    selectedSound = savedSoundType;
-    const selector = document.querySelector('.sound-select');
-    if (selector) selector.value = selectedSound;
-    }
+            // Load sound type
+            const savedSoundType = localStorage.getItem('masbahaSoundType');
+            if (savedSoundType) {
+                selectedSound = savedSoundType;
+                const selector = document.querySelector('.sound-select');
+                if (selector) selector.value = selectedSound;
+            }
 
-    // Load vibration preference
-    const savedVibration = localStorage.getItem('masbahaVibration');
-    if (savedVibration !== null) {
-    vibrationEnabled = savedVibration === 'true';
-    }
-    const vibToggle = document.getElementById('vibrationToggle');
-    if (vibrationEnabled) {
-    vibToggle.classList.add('active');
-    } else {
-    vibToggle.classList.remove('active');
-    }
+            // Load vibration preference
+            const savedVibration = localStorage.getItem('masbahaVibration');
+            if (savedVibration !== null) {
+                vibrationEnabled = savedVibration === 'true';
+            }
+            const vibToggle = document.getElementById('vibrationToggle');
+            if (vibrationEnabled) {
+                vibToggle.classList.add('active');
+            } else {
+                vibToggle.classList.remove('active');
+            }
 
-    // Load lifetime count
-    const savedLifetime = localStorage.getItem('masbahaLifetime');
-    if (savedLifetime) {
-    lifetimeCount = parseInt(savedLifetime);
-    document.querySelector('#lifetimeCounter span').textContent = `مجموع التسبيحات: ${lifetimeCount}`;
-    }
+            // Load lifetime count
+            const savedLifetime = localStorage.getItem('masbahaLifetime');
+            if (savedLifetime) {
+                lifetimeCount = parseInt(savedLifetime);
+                document.querySelector('#lifetimeCounter span').textContent = `مجموع التسبيحات: ${lifetimeCount}`;
+            }
 
-    // Load history
-    const savedHistory = localStorage.getItem('masbahaHistory');
-    if (savedHistory) {
-    history = JSON.parse(savedHistory);
-    renderHistory();
-    }
-    }
+            // Load history
+            const savedHistory = localStorage.getItem('masbahaHistory');
+            if (savedHistory) {
+                history = JSON.parse(savedHistory);
+                renderHistory();
+            }
+        }
 
-    // Keyboard support
-    document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-    e.preventDefault();
-    increment();
-    }
-    });
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                increment();
+            }
+        });
 
-    function hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-    } : {
-    r: 27,
-    g: 94,
-    b: 32
-    };
-    }
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : {
+                r: 27,
+                g: 94,
+                b: 32
+            };
+        }
 
-    // Initialize
-    updateDisplay();
-    loadData();
-
-    // Handle window resize to recalculate progress ring
-    window.addEventListener('resize', () => {
-        circumference = updateCircumference();
+        // Initialize
         updateDisplay();
-    });
+        loadData();
 
-    // Load theme settings
-    (function () {
-    const darkMode = localStorage.getItem('darkMode') === 'true';
-    if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
+        // Handle window resize to recalculate progress ring
+        window.addEventListener('resize', () => {
+            circumference = updateCircumference();
+            updateDisplay();
+        });
 
-    const color = localStorage.getItem('primaryColor');
-    if (color) {
-    const num = parseInt(color.replace('#', ''), 16);
-    const amt = Math.round(2.55 * 30);
-    const R = (num >> 16) + amt;
-    const G = (num >> 8 & 0x00FF) + amt;
-    const B = (num & 0x0000FF) + amt;
-    const lightColor = '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + (G < 255 ? G < 1 ? 0 : G : 255) *
-        0x100 + (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
-        document.documentElement.style.setProperty('--primary-color', color);
-        document.documentElement.style.setProperty('--primary-light', lightColor); // Update shadow colors const
-        rgb=hexToRgb(color); const shadowLight=`rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`; const
-        shadowHeavy=`rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
-        document.documentElement.style.setProperty('--shadow', shadowLight);
-        document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy); } const
-        fontSize=localStorage.getItem('fontSize'); if (fontSize !==null) { const fontSizes=[12, 14, 16, 18, 20, 24, 28];
-        const baseSize=fontSizes[parseInt(fontSize)] || 16;
-        document.documentElement.style.setProperty('--font-size-base', baseSize + 'px' );
-        document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px' );
-        document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px' ); } })(); if
-        ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); } function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('active');
-        document.getElementById('sidebarOverlay').classList.toggle('active'); 
-    }
+        // Load theme settings
+        (function () {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
+
+            const color = localStorage.getItem('primaryColor');
+            if (color) {
+                const num = parseInt(color.replace('#', ''), 16);
+                const amt = Math.round(2.55 * 30);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                const lightColor = '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + (G < 255 ? G < 1 ? 0 : G : 255) *
+                    0x100 + (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+                document.documentElement.style.setProperty('--primary-color', color);
+                document.documentElement.style.setProperty('--primary-light', lightColor); // Update shadow colors const
+                rgb = hexToRgb(color); const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`; const
+                    shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
+                document.documentElement.style.setProperty('--shadow', shadowLight);
+                document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
+            } const
+                fontSize = localStorage.getItem('fontSize'); if (fontSize !== null) {
+                    const fontSizes = [12, 14, 16, 18, 20, 24, 28];
+                    const baseSize = fontSizes[parseInt(fontSize)] || 16;
+                    document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
+                    document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
+                    document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px');
+                }
+        })(); if
+            ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); } function toggleSidebar() {
+                document.getElementById('sidebar').classList.toggle('active');
+                document.getElementById('sidebarOverlay').classList.toggle('active');
+            }
     </script>
 </body>
 
 </html>
-
-
