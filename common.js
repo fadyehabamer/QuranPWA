@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const CSS = `
         .rstreak-fab {
             position: fixed;
-            bottom: 145px;
+            bottom: 200px;
             left: 20px;
             width: 52px;
             height: 52px;
@@ -191,19 +191,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         .rstreak-panel {
             position: fixed;
-            bottom: 210px;
+            bottom: 265px;
             left: 20px;
             width: 310px;
-            background: var(--card-bg, #fff);
+            background: #fff;
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.18);
             z-index: 1099;
             overflow: hidden;
             display: none;
             flex-direction: column;
-            border: 1px solid var(--border-color, #e8e8e8);
+            border: 1px solid #e8e8e8;
             font-family: 'Cairo', sans-serif;
         }
+        [data-theme="dark"] .rstreak-panel { border-color: #333; }
         .rstreak-panel.open { display: flex; }
         .rstreak-header {
             background: linear-gradient(135deg, #e65c00, #f9d423);
@@ -550,7 +551,7 @@ function loadVisitorCount() {
     style.textContent = `
         .radio-fab {
             position: fixed;
-            bottom: 80px;
+            bottom: 135px;
             left: 20px;
             width: 52px;
             height: 52px;
@@ -570,19 +571,21 @@ function loadVisitorCount() {
         .radio-fab:hover { transform: scale(1.1); }
         .radio-panel {
             position: fixed;
-            bottom: 145px;
+            bottom: 200px;
             left: 20px;
             width: 290px;
-            background: var(--card-bg, #fff);
+            background: #fff;
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.18);
             z-index: 1099;
             overflow: hidden;
             display: none;
             flex-direction: column;
-            border: 1px solid var(--border-color, #e8e8e8);
+            border: 1px solid #e8e8e8;
+            font-family: 'Cairo', sans-serif;
         }
-        .radio-panel.open { display: flex; }
+        [data-theme="dark"] .radio-panel { border-color: #333; }
+.radio-panel.open { display: flex; }
         .radio-panel-header {
             background: linear-gradient(135deg, var(--primary-color, #1B5E20), var(--primary-light, #2E7D32));
             color: #fff;
@@ -646,9 +649,9 @@ function loadVisitorCount() {
     document.head.appendChild(style);
 
     const STATIONS = [
-        { name: 'إذاعة القرآن الكريم - القاهرة', url: 'https://n05.radiojar.com/8s5u5tpdtwzuv?rj-ttl=5&rj-tok=AAABnItaNF8Ast9L_3iEQzei5w' },
+        { name: 'إذاعة القرآن الكريم - القاهرة', url: 'https://n05.radiojar.com/8s5u5tpdtwzuv' },
         { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://live.mp3quran.net/saudi' },
-        { name: 'إذاعة نور القرآن', url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
+        { name: 'إذاعة نور القرآن', url: 'https://qurango.net/radio/tarabeel' },
     ];
 
     let _audio = null;
@@ -682,7 +685,9 @@ function loadVisitorCount() {
 
         _audio = document.createElement('audio');
         _audio.id = 'quranRadioAudio';
-        _audio.preload = 'none';
+        _audio.setAttribute('playsinline', '');
+        _audio.setAttribute('webkit-playsinline', '');
+        _audio.preload = 'auto';
 
         document.body.appendChild(fab);
         document.body.appendChild(panel);
@@ -712,12 +717,17 @@ function loadVisitorCount() {
         if (_audio) {
             _audio.pause();
             _audio.src = s.url;
+            _audio.load(); // Explicitly load on src change
             _audio.volume = parseFloat(document.getElementById('radioVolume')?.value || 0.8);
+
             const playPromise = _audio.play();
-            if (playPromise) {
-                playPromise.catch(() => {
-                    // stream might need retry
-                    setTimeout(() => _audio.play().catch(() => { }), 1000);
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.error('Playback failed:', error);
+                    // Stream might need retry or user gesture was lost
+                    setTimeout(() => {
+                        _audio.play().catch(() => { });
+                    }, 500);
                 });
             }
         }
