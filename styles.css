@@ -279,7 +279,7 @@ body {
 /* Home Section Styles */
 .hero-section {
     text-align: center;
-    padding: 60px 30px;
+    padding: 0px 30px;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     border-radius: var(--radius-lg);
     color: white;
@@ -598,6 +598,39 @@ body {
     border-top: 1px solid var(--border-color);
     font-weight: 600;
     color: var(--primary-color);
+}
+
+.detect-location-container {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.detect-location-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all var(--transition-fast);
+}
+
+.detect-location-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+.detect-location-btn i {
+    font-size: 16px;
 }
 
 /* Quick Tools */

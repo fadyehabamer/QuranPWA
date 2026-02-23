@@ -904,7 +904,14 @@ async function initHomePrayerWidget() {
                 updatePrayerUI(loc);
             }, () => {
                 locationEl.textContent = 'الموقع غير محدد';
-                body.innerHTML = '<a href="prayer-times" style="font-size:12px;color:var(--primary-color);text-decoration:none">اضغط لتحديد موقعك</a>';
+                body.innerHTML = `
+                    <div class="detect-location-container">
+                        <button class="detect-location-btn" onclick="requestUserLocation()">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            تحديد الموقع تلقائياً
+                        </button>
+                    </div>
+                `;
             });
         }
     } else {
@@ -942,4 +949,50 @@ async function initHomePrayerWidget() {
             body.innerHTML = '<p style="font-size:12px;opacity:0.5">فشل تحميل المواقيت</p>';
         }
     }
+}
+
+
+async function requestUserLocation() {
+    const locationEl = document.getElementById('pwLocation');
+    const body = document.getElementById('pwBody');
+
+    if (!("geolocation" in navigator)) {
+        alert("متصفحك لا يدعم تحديد الموقع");
+        return;
+    }
+
+    if (locationEl) locationEl.textContent = 'جاري التحديد...';
+    if (body) body.innerHTML = '<div class="loading"><div class="spinner" style="margin:20px auto"></div></div>';
+
+    navigator.geolocation.getCurrentPosition(async pos => {
+        const loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        localStorage.setItem('userLocation', JSON.stringify(loc));
+
+        // Try to get location name (optional, but nice)
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.latitude}&lon=${loc.longitude}&format=json&accept-language=ar`);
+            const data = await res.json();
+            if (data.address) {
+                const city = data.address.city || data.address.town || data.address.state || 'موقعك المكتشف';
+                localStorage.setItem('locationText', city);
+            }
+        } catch (e) { }
+
+        // Re-initialize widget
+        initHomePrayerWidget();
+    }, (err) => {
+        console.error("Location error:", err);
+        if (locationEl) locationEl.textContent = 'فشل تحديد الموقع';
+        if (body) {
+            body.innerHTML = `
+                <div class="detect-location-container">
+                    <p style="font-size:12px;color:var(--text-color);opacity:0.6;margin-bottom:10px;text-align:center">يرجى تفعيل صلاحية الموقع من إعدادات المتصفح</p>
+                    <button class="detect-location-btn" onclick="requestUserLocation()">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        إعادة المحاولة
+                    </button>
+                </div>
+            `;
+        }
+    });
 }
