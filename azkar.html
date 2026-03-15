@@ -331,139 +331,89 @@
 
     <script src="common.js"></script>
     <script>
-        const azkarData = {
-            morning: {
-                name: 'أذكار الصباح',
-                azkar: [
-                    {
-                        text: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
-                        desc: "من قالها حين يصبح أجير من الجن حتى يمسي",
-                        reference: "مسلم",
-                        repeat: "مرة واحدة"
-                    },
-                    {
-                        text: "اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ",
-                        reference: "الترمذي",
-                        repeat: "مرة واحدة"
-                    },
-                    {
-                        text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
-                        desc: "من قالها مائة مرة حطت خطاياه وإن كانت مثل زبد البحر",
-                        reference: "متفق عليه",
-                        repeat: "مائة مرة"
-                    },
-                    {
-                        text: "أَصْبَحْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ، حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ",
-                        reference: "أحمد",
-                        repeat: "مرة واحدة"
-                    }
-                ]
-            },
-            evening: {
-                name: 'أذكار المساء',
-                azkar: [
-                    {
-                        text: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
-                        desc: "من قالها حين يمسي أجير من الجن حتى يصبح",
-                        reference: "مسلم",
-                        repeat: "مرة واحدة"
-                    },
-                    {
-                        text: "اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ",
-                        reference: "الترمذي",
-                        repeat: "مرة واحدة"
-                    },
-                    {
-                        text: "أَمْسَيْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ، حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ",
-                        reference: "أحمد",
-                        repeat: "مرة واحدة"
-                    }
-                ]
-            },
-            sleep: {
-                name: 'أذكار النوم',
-                azkar: [
-                    {
-                        text: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا",
-                        reference: "البخاري",
-                        repeat: "مرة واحدة"
-                    },
-                    {
-                        text: "اللَّهُمَّ قِنِي عَذَابَكَ يَوْمَ تَبْعَثُ عِبَادَكَ",
-                        desc: "كان النبي يقولها إذا أوى إلى فراشه",
-                        reference: "أبو داود",
-                        repeat: "ثلاث مرات"
-                    },
-                    {
-                        text: "بِاسْمِكَ رَبِّي وَضَعْتُ جَنْبِي، وَبِكَ أَرْفَعُهُ، إِنْ أَمْسَكْتَ نَفْسِي فَارْحَمْهَا، وَإِنْ أَرْسَلْتَهَا فَاحْفَظْهَا بِمَا تَحْفَظُ بِهِ عِبَادَكَ الصَّالِحِينَ",
-                        reference: "متفق عليه",
-                        repeat: "مرة واحدة"
-                    }
-                ]
-            },
-            wakeup: {
-                name: 'أذكار الاستيقاظ',
-                azkar: [
-                    {
-                        text: "الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ",
-                        reference: "البخاري",
-                        repeat: "مرة واحدة"
-                    },
-                    {
-                        text: "الْحَمْدُ لِلَّهِ الَّذِي عَافَانِي فِي جَسَدِي، وَرَدَّ عَلَيَّ رُوحِي، وَأَذِنَ لِي بِذِكْرِهِ",
-                        reference: "الترمذي",
-                        repeat: "مرة واحدة"
-                    }
-                ]
-            },
-            prayer: {
-                name: 'أذكار الصلاة',
-                azkar: [
-                    {
-                        text: "أَسْتَغْفِرُ اللَّهَ",
-                        repeat: "ثلاث مرات"
-                    },
-                    {
-                        text: "اللَّهُمَّ أَنْتَ السَّلَامُ، وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ",
-                        reference: "مسلم",
-                        repeat: "مرة واحدة"
-                    },
-                    {
-                        text: "سُبْحَانَ اللَّهِ، وَالْحَمْدُ لِلَّهِ، وَاللَّهُ أَكْبَرُ",
-                        desc: "من سبح الله دبر كل صلاة ثلاثاً وثلاثين",
-                        reference: "مسلم",
-                        repeat: "ثلاث وثلاثون"
-                    }
-                ]
-            },
-            general: {
-                name: 'أذكار عامة',
-                azkar: [
-                    {
-                        text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ",
-                        desc: "كلمتان خفيفتان على اللسان، ثقيلتان في الميزان",
-                        reference: "متفق عليه",
-                        repeat: "مرة واحدة"
-                    },
-                    {
-                        text: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ",
-                        desc: "كنز من كنوز الجنة",
-                        reference: "متفق عليه",
-                        repeat: "مرة واحدة"
-                    },
-                    {
-                        text: "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ",
-                        desc: "من صلى علي واحدة صلى الله عليه عشراً",
-                        reference: "مسلم",
-                        repeat: "عشر مرات"
-                    }
-                ]
-            }
-        };
-
+        let azkarData = {};
         let currentCategory = null;
         let zikrCounts = {};
         let favorites = [];
+        // Load azkar data from JSON file
+        async function loadAzkarData() {
+            try {
+                const response = await fetch('azkar.json');
+                const jsonData = await response.json();
+
+                // Convert the JSON structure to our expected format
+                azkarData = {};
+                jsonData.forEach((category, index) => {
+                    const key = category.category.replace(/\s+/g, '_').toLowerCase();
+                    azkarData[key] = {
+                        name: category.category,
+                        azkar: category.array.map(item => ({
+                            text: item.text,
+                            repeat: getCountDescription(item.count),
+                            count: item.count
+                        }))
+                    };
+                });
+
+                // Render categories after data is loaded
+                renderCategories();
+            } catch (error) {
+                console.error('Error loading azkar data:', error);
+                // Fallback to original data if JSON fails to load
+                azkarData = {
+                    morning: {
+                        name: 'أذكار الصباح',
+                        azkar: [
+                            {
+                                text: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+                                repeat: "مرة واحدة",
+                                count: 1
+                            }
+                        ]
+                    }
+                };
+                renderCategories();
+            }
+        }
+
+        function getCountDescription(count) {
+            const countMap = {
+                1: "مرة واحدة",
+                3: "ثلاث مرات",
+                4: "أربع مرات",
+                7: "سبع مرات",
+                10: "عشر مرات",
+                33: "ثلاث وثلاثون",
+                34: "أربع وثلاثون",
+                100: "مائة مرة"
+            };
+            return countMap[count] || `${count} مرة`;
+        }
+
+        // Function to extract descriptions from text (looking for content in brackets)
+        function extractDescription(text) {
+            // Look for content in brackets [...]
+            const bracketMatches = text.match(/\[(.*?)\]/g);
+            if (bracketMatches && bracketMatches.length > 0) {
+                // Join all bracket contents with commas
+                return bracketMatches.map(match => match.slice(1, -1)).join(', ');
+            }
+
+            // Look for content in parentheses (...)
+            const parenMatches = text.match(/\((.*?)\)/g);
+            if (parenMatches && parenMatches.length > 0) {
+                // Take the first parenthetical content that looks like a description
+                for (let match of parenMatches) {
+                    const content = match.slice(1, -1);
+                    if (content.includes('مرة') || content.includes('مرات') || content.includes('قول') ||
+                        content.includes('قال') || content.includes('كان') || content.includes('من')) {
+                        return content;
+                    }
+                }
+            }
+
+            return '';
+        }
 
         function loadUserData() {
             const savedCounts = localStorage.getItem('zikrCounts');
@@ -485,14 +435,20 @@
         function renderCategories() {
             const list = document.getElementById('categoryList');
 
-            const categoryIcons = {
-                morning: 'bi-sunrise-fill',
-                evening: 'bi-sunset-fill',
-                sleep: 'bi-moon-stars-fill',
-                wakeup: 'bi-alarm-fill',
-                prayer: 'bi-building',
-                general: 'bi-bookmark-star-fill'
-            };
+            // Generate icons dynamically based on category names
+            function getCategoryIcon(categoryName) {
+                const iconMap = {
+                    'أذكار الصباح': 'bi-sunrise-fill',
+                    'أذكار المساء': 'bi-sunset-fill',
+                    'أذكار النوم': 'bi-moon-stars-fill',
+                    'أذكار الاستيقاظ': 'bi-alarm-fill',
+                    'أذكار الصلاة': 'bi-building',
+                    'الأذكار': 'bi-bookmark-star-fill'
+                };
+
+                // Default icon if category not found in map
+                return iconMap[categoryName] || 'bi-bookmark-star-fill';
+            }
 
             let html = '';
 
@@ -506,7 +462,7 @@
             </div>`;
 
             for (const [key, category] of Object.entries(azkarData)) {
-                const icon = categoryIcons[key] || 'bi-bookmark-star-fill';
+                const icon = getCategoryIcon(category.name);
                 html += `<div class="category-item" onclick="showCategory('${key}')">
                     <div class="category-info">
                         <div class="category-icon"><i class="bi ${icon}"></i></div>
@@ -535,8 +491,7 @@
                 html += `<div class="zikr-card" id="card_${index}">
                     <div class="zikr-text">${zikr.text}</div>
                     <div class="zikr-info">
-                        ${zikr.desc ? `<div class="zikr-desc">${zikr.desc}</div>` : ''}
-                        ${zikr.reference ? `<div class="zikr-reference">المرجع: ${zikr.reference}</div>` : ''}
+                        ${extractDescription(zikr.text) ? `<div class="zikr-desc">${extractDescription(zikr.text)}</div>` : ''}
                     </div>
                     <div class="zikr-actions">
                         <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${categoryKey}', ${index})">
@@ -575,13 +530,13 @@
                     html += `<div class="zikr-card">
                         <div class="zikr-text">${zikr.text}</div>
                         <div class="zikr-info">
-                            ${zikr.desc ? `<div class="zikr-desc">${zikr.desc}</div>` : ''}
+                            ${extractDescription(zikr.text) ? `<div class="zikr-desc">${extractDescription(zikr.text)}</div>` : ''}
                         </div>
                         <div class="zikr-actions">
                             <button class="favorite-btn active" onclick="removeFromFavorites(${index})">
                                 <i class="bi bi-heart-fill"></i>
                             </button>
-                            <div class="zikr-repeat">${zikr.repeat}</div>
+                            <div class="zikr-repeat">${zikr.repeat || getCountDescription(zikr.count)}</div>
                         </div>
                     </div>`;
                 });
@@ -615,6 +570,13 @@
             if (repeatText.includes('أربع مرات')) return 4;
             if (repeatText.includes('مائة مرة')) return 100;
             if (repeatText.includes('عشر مرات')) return 10;
+
+            // Extract number from strings like "5 مرة"
+            const match = repeatText.match(/(\d+)\s*(مرة|مرات)/);
+            if (match) {
+                return parseInt(match[1]);
+            }
+
             return 1;
         }
 
@@ -703,7 +665,7 @@
 
         // Initialize
         loadUserData();
-        renderCategories();
+        loadAzkarData();
 
         // Load theme settings
         (function () {
@@ -729,5 +691,4 @@
         }
     </script>
 </body>
-
 </html>
