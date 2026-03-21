@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
@@ -237,28 +237,28 @@
             <a href="/" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الرئيسية</div>
             </a>
-            <a href="quran" class="sidebar-nav-item">
+            <a href="quran.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">القرآن الكريم</div>
             </a>
-            <a href="bookmarks" class="sidebar-nav-item active">
+            <a href="bookmarks.html" class="sidebar-nav-item active">
                 <div class="sidebar-nav-label">المواضع المحفوظة</div>
             </a>
-            <a href="azkar" class="sidebar-nav-item">
+            <a href="azkar.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الأذكار</div>
             </a>
-            <a href="masbaha" class="sidebar-nav-item">
+            <a href="masbaha.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">المسبحة</div>
             </a>
-            <a href="sunan" class="sidebar-nav-item">
+            <a href="sunan.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">سنن النبي</div>
             </a>
-            <a href="prayer-times" class="sidebar-nav-item">
+            <a href="prayer-times.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">مواقيت الصلاة</div>
             </a>
-            <a href="/bio" class="sidebar-nav-item">
+            <a href="bio.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">عن المطور</div>
             </a>
-            <a href="settings" class="sidebar-nav-item">
+            <a href="settings.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الإعدادات</div>
             </a>
         </nav>
@@ -288,7 +288,7 @@
                 <span class="count" id="visitorCount">-</span>
             </div>
             <button class="header-back-btn" onclick="window.location.href='/'">→</button>
-            <button class="settings-btn" onclick="window.location.href='settings'"><i
+            <button class="settings-btn" onclick="window.location.href='settings.html'"><i
                     class="bi bi-gear-fill"></i></button>
             <button class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
         </div>
@@ -446,7 +446,7 @@
                         <div class="empty-state-icon"><i class="bi bi-bookmark" style="font-size: 80px;"></i></div>
                         <h3 class="empty-state-title">لا توجد مواضع محفوظة</h3>
                         <p class="empty-state-desc">لم تقم بحفظ أي موضع بعد.<br>اذهب إلى أي سورة واضغط على "حفظ الموضع" لحفظ مكان قراءتك.</p>
-                        <a href="quran" class="empty-state-btn"><i class="bi bi-book-fill"></i> ابدأ القراءة</a>
+                        <a href="quran.html" class="empty-state-btn"><i class="bi bi-book-fill"></i> ابدأ القراءة</a>
                     </div>
                 `;
                 stats.style.display = 'none';
@@ -517,7 +517,7 @@
             if (!bookmarks[index]) return;
 
             const bookmark = bookmarks[index];
-            window.location.href = `quran?surah=${bookmark.surah}&page=${bookmark.page}`;
+            window.location.href = `quran.html?surah=${bookmark.surah}&page=${bookmark.page}`;
         }
 
         function deleteBookmark(index) {

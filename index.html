@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
@@ -489,6 +489,196 @@
             gap: 8px;
             margin-bottom: 8px;
         }
+
+        .mood-support-section {
+            margin-bottom: 32px;
+        }
+
+        .mood-support-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .mood-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mood-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary, #666);
+            margin-bottom: 12px;
+        }
+
+        .mood-input {
+            width: 100%;
+            min-height: 80px;
+            resize: vertical;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .mood-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .mood-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .mood-chip {
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 999px;
+            padding: 6px 11px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .mood-generate-btn {
+            border: none;
+            border-radius: 10px;
+            background: var(--primary-color);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 10px 14px;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .mood-result {
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            background: rgba(var(--primary-rgb), 0.05);
+            display: none;
+        }
+
+        .mood-result.active {
+            display: block;
+        }
+
+        .mood-context-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+        }
+
+        .mood-context-text {
+            font-size: 14px;
+            color: var(--text-color);
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        .mood-ayah-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .mood-ayah-item {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            background: var(--card-bg);
+        }
+
+        .mood-ayah-text {
+            font-family: 'Amiri', serif;
+            font-size: 21px;
+            line-height: 1.8;
+            margin-bottom: 6px;
+        }
+
+        .mood-ayah-ref {
+            font-size: 13px;
+            color: var(--text-secondary, #666);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .mood-ayah-link {
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .mood-note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-secondary, #666);
+            line-height: 1.6;
+        }
+
+        .mood-detected {
+            font-size: 13px;
+            color: var(--text-secondary, #666);
+            margin-bottom: 8px;
+        }
+
+        .mood-score-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .mood-score-pill {
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 10px;
+            background: rgba(var(--primary-rgb), 0.15);
+            color: var(--primary-color);
+            border: 1px solid rgba(var(--primary-rgb), 0.3);
+        }
+
+        .mood-score-pill.secondary {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .mood-score-pill.secondary {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mood-ayah-tag {
+            display: inline-block;
+            margin-bottom: 6px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 9px;
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary-color);
+            border: 1px solid rgba(var(--primary-rgb), 0.18);
+        }
     </style>
 </head>
 
@@ -506,28 +696,28 @@
             <a href="/" class="sidebar-nav-item active">
                 <div class="sidebar-nav-label">الرئيسية</div>
             </a>
-            <a href="quran" class="sidebar-nav-item">
+            <a href="quran.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">القرآن الكريم</div>
             </a>
-            <a href="bookmarks" class="sidebar-nav-item">
+            <a href="bookmarks.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">المواضع المحفوظة</div>
             </a>
-            <a href="azkar" class="sidebar-nav-item">
+            <a href="azkar.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الأذكار</div>
             </a>
-            <a href="masbaha" class="sidebar-nav-item">
+            <a href="masbaha.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">المسبحة</div>
             </a>
-            <a href="sunan" class="sidebar-nav-item">
+            <a href="sunan.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">سنن النبي</div>
             </a>
-            <a href="prayer-times" class="sidebar-nav-item">
+            <a href="prayer-times.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">مواقيت الصلاة</div>
             </a>
-            <a href="/bio" class="sidebar-nav-item">
+            <a href="bio.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">عن المطور</div>
             </a>
-            <a href="settings" class="sidebar-nav-item">
+            <a href="settings.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الإعدادات</div>
             </a>
         </nav>
@@ -547,7 +737,7 @@
         </button>
         <h1>القرآن الكريم</h1>
         <div class="header-left-buttons">
-            <button class="settings-btn" onclick="window.location.href='settings'">
+            <button class="settings-btn" onclick="window.location.href='settings.html'">
                 <i class="bi bi-gear-fill"></i>
             </button>
         </div>
@@ -674,33 +864,59 @@
                 </div>
             </div>
 
+            <!-- Mood Support -->
+            <div class="mood-support-section animate-fade-up delay-3">
+                <div class="mood-support-card glass-card">
+                    <div class="mood-title"><i class="bi bi-heart-pulse"></i> دعم نفسي بالقرآن</div>
+                    <div class="mood-subtitle">اكتب شعورك، وسنقترح آيات مناسبة مع رسالة قصيرة تبعث الطمأنينة.</div>
+
+                    <textarea id="moodInput" class="mood-input" placeholder="مثال: أشعر بالحزن والقلق هذه الأيام..."></textarea>
+
+                    <div class="mood-chips">
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أنا حزين')">حزين</button>
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بالقلق')">قلق</button>
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بضغط شديد')">توتر</button>
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أنا غاضب')">غضب</button>
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بالذنب')">ذنب</button>
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أعيش حالة فقد وحزن')">فقد</button>
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أنا منهك ومطفي')">احتراق</button>
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بالوحدة')">وحدة</button>
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أحتاج أمل')">أمل</button>
+                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أحتاج شكر وامتنان')">امتنان</button>
+                    </div>
+
+                    <button class="mood-generate-btn" onclick="generateMoodSupport()">ولّد آيات مناسبة</button>
+                    <div id="moodResult" class="mood-result"></div>
+                </div>
+            </div>
+
             <!-- Features Grid -->
             <div class="features-grid">
-                <a href="quran" class="feature-card glass-card animate-fade-up delay-3">
+                <a href="quran.html" class="feature-card glass-card animate-fade-up delay-3">
                     <div class="feature-icon">📚</div>
                     <h3 class="feature-title">القرآن الكريم</h3>
                     <p class="feature-description">اقرأ القرآن الكريم مع إمكانية حفظ موضع القراءة والاستماع للتلاوة</p>
                 </a>
 
-                <a href="azkar" class="feature-card glass-card animate-fade-up delay-4">
+                <a href="azkar.html" class="feature-card glass-card animate-fade-up delay-4">
                     <div class="feature-icon">🌙</div>
                     <h3 class="feature-title">الأذكار</h3>
                     <p class="feature-description">أذكار الصباح والمساء وأذكار متنوعة لكل المناسبات</p>
                 </a>
 
-                <a href="masbaha" class="feature-card glass-card animate-fade-up delay-5">
+                <a href="masbaha.html" class="feature-card glass-card animate-fade-up delay-5">
                     <div class="feature-icon">📿</div>
                     <h3 class="feature-title">المسبحة الإلكترونية</h3>
                     <p class="feature-description">سبّح بسهولة مع عداد رقمي وأهداف قابلة للتخصيص</p>
                 </a>
 
-                <a href="prayer-times" class="feature-card glass-card animate-fade-up delay-1">
+                <a href="prayer-times.html" class="feature-card glass-card animate-fade-up delay-1">
                     <div class="feature-icon">🕌</div>
                     <h3 class="feature-title">مواقيت الصلاة</h3>
                     <p class="feature-description">مواقيت الصلاة الدقيقة حسب موقعك مع الوقت المتبقي للصلاة القادمة</p>
                 </a>
 
-                <a href="settings" class="feature-card glass-card animate-fade-up delay-2">
+                <a href="settings.html" class="feature-card glass-card animate-fade-up delay-2">
                     <div class="feature-icon">⚙️</div>
                     <h3 class="feature-title">الإعدادات</h3>
                     <p class="feature-description">خصص تجربتك مع الوضع الليلي والألوان وحجم الخط</p>
@@ -713,11 +929,11 @@
                     <i class="bi bi-circle-half"></i>
                     <span class="tool-label">المظهر</span>
                 </button>
-                <button class="tool-btn" onclick="location.href='settings'">
+                <button class="tool-btn" onclick="location.href='settings.html'">
                     <i class="bi bi-type"></i>
                     <span class="tool-label">الخط</span>
                 </button>
-                <button class="tool-btn" onclick="location.href='bookmarks'">
+                <button class="tool-btn" onclick="location.href='bookmarks.html'">
                     <i class="bi bi-bookmark-fill"></i>
                     <span class="tool-label">المحفوظات</span>
                 </button>
@@ -745,11 +961,11 @@
             <div class="quick-actions glass-card animate-fade-up delay-3">
                 <h2 class="quick-actions-title">ابدأ الآن</h2>
                 <div class="action-buttons">
-                    <a href="quran" class="action-btn">
+                    <a href="quran.html" class="action-btn">
                         <i class="bi bi-book-fill"></i>
                         <span>ابدأ القراءة</span>
                     </a>
-                    <a href="azkar" class="action-btn secondary">
+                    <a href="azkar.html" class="action-btn secondary">
                         <i class="bi bi-moon-stars-fill"></i>
                         <span>أذكار اليوم</span>
                     </a>
@@ -764,23 +980,23 @@
             <i class="bi bi-house-fill nav-icon"></i>
             <span class="nav-label">الرئيسية</span>
         </a>
-        <a href="quran" class="nav-item">
+        <a href="quran.html" class="nav-item">
             <i class="bi bi-book-fill nav-icon"></i>
             <span class="nav-label">القرآن</span>
         </a>
-        <a href="azkar" class="nav-item">
+        <a href="azkar.html" class="nav-item">
             <i class="bi bi-moon-stars-fill nav-icon"></i>
             <span class="nav-label">الأذكار</span>
         </a>
-        <a href="masbaha" class="nav-item">
+        <a href="masbaha.html" class="nav-item">
             <i class="bi bi-circle-fill nav-icon"></i>
             <span class="nav-label">المسبحة</span>
         </a>
-        <a href="prayer-times" class="nav-item">
+        <a href="prayer-times.html" class="nav-item">
             <i class="bi bi-clock-fill nav-icon"></i>
             <span class="nav-label">الصلاة</span>
         </a>
-        <a href="settings" class="nav-item">
+        <a href="settings.html" class="nav-item">
             <i class="bi bi-gear-fill nav-icon"></i>
             <span class="nav-label">الإعدادات</span>
         </a>
@@ -926,7 +1142,7 @@
 
         function resumeReading() {
             if (window.lastBookmark) {
-                window.location.href = `quran?surah=${window.lastBookmark.surah}&page=${window.lastBookmark.page}`;
+                window.location.href = `quran.html?surah=${window.lastBookmark.surah}&page=${window.lastBookmark.page}`;
             }
         }
 
@@ -1129,6 +1345,411 @@
                 const backlogText = status.backlogPages > 0 ? ` • تعويض متراكم: ${status.backlogPages}` : '';
                 textEl.textContent = `هدف اليوم: من صفحة ${status.todayStartPage} إلى ${status.todayEndPage} (${status.todayTargetPages} صفحات)${backlogText}`;
             }
+        }
+
+        const MOOD_SUPPORT_PROFILES = [
+            {
+                id: 'sadness',
+                label: 'حزن',
+                title: 'للتخفيف من الحزن',
+                keywords: [
+                    { term: 'حزين', weight: 1.6 },
+                    { term: 'حزن', weight: 1.5 },
+                    { term: 'مكتئب', weight: 1.8 },
+                    { term: 'كئيب', weight: 1.7 },
+                    { term: 'مكسور', weight: 1.4 },
+                    { term: 'sad', weight: 1.3 },
+                    { term: 'depressed', weight: 1.8 }
+                ],
+                context: 'الحزن مفهوم، والقرآن يذكّر أن الضيق مؤقت، وأن رحمته سبحانه أوسع من كل ما يثقل القلب.',
+                verses: [
+                    { surah: 94, ayah: 5, ref: 'الشرح 5-6', text: 'فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا' },
+                    { surah: 2, ayah: 286, ref: 'البقرة 286', text: 'لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا' },
+                    { surah: 12, ayah: 87, ref: 'يوسف 87', text: 'وَلَا تَيْأَسُوا مِن رَّوْحِ اللَّهِ' },
+                    { surah: 93, ayah: 3, ref: 'الضحى 3', text: 'مَا وَدَّعَكَ رَبُّكَ وَمَا قَلَىٰ' }
+                ]
+            },
+            {
+                id: 'anxiety',
+                label: 'قلق',
+                title: 'للسكينة وقت القلق',
+                keywords: [
+                    { term: 'قلق', weight: 1.8 },
+                    { term: 'متوتر', weight: 1.6 },
+                    { term: 'توتر', weight: 1.5 },
+                    { term: 'خايف', weight: 1.3 },
+                    { term: 'خوف', weight: 1.4 },
+                    { term: 'anxiety', weight: 1.8 },
+                    { term: 'panic', weight: 1.8 },
+                    { term: 'worried', weight: 1.3 }
+                ],
+                context: 'القلق يهدأ حين يتذكر القلب أن تدبير الله أرحم من كل الاحتمالات التي تُتعب الفكر.',
+                verses: [
+                    { surah: 13, ayah: 28, ref: 'الرعد 28', text: 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ' },
+                    { surah: 65, ayah: 3, ref: 'الطلاق 3', text: 'وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ' },
+                    { surah: 3, ayah: 173, ref: 'آل عمران 173', text: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ' },
+                    { surah: 2, ayah: 153, ref: 'البقرة 153', text: 'اسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ' }
+                ]
+            },
+            {
+                id: 'stress',
+                label: 'ضغط',
+                title: 'لتخفيف الضغط والتوتر',
+                keywords: [
+                    { term: 'ضغط', weight: 1.8 },
+                    { term: 'مضغوط', weight: 1.9 },
+                    { term: 'مأزوم', weight: 1.4 },
+                    { term: 'مرهق', weight: 1.3 },
+                    { term: 'stress', weight: 1.8 },
+                    { term: 'stressed', weight: 1.8 }
+                ],
+                context: 'عند تزاحم المسؤوليات، ذكّر نفسك أن الله لا يكلّفك فوق طاقتك، وأن الفرج قريب بإذنه.',
+                verses: [
+                    { surah: 94, ayah: 5, ref: 'الشرح 5-6', text: 'فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا' },
+                    { surah: 2, ayah: 286, ref: 'البقرة 286', text: 'لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا' },
+                    { surah: 65, ayah: 2, ref: 'الطلاق 2-3', text: 'وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا' },
+                    { surah: 20, ayah: 25, ref: 'طه 25-26', text: 'رَبِّ اشْرَحْ لِي صَدْرِي ۝ وَيَسِّرْ لِي أَمْرِي' }
+                ]
+            },
+            {
+                id: 'anger',
+                label: 'غضب',
+                title: 'لتهدئة الغضب',
+                keywords: [
+                    { term: 'غضبان', weight: 1.8 },
+                    { term: 'غضب', weight: 1.7 },
+                    { term: 'معصب', weight: 1.7 },
+                    { term: 'منفعل', weight: 1.5 },
+                    { term: 'angry', weight: 1.7 },
+                    { term: 'mad', weight: 1.6 }
+                ],
+                context: 'قوة المؤمن تظهر في ضبط النفس عند الغضب، لا في اندفاعها. التنفس والذكر يفتحان باب السكينة.',
+                verses: [
+                    { surah: 3, ayah: 134, ref: 'آل عمران 134', text: 'وَالْكَاظِمِينَ الْغَيْظَ وَالْعَافِينَ عَنِ النَّاسِ ۗ وَاللَّهُ يُحِبُّ الْمُحْسِنِينَ' },
+                    { surah: 42, ayah: 43, ref: 'الشورى 43', text: 'وَلَمَن صَبَرَ وَغَفَرَ إِنَّ ذَٰلِكَ لَمِنْ عَزْمِ الْأُمُورِ' },
+                    { surah: 24, ayah: 22, ref: 'النور 22', text: 'وَلْيَعْفُوا وَلْيَصْفَحُوا ۗ أَلَا تُحِبُّونَ أَن يَغْفِرَ اللَّهُ لَكُمْ' },
+                    { surah: 41, ayah: 34, ref: 'فصلت 34', text: 'ادْفَعْ بِالَّتِي هِيَ أَحْسَنُ' }
+                ]
+            },
+            {
+                id: 'guilt',
+                label: 'ذنب',
+                title: 'لعلاج الذنب والندم',
+                keywords: [
+                    { term: 'ذنب', weight: 1.8 },
+                    { term: 'ندم', weight: 1.7 },
+                    { term: 'خجلان', weight: 1.4 },
+                    { term: 'قصرت', weight: 1.3 },
+                    { term: 'guilt', weight: 1.8 },
+                    { term: 'regret', weight: 1.7 }
+                ],
+                context: 'الشعور بالذنب يمكن أن يكون بداية رجوع جميل؛ باب التوبة مفتوح ما دامت الروح في الجسد.',
+                verses: [
+                    { surah: 39, ayah: 53, ref: 'الزمر 53', text: 'لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ ۚ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا' },
+                    { surah: 66, ayah: 8, ref: 'التحريم 8', text: 'يَا أَيُّهَا الَّذِينَ آمَنُوا تُوبُوا إِلَى اللَّهِ تَوْبَةً نَّصُوحًا' },
+                    { surah: 25, ayah: 70, ref: 'الفرقان 70', text: 'فَأُولَٰئِكَ يُبَدِّلُ اللَّهُ سَيِّئَاتِهِمْ حَسَنَاتٍ' },
+                    { surah: 11, ayah: 114, ref: 'هود 114', text: 'إِنَّ الْحَسَنَاتِ يُذْهِبْنَ السَّيِّئَاتِ' }
+                ]
+            },
+            {
+                id: 'grief',
+                label: 'فقد',
+                title: 'للتعامل مع الفقد',
+                keywords: [
+                    { term: 'فقد', weight: 2.0 },
+                    { term: 'فراق', weight: 1.8 },
+                    { term: 'مات', weight: 1.7 },
+                    { term: 'رحل', weight: 1.7 },
+                    { term: 'grief', weight: 2.0 },
+                    { term: 'loss', weight: 1.8 },
+                    { term: 'bereaved', weight: 1.8 }
+                ],
+                context: 'ألم الفقد شديد، لكن الله مع الصابرين، ويجبر القلوب التي صدقت في الاستعانة به.',
+                verses: [
+                    { surah: 2, ayah: 156, ref: 'البقرة 156-157', text: 'إِنَّا لِلَّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ' },
+                    { surah: 12, ayah: 86, ref: 'يوسف 86', text: 'إِنَّمَا أَشْكُو بَثِّي وَحُزْنِي إِلَى اللَّهِ' },
+                    { surah: 57, ayah: 22, ref: 'الحديد 22-23', text: 'مَا أَصَابَ مِن مُّصِيبَةٍ فِي الْأَرْضِ وَلَا فِي أَنفُسِكُمْ إِلَّا فِي كِتَابٍ' },
+                    { surah: 65, ayah: 5, ref: 'الطلاق 5', text: 'وَمَن يَتَّقِ اللَّهَ يُكَفِّرْ عَنْهُ سَيِّئَاتِهِ وَيُعْظِمْ لَهُ أَجْرًا' }
+                ]
+            },
+            {
+                id: 'burnout',
+                label: 'إنهاك',
+                title: 'عند الإرهاق والاحتراق النفسي',
+                keywords: [
+                    { term: 'منهك', weight: 1.9 },
+                    { term: 'تعبان', weight: 1.5 },
+                    { term: 'احتراق', weight: 2.0 },
+                    { term: 'مطفي', weight: 1.5 },
+                    { term: 'burnout', weight: 2.0 },
+                    { term: 'exhausted', weight: 1.8 },
+                    { term: 'drained', weight: 1.7 }
+                ],
+                context: 'الإرهاق لا يعني الضعف، بل يعني أنك تحتاج رحمة بنفسك وعودة هادئة إلى الله بخطوات بسيطة.',
+                verses: [
+                    { surah: 20, ayah: 2, ref: 'طه 2', text: 'مَا أَنْزَلْنَا عَلَيْكَ الْقُرْآنَ لِتَشْقَىٰ' },
+                    { surah: 17, ayah: 82, ref: 'الإسراء 82', text: 'وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ لِّلْمُؤْمِنِينَ' },
+                    { surah: 73, ayah: 20, ref: 'المزمل 20', text: 'فَاقْرَؤُوا مَا تَيَسَّرَ مِنَ الْقُرْآنِ' },
+                    { surah: 2, ayah: 286, ref: 'البقرة 286', text: 'لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا' }
+                ]
+            },
+            {
+                id: 'lonely',
+                label: 'وحدة',
+                title: 'عند شعور الوحدة',
+                keywords: [
+                    { term: 'وحيد', weight: 1.8 },
+                    { term: 'وحدة', weight: 1.8 },
+                    { term: 'لوحدي', weight: 1.8 },
+                    { term: 'منعزل', weight: 1.6 },
+                    { term: 'lonely', weight: 1.8 },
+                    { term: 'alone', weight: 1.6 }
+                ],
+                context: 'حتى إن غاب الناس، قرب الله لا يغيب. في الذكر والدعاء أنس عميق يطمئن القلب.',
+                verses: [
+                    { surah: 2, ayah: 186, ref: 'البقرة 186', text: 'فَإِنِّي قَرِيبٌ ۖ أُجِيبُ دَعْوَةَ الدَّاعِ إِذَا دَعَانِ' },
+                    { surah: 50, ayah: 16, ref: 'ق 16', text: 'وَنَحْنُ أَقْرَبُ إِلَيْهِ مِنْ حَبْلِ الْوَرِيدِ' },
+                    { surah: 9, ayah: 40, ref: 'التوبة 40', text: 'لَا تَحْزَنْ إِنَّ اللَّهَ مَعَنَا' },
+                    { surah: 57, ayah: 4, ref: 'الحديد 4', text: 'وَهُوَ مَعَكُمْ أَيْنَ مَا كُنتُمْ' }
+                ]
+            },
+            {
+                id: 'hope',
+                label: 'أمل',
+                title: 'لتجديد الأمل',
+                keywords: [
+                    { term: 'امل', weight: 1.8 },
+                    { term: 'تفاؤل', weight: 1.8 },
+                    { term: 'رجاء', weight: 1.7 },
+                    { term: 'فرج', weight: 1.6 },
+                    { term: 'hope', weight: 1.8 },
+                    { term: 'optimistic', weight: 1.5 }
+                ],
+                context: 'الأمل عبادة قلبية، وكلما اشتدت العتمة اقترب الفجر، ووعد الله حق لا يتخلف.',
+                verses: [
+                    { surah: 12, ayah: 87, ref: 'يوسف 87', text: 'وَلَا تَيْأَسُوا مِن رَّوْحِ اللَّهِ' },
+                    { surah: 39, ayah: 53, ref: 'الزمر 53', text: 'لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ' },
+                    { surah: 65, ayah: 2, ref: 'الطلاق 2-3', text: 'وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا ۝ وَيَرْزُقْهُ مِنْ حَيْثُ لَا يَحْتَسِبُ' },
+                    { surah: 94, ayah: 6, ref: 'الشرح 6', text: 'إِنَّ مَعَ الْعُسْرِ يُسْرًا' }
+                ]
+            },
+            {
+                id: 'gratitude',
+                label: 'امتنان',
+                title: 'لتثبيت الامتنان',
+                keywords: [
+                    { term: 'ممتن', weight: 1.7 },
+                    { term: 'شكر', weight: 1.7 },
+                    { term: 'امتنان', weight: 1.8 },
+                    { term: 'الحمد', weight: 1.6 },
+                    { term: 'grateful', weight: 1.7 },
+                    { term: 'gratitude', weight: 1.7 }
+                ],
+                context: 'الامتنان يفتح بصيرة القلب، ويحوّل النظر من النقص إلى النعمة، ومن القلق إلى الرضا.',
+                verses: [
+                    { surah: 14, ayah: 7, ref: 'إبراهيم 7', text: 'لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ' },
+                    { surah: 55, ayah: 13, ref: 'الرحمن 13', text: 'فَبِأَيِّ آلَاءِ رَبِّكُمَا تُكَذِّبَانِ' },
+                    { surah: 16, ayah: 18, ref: 'النحل 18', text: 'وَإِن تَعُدُّوا نِعْمَةَ اللَّهِ لَا تُحْصُوهَا' },
+                    { surah: 2, ayah: 152, ref: 'البقرة 152', text: 'فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ' }
+                ]
+            }
+        ];
+
+        function normalizeMoodText(text) {
+            return String(text || '')
+                .toLowerCase()
+                .normalize('NFKD')
+                .replace(/[\u064b-\u065f\u0670\u06d6-\u06ed]/g, '')
+                .replace(/[إأآٱ]/g, 'ا')
+                .replace(/ى/g, 'ي')
+                .replace(/ؤ/g, 'و')
+                .replace(/ئ/g, 'ي')
+                .replace(/ة/g, 'ه')
+                .trim();
+        }
+
+        function countKeywordMatches(text, keyword) {
+            if (!text || !keyword) return 0;
+            let count = 0;
+            let index = 0;
+            while (true) {
+                index = text.indexOf(keyword, index);
+                if (index === -1) break;
+                count += 1;
+                index += keyword.length;
+            }
+            return count;
+        }
+
+        function scoreMoodProfile(normalizedText, profile) {
+            let score = 0;
+            profile.keywords.forEach(keywordRule => {
+                const term = normalizeMoodText(keywordRule.term || '');
+                const weight = Number(keywordRule.weight || 1);
+                const hits = countKeywordMatches(normalizedText, term);
+                if (hits > 0) {
+                    score += hits * weight;
+                }
+            });
+            return score;
+        }
+
+        function classifyMood(feelingText) {
+            const normalized = normalizeMoodText(feelingText);
+            if (!normalized) return null;
+
+            const ranked = MOOD_SUPPORT_PROFILES
+                .map(profile => ({
+                    ...profile,
+                    rawScore: scoreMoodProfile(normalized, profile)
+                }))
+                .filter(item => item.rawScore > 0)
+                .sort((a, b) => b.rawScore - a.rawScore);
+
+            if (ranked.length === 0) {
+                const fallback = MOOD_SUPPORT_PROFILES.find(profile => profile.id === 'anxiety') || MOOD_SUPPORT_PROFILES[0];
+                return {
+                    selected: [fallback],
+                    ranked: [{ ...fallback, confidence: 52 }]
+                };
+            }
+
+            const topRaw = ranked[0].rawScore || 1;
+            const rankedWithConfidence = ranked.slice(0, 3).map((item, index) => {
+                const relative = item.rawScore / topRaw;
+                const confidence = Math.max(36, Math.min(97, Math.round((relative * 100) - (index * 3))));
+                return {
+                    ...item,
+                    confidence
+                };
+            });
+
+            const selected = [rankedWithConfidence[0]];
+            if (rankedWithConfidence[1] && rankedWithConfidence[1].rawScore >= rankedWithConfidence[0].rawScore * 0.58) {
+                selected.push(rankedWithConfidence[1]);
+            }
+
+            return {
+                selected,
+                ranked: rankedWithConfidence
+            };
+        }
+
+        function shuffleArray(list) {
+            const copy = [...list];
+            for (let i = copy.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function buildAyahSet(selectedProfiles) {
+            const selectedIds = selectedProfiles.map(profile => profile.id);
+            const perProfileCount = selectedProfiles.length > 1 ? 3 : 5;
+            const maxCount = selectedProfiles.length > 1 ? 6 : 5;
+            const verseMap = new Map();
+
+            selectedProfiles.forEach(profile => {
+                const verses = shuffleArray(profile.verses);
+                let localAdded = 0;
+                verses.forEach(verse => {
+                    if (localAdded >= perProfileCount) return;
+                    const key = `${verse.surah}:${verse.ayah}`;
+                    if (!verseMap.has(key)) {
+                        verseMap.set(key, {
+                            ...verse,
+                            sourceMood: profile.label
+                        });
+                        localAdded += 1;
+                    }
+                });
+            });
+
+            if (verseMap.size < maxCount) {
+                MOOD_SUPPORT_PROFILES
+                    .filter(profile => !selectedIds.includes(profile.id))
+                    .forEach(profile => {
+                        if (verseMap.size >= maxCount) return;
+                        const verses = shuffleArray(profile.verses);
+                        verses.forEach(verse => {
+                            if (verseMap.size >= maxCount) return;
+                            const key = `${verse.surah}:${verse.ayah}`;
+                            if (!verseMap.has(key)) {
+                                verseMap.set(key, {
+                                    ...verse,
+                                    sourceMood: profile.label
+                                });
+                            }
+                        });
+                    });
+            }
+
+            return Array.from(verseMap.values()).slice(0, maxCount);
+        }
+
+        function createMoodSummary(selectedProfiles) {
+            if (selectedProfiles.length > 1) {
+                return `تم التقاط مزيج مشاعر: ${selectedProfiles[0].label} + ${selectedProfiles[1].label}`;
+            }
+            return `تم التقاط الشعور الأقرب: ${selectedProfiles[0].label}`;
+        }
+
+        function applyMoodQuick(text) {
+            const input = document.getElementById('moodInput');
+            if (!input) return;
+            input.value = text;
+            generateMoodSupport();
+        }
+
+        function generateMoodSupport() {
+            const input = document.getElementById('moodInput');
+            const result = document.getElementById('moodResult');
+            if (!input || !result) return;
+
+            const feeling = input.value.trim();
+            if (!feeling) {
+                alert('اكتب شعورك أولاً حتى نقترح آيات مناسبة.');
+                return;
+            }
+
+            const classification = classifyMood(feeling);
+            if (!classification || !classification.selected.length) {
+                result.classList.remove('active');
+                result.innerHTML = '';
+                return;
+            }
+
+            const selectedProfiles = classification.selected;
+            const ayahSet = buildAyahSet(selectedProfiles);
+
+            const scorePills = classification.ranked.map((item, index) => `
+                <span class="mood-score-pill ${index > 0 ? 'secondary' : ''}">${item.label} ${item.confidence}%</span>
+            `).join('');
+
+            const contexts = selectedProfiles.map(profile => profile.context);
+            const combinedContext = contexts.join(' ');
+
+            const versesHtml = ayahSet.map(verse => `
+                <div class="mood-ayah-item">
+                    <span class="mood-ayah-tag">مناسب لـ ${verse.sourceMood}</span>
+                    <div class="mood-ayah-text">${verse.text}</div>
+                    <div class="mood-ayah-ref">
+                        <span>${verse.ref}</span>
+                        <a class="mood-ayah-link" href="quran.html?surah=${verse.surah}&ayah=${verse.ayah}">فتح الآية</a>
+                    </div>
+                </div>
+            `).join('');
+
+            result.innerHTML = `
+                <div class="mood-context-title">${selectedProfiles[0].title}</div>
+                <div class="mood-detected">${createMoodSummary(selectedProfiles)}</div>
+                <div class="mood-score-list">${scorePills}</div>
+                <div class="mood-context-text">${combinedContext}</div>
+                <div class="mood-ayah-list">${versesHtml}</div>
+                <div class="mood-note">إذا كان شعورك مؤلماً لفترة طويلة، تحدث مع شخص تثق به أو مختص نفسي إلى جانب الاستعانة بالقرآن والدعاء.</div>
+            `;
+            result.classList.add('active');
         }
 
         // Initialize

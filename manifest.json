@@ -2,7 +2,9 @@
   "name": "القرآن الكريم - تطبيق إسلامي شامل",
   "short_name": "القرآن الكريم",
   "description": "تطبيق شامل للقرآن الكريم مع الأذكار والمسبحة الإلكترونية",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f5f5f5",
   "theme_color": "#1B5E20",
@@ -24,5 +26,59 @@
     }
   ],
   "categories": ["lifestyle", "education"],
+  "shortcuts": [
+    {
+      "name": "القرآن الكريم",
+      "short_name": "القرآن",
+      "description": "فتح صفحة قراءة القرآن",
+      "url": "/quran.html",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "مواقيت الصلاة",
+      "short_name": "الصلاة",
+      "description": "فتح مواقيت الصلاة والقبلة",
+      "url": "/prayer-times.html",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "الأذكار",
+      "short_name": "الأذكار",
+      "description": "فتح صفحة الأذكار",
+      "url": "/azkar.html",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "المسبحة",
+      "short_name": "المسبحة",
+      "description": "فتح المسبحة الإلكترونية",
+      "url": "/masbaha.html",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
   "screenshots": []
 }

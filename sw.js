@@ -1,22 +1,14 @@
-const CACHE_NAME = 'quran-app-v8';
-const urlsToCache = [
+const CACHE_NAME = 'quran-app-v10';
+const APP_SHELL_URLS = [
   '/',
   '/index.html',
-  '/quran',
   '/quran.html',
-  '/azkar',
   '/azkar.html',
-  '/masbaha',
   '/masbaha.html',
-  '/settings',
   '/settings.html',
-  '/bookmarks',
   '/bookmarks.html',
-  '/sunan',
   '/sunan.html',
-  '/prayer-times',
   '/prayer-times.html',
-  '/bio',
   '/bio.html',
   '/styles.css',
   '/common.js',
@@ -25,130 +17,181 @@ const urlsToCache = [
   '/manifest.json'
 ];
 
-// Install event - cache resources
+const QURAN_API_HOST = 'api.alquran.cloud';
+const STREAM_HOST_BLOCKLIST = [
+  'mp3quran.net',
+  'radiojar.com',
+  'qurango.net',
+  'radio.co'
+];
+
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-      .catch(err => {
-        console.log('Cache addAll error:', err);
-      })
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+
+      // Cache each URL independently so one failing request does not abort installation.
+      await Promise.allSettled(
+        APP_SHELL_URLS.map(async (url) => {
+          try {
+            const request = new Request(url, { cache: 'reload' });
+            const response = await fetch(request);
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            await cache.put(request, response.clone());
+          } catch (error) {
+            console.warn('[SW] Precache skip:', url, error && error.message ? error.message : error);
+          }
+        })
+      );
+    })()
   );
-  // Force the waiting service worker to become active
-  self.skipWaiting();
 });
 
-// Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
-  // Skip caching for chrome-extension and other unsupported schemes
+  const { request } = event;
+
+  if (request.method !== 'GET') {
+    return;
+  }
+
   const url = new URL(event.request.url);
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
     return;
   }
 
-  // Skip caching for radio streams and any large audio playback
   if (url.pathname.includes('radio') ||
     url.pathname.includes('stream') ||
-    url.hostname.includes('mp3quran.net') ||
-    url.hostname.includes('radiojar.com') ||
-    url.hostname.includes('qurango.net') ||
-    url.hostname.includes('radio.co')) {
+    STREAM_HOST_BLOCKLIST.some(host => url.hostname.includes(host))) {
     return;
   }
 
-  // Handle Quran API requests (including tafsir)
-  if (url.hostname === 'api.alquran.cloud') {
-    event.respondWith(
-      caches.match(event.request)
-        .then(response => {
-          if (response) {
-            return response;
-          }
-          return fetch(event.request).then(networkResponse => {
-            // Cache API responses for better performance
-            if (networkResponse.status === 200) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(event.request, responseClone);
-              });
-            }
-            return networkResponse;
-          });
-        })
-    );
+  if (request.mode === 'navigate') {
+    event.respondWith(handleNavigationRequest(request));
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
+  if (url.hostname === QURAN_API_HOST) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
 
-        // Try matching with .html extension for clean URLs
-        const urlPath = url.pathname;
-        if (!urlPath.endsWith('.html') && !urlPath.includes('.')) {
-          const htmlRequest = new Request(urlPath + '.html');
-          return caches.match(htmlRequest).then(htmlResponse => {
-            if (htmlResponse) {
-              return htmlResponse;
-            }
-            return fetchAndCache(event.request);
-          });
-        }
-
-        return fetchAndCache(event.request);
-      })
-  );
+  event.respondWith(staleWhileRevalidate(request));
 });
 
-function fetchAndCache(request) {
-  return fetch(request).then(response => {
-    // Check if we received a valid response
-    if (!response || response.status !== 200 || response.type !== 'basic') {
-      return response;
+function getHtmlFallbackPath(pathname) {
+  if (!pathname || pathname === '/') {
+    return '/index.html';
+  }
+
+  if (pathname.endsWith('.html') || pathname.includes('.')) {
+    return pathname;
+  }
+
+  return `${pathname}.html`;
+}
+
+function shouldCacheResponse(response) {
+  return response && response.status === 200 && (response.type === 'basic' || response.type === 'cors');
+}
+
+async function updateCache(request, response) {
+  if (!shouldCacheResponse(response)) {
+    return;
+  }
+
+  const cache = await caches.open(CACHE_NAME);
+  await cache.put(request, response);
+}
+
+async function networkFirst(request) {
+  try {
+    const networkResponse = await fetch(request);
+    await updateCache(request, networkResponse.clone());
+    return networkResponse;
+  } catch (_error) {
+    const cachedResponse = await caches.match(request, { ignoreSearch: true });
+    if (cachedResponse) {
+      return cachedResponse;
     }
 
-    // Clone the response
-    const responseToCache = response.clone();
-
-    caches.open(CACHE_NAME).then(cache => {
-      cache.put(request, responseToCache);
-    });
-
-    return response;
-  }).catch(() => {
-    // Return a fallback response if fetch fails
-    return new Response('Network error', {
-      status: 408,
+    return new Response('Network unavailable', {
+      status: 503,
       headers: { 'Content-Type': 'text/plain' }
     });
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cachedResponse = await caches.match(request, { ignoreSearch: true });
+
+  const networkPromise = fetch(request)
+    .then(async networkResponse => {
+      await updateCache(request, networkResponse.clone());
+      return networkResponse;
+    })
+    .catch(() => null);
+
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  const networkResponse = await networkPromise;
+  if (networkResponse) {
+    return networkResponse;
+  }
+
+  return new Response('Offline', {
+    status: 503,
+    headers: { 'Content-Type': 'text/plain' }
   });
 }
 
-// Activate event - clean up old caches
+async function handleNavigationRequest(request) {
+  try {
+    const networkResponse = await fetch(request);
+    await updateCache(request, networkResponse.clone());
+    return networkResponse;
+  } catch (_error) {
+    const requestUrl = new URL(request.url);
+    const fallbackPath = getHtmlFallbackPath(requestUrl.pathname);
+    const cachedResponse = await caches.match(request, { ignoreSearch: true }) ||
+      await caches.match(fallbackPath) ||
+      await caches.match('/index.html');
+
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    return new Response('Offline', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  }
+}
+
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames
+          .filter(cacheName => cacheName !== CACHE_NAME)
+          .map(cacheName => caches.delete(cacheName))
       );
-    })
+
+      await self.clients.claim();
+    })()
   );
 });
 
-// Message event - handle cache clearing requests
 self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
+
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
       caches.keys().then(cacheNames => {

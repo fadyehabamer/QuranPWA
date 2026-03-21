@@ -1,4 +1,38 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/quran",
+      "destination": "/quran.html"
+    },
+    {
+      "source": "/azkar",
+      "destination": "/azkar.html"
+    },
+    {
+      "source": "/masbaha",
+      "destination": "/masbaha.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/settings.html"
+    },
+    {
+      "source": "/bookmarks",
+      "destination": "/bookmarks.html"
+    },
+    {
+      "source": "/sunan",
+      "destination": "/sunan.html"
+    },
+    {
+      "source": "/prayer-times",
+      "destination": "/prayer-times.html"
+    },
+    {
+      "source": "/bio",
+      "destination": "/bio.html"
+    }
+  ]
 }

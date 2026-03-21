@@ -59,6 +59,177 @@ function hideModal() {
     modal.classList.remove('active');
 }
 
+// Service worker update toast
+(function initServiceWorkerUpdateToast() {
+    if (!('serviceWorker' in navigator) || window.__swUpdateToastInitialized) {
+        return;
+    }
+
+    window.__swUpdateToastInitialized = true;
+    let activeRegistration = null;
+    let toastElement = null;
+
+    function ensureToastStyles() {
+        if (document.getElementById('swUpdateToastStyles')) return;
+
+        const style = document.createElement('style');
+        style.id = 'swUpdateToastStyles';
+        style.textContent = `
+            .sw-update-toast {
+                position: fixed;
+                right: 16px;
+                bottom: 86px;
+                width: min(360px, calc(100vw - 24px));
+                background: var(--card-bg, #fff);
+                color: var(--text-color, #1a1a1a);
+                border: 1px solid var(--border-color, #ddd);
+                border-radius: 14px;
+                box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+                padding: 14px;
+                z-index: 2000;
+                transform: translateY(140%);
+                opacity: 0;
+                transition: transform 0.25s ease, opacity 0.25s ease;
+                font-family: 'Cairo', sans-serif;
+            }
+            .sw-update-toast.active {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            .sw-update-title {
+                font-weight: 700;
+                color: var(--primary-color, #1B5E20);
+                margin-bottom: 5px;
+                font-size: 15px;
+            }
+            .sw-update-text {
+                font-size: 13px;
+                color: var(--text-secondary, #666);
+                line-height: 1.6;
+                margin-bottom: 10px;
+            }
+            .sw-update-actions {
+                display: flex;
+                gap: 8px;
+                justify-content: flex-end;
+            }
+            .sw-update-btn {
+                border: none;
+                border-radius: 9px;
+                padding: 8px 12px;
+                font-size: 13px;
+                cursor: pointer;
+                font-family: inherit;
+            }
+            .sw-update-btn.primary {
+                background: var(--primary-color, #1B5E20);
+                color: #fff;
+                font-weight: 700;
+            }
+            .sw-update-btn.secondary {
+                background: rgba(0, 0, 0, 0.07);
+                color: var(--text-color, #1a1a1a);
+            }
+            [data-theme="dark"] .sw-update-btn.secondary {
+                background: rgba(255, 255, 255, 0.12);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function ensureToastElement() {
+        if (toastElement) return toastElement;
+
+        toastElement = document.createElement('div');
+        toastElement.className = 'sw-update-toast';
+        toastElement.innerHTML = `
+            <div class="sw-update-title">إصدار جديد متاح</div>
+            <div class="sw-update-text">تم تنزيل تحديث للتطبيق. حدّث الآن للحصول على أحدث المزايا والتحسينات.</div>
+            <div class="sw-update-actions">
+                <button type="button" class="sw-update-btn secondary" id="swUpdateLaterBtn">لاحقاً</button>
+                <button type="button" class="sw-update-btn primary" id="swUpdateNowBtn">تحديث الآن</button>
+            </div>
+        `;
+
+        document.body.appendChild(toastElement);
+
+        const laterBtn = toastElement.querySelector('#swUpdateLaterBtn');
+        const updateBtn = toastElement.querySelector('#swUpdateNowBtn');
+
+        if (laterBtn) {
+            laterBtn.addEventListener('click', hideUpdateToast);
+        }
+
+        if (updateBtn) {
+            updateBtn.addEventListener('click', () => {
+                if (activeRegistration && activeRegistration.waiting) {
+                    activeRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
+                hideUpdateToast();
+            });
+        }
+
+        return toastElement;
+    }
+
+    function showUpdateToast(registration) {
+        if (!navigator.serviceWorker.controller) return;
+        activeRegistration = registration;
+        ensureToastStyles();
+
+        const mount = () => {
+            const element = ensureToastElement();
+            element.classList.add('active');
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', mount, { once: true });
+        } else {
+            mount();
+        }
+    }
+
+    function hideUpdateToast() {
+        if (!toastElement) return;
+        toastElement.classList.remove('active');
+    }
+
+    function watchRegistration(registration) {
+        if (!registration) return;
+
+        if (registration.waiting) {
+            showUpdateToast(registration);
+        }
+
+        registration.addEventListener('updatefound', () => {
+            const installingWorker = registration.installing;
+            if (!installingWorker) return;
+
+            installingWorker.addEventListener('statechange', () => {
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    showUpdateToast(registration);
+                }
+            });
+        });
+    }
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (window.__swToastRefreshing) return;
+        window.__swToastRefreshing = true;
+        window.location.reload();
+    });
+
+    navigator.serviceWorker.getRegistration()
+        .then(reg => reg || navigator.serviceWorker.register('/sw.js'))
+        .then(registration => {
+            watchRegistration(registration);
+            if (registration && typeof registration.update === 'function') {
+                registration.update().catch(() => { });
+            }
+        })
+        .catch(() => { });
+})();
+
 // Close modal on overlay click
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('customModal');
@@ -839,7 +1010,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') {
                 const query = e.target.value.trim();
                 if (query) {
-                    location.href = `quran?search=${encodeURIComponent(query)}`;
+                    location.href = `quran.html?search=${encodeURIComponent(query)}`;
                 }
             }
         });

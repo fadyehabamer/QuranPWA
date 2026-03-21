@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
@@ -141,6 +141,85 @@
         .search-container input:focus {
             outline: none;
             border-color: var(--primary-color);
+        }
+
+        .instant-search-results {
+            margin-top: 10px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .instant-search-results.active {
+            display: block;
+        }
+
+        .instant-search-section {
+            padding: 10px 12px 0;
+        }
+
+        .instant-search-section-title {
+            font-size: 13px;
+            color: var(--text-color);
+            opacity: 0.75;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .instant-result-item {
+            width: 100%;
+            border: none;
+            border-top: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-color);
+            padding: 11px 12px;
+            text-align: right;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-family: 'Amiri', serif;
+        }
+
+        .instant-result-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .instant-result-item strong {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .instant-result-item small {
+            font-size: 13px;
+            opacity: 0.8;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .instant-result-empty {
+            padding: 12px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .ayah-search-highlight {
+            background: rgba(76, 175, 80, 0.16);
+            border-radius: 10px;
+            padding: 2px 4px;
+            animation: ayahResultPulse 1.8s ease;
+        }
+
+        @keyframes ayahResultPulse {
+            0% {
+                background: rgba(76, 175, 80, 0.34);
+            }
+
+            100% {
+                background: rgba(76, 175, 80, 0.1);
+            }
         }
 
         .reader-header {
@@ -1061,28 +1140,28 @@
             <a href="/" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الرئيسية</div>
             </a>
-            <a href="quran" class="sidebar-nav-item active">
+            <a href="quran.html" class="sidebar-nav-item active">
                 <div class="sidebar-nav-label">القرآن الكريم</div>
             </a>
-            <a href="bookmarks" class="sidebar-nav-item">
+            <a href="bookmarks.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">المواضع المحفوظة</div>
             </a>
-            <a href="azkar" class="sidebar-nav-item">
+            <a href="azkar.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الأذكار</div>
             </a>
-            <a href="masbaha" class="sidebar-nav-item">
+            <a href="masbaha.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">المسبحة</div>
             </a>
-            <a href="sunan" class="sidebar-nav-item">
+            <a href="sunan.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">سنن النبي</div>
             </a>
-            <a href="prayer-times" class="sidebar-nav-item">
+            <a href="prayer-times.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">مواقيت الصلاة</div>
             </a>
-            <a href="/bio" class="sidebar-nav-item">
+            <a href="bio.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">عن المطور</div>
             </a>
-            <a href="settings" class="sidebar-nav-item">
+            <a href="settings.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">الإعدادات</div>
             </a>
         </nav>
@@ -1102,7 +1181,7 @@
                 <i class="bi bi-people-fill"></i>
                 <span class="count" id="visitorCount">-</span>
             </div>
-            <button class="settings-btn" onclick="window.location.href='settings'">
+            <button class="settings-btn" onclick="window.location.href='settings.html'">
                 <i class="bi bi-gear-fill"></i>
             </button>
         </div>
@@ -1113,7 +1192,8 @@
         <!-- Surah List View -->
         <div id="surahListView" class="surah-list-view active">
             <div class="search-container">
-                <input type="text" id="surahSearch" placeholder="ابحث عن سورة..." oninput="filterSurahs()">
+                <input type="text" id="surahSearch" placeholder="ابحث باسم السورة أو نص الآية..." oninput="onSearchInput()">
+                <div id="instantSearchResults" class="instant-search-results"></div>
             </div>
             <div id="surahList" class="surah-list"></div>
         </div>
@@ -1438,6 +1518,12 @@
         let isPlaying = false;
         let currentAyahIndex = 0;
         let allAyahs = [];
+        let searchDebounceTimer = null;
+        let searchAbortController = null;
+        let latestSearchToken = 0;
+        const ayahSearchCache = new Map();
+        const MAX_SURAH_SEARCH_RESULTS = 6;
+        const MAX_AYAH_SEARCH_RESULTS = 8;
 
         const surahNames = [
             'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال',
@@ -1573,6 +1659,188 @@
             { name: 'الناس', verses: 6, type: 'مكية' }
         ];
 
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function normalizeArabicText(value) {
+            return String(value || '')
+                .toLowerCase()
+                .normalize('NFKD')
+                .replace(/[\u064b-\u065f\u0670\u06d6-\u06ed]/g, '')
+                .replace(/[إأآٱ]/g, 'ا')
+                .replace(/ى/g, 'ي')
+                .replace(/ؤ/g, 'و')
+                .replace(/ئ/g, 'ي')
+                .replace(/ة/g, 'ه')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function getSurahSearchMatches(query) {
+            const normalizedQuery = normalizeArabicText(query);
+            if (!normalizedQuery) return [];
+
+            return surahInfo
+                .map((surah, index) => ({
+                    surah,
+                    number: index + 1,
+                    arabicName: surahNames[index],
+                    haystack: normalizeArabicText(`${surah.name} ${surahNames[index]} ${surah.type} ${index + 1}`)
+                }))
+                .filter(item => item.haystack.includes(normalizedQuery) || String(item.number).includes(query.trim()))
+                .slice(0, MAX_SURAH_SEARCH_RESULTS);
+        }
+
+        function renderInstantSearchResults({ query, surahMatches = [], ayahMatches = [], isLoading = false, error = '' }) {
+            const resultsBox = document.getElementById('instantSearchResults');
+            if (!resultsBox) return;
+
+            if (!query || query.trim().length < 2) {
+                clearInstantSearchResults();
+                return;
+            }
+
+            let html = '';
+
+            if (surahMatches.length > 0) {
+                html += '<div class="instant-search-section">';
+                html += '<div class="instant-search-section-title">نتائج السور</div>';
+                html += '</div>';
+
+                surahMatches.forEach(item => {
+                    html += `
+                        <button class="instant-result-item" onclick="openSearchSurah(${item.number})" type="button">
+                            <strong>سورة ${escapeHtml(item.surah.name)}</strong>
+                            <small>رقم ${item.number} • ${escapeHtml(item.surah.type)} • ${item.surah.verses} آيات</small>
+                        </button>
+                    `;
+                });
+            }
+
+            if (ayahMatches.length > 0 || isLoading || error) {
+                html += '<div class="instant-search-section">';
+                html += '<div class="instant-search-section-title">نتائج الآيات</div>';
+                html += '</div>';
+
+                if (isLoading) {
+                    html += '<div class="instant-result-empty">جار البحث في نصوص الآيات...</div>';
+                } else if (error) {
+                    html += `<div class="instant-result-empty">${escapeHtml(error)}</div>`;
+                } else {
+                    ayahMatches.forEach(match => {
+                        html += `
+                            <button class="instant-result-item" onclick="openSearchAyah(${match.surahNumber}, ${match.ayahNumberInSurah})" type="button">
+                                <strong>سورة ${escapeHtml(match.surahName)} • آية ${match.ayahNumberInSurah}</strong>
+                                <small>${escapeHtml(match.previewText)}</small>
+                            </button>
+                        `;
+                    });
+                }
+            }
+
+            if (!surahMatches.length && !ayahMatches.length && !isLoading && !error) {
+                html = '<div class="instant-result-empty">لا توجد نتائج مطابقة</div>';
+            }
+
+            resultsBox.innerHTML = html;
+            resultsBox.classList.add('active');
+        }
+
+        function clearInstantSearchResults() {
+            const resultsBox = document.getElementById('instantSearchResults');
+            if (!resultsBox) return;
+            resultsBox.classList.remove('active');
+            resultsBox.innerHTML = '';
+        }
+
+        async function fetchAyahSearchMatches(query, signal) {
+            const normalizedQuery = normalizeArabicText(query);
+            if (ayahSearchCache.has(normalizedQuery)) {
+                return ayahSearchCache.get(normalizedQuery);
+            }
+
+            const response = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(query)}/all/ar`, { signal });
+            if (!response.ok) {
+                throw new Error('تعذر الوصول لخدمة البحث حالياً');
+            }
+
+            const data = await response.json();
+            const matches = (data?.data?.matches || [])
+                .slice(0, MAX_AYAH_SEARCH_RESULTS)
+                .map(match => ({
+                    surahNumber: match?.surah?.number,
+                    surahName: match?.surah?.name || '',
+                    ayahNumberInSurah: match?.numberInSurah,
+                    previewText: (match?.text || '').replace(/\s+/g, ' ').trim().slice(0, 170)
+                }))
+                .filter(match => match.surahNumber && match.ayahNumberInSurah);
+
+            ayahSearchCache.set(normalizedQuery, matches);
+            return matches;
+        }
+
+        function onSearchInput() {
+            const input = document.getElementById('surahSearch');
+            if (!input) return;
+
+            const query = input.value.trim();
+            filterSurahs(query);
+
+            clearTimeout(searchDebounceTimer);
+            if (searchAbortController) {
+                searchAbortController.abort();
+                searchAbortController = null;
+            }
+
+            if (query.length < 2) {
+                latestSearchToken++;
+                clearInstantSearchResults();
+                return;
+            }
+
+            const searchToken = ++latestSearchToken;
+            const surahMatches = getSurahSearchMatches(query);
+            renderInstantSearchResults({
+                query,
+                surahMatches,
+                ayahMatches: [],
+                isLoading: true
+            });
+
+            searchDebounceTimer = setTimeout(async () => {
+                searchAbortController = new AbortController();
+
+                try {
+                    const ayahMatches = await fetchAyahSearchMatches(query, searchAbortController.signal);
+                    if (searchToken !== latestSearchToken) return;
+
+                    renderInstantSearchResults({
+                        query,
+                        surahMatches,
+                        ayahMatches,
+                        isLoading: false
+                    });
+                } catch (error) {
+                    if (error.name === 'AbortError') return;
+                    if (searchToken !== latestSearchToken) return;
+
+                    renderInstantSearchResults({
+                        query,
+                        surahMatches,
+                        ayahMatches: [],
+                        isLoading: false,
+                        error: 'تعذر البحث في الآيات الآن، يمكنك متابعة البحث في السور.'
+                    });
+                }
+            }, 320);
+        }
+
         function renderSurahList() {
             const list = document.getElementById('surahList');
             let html = '';
@@ -1600,12 +1868,14 @@
             list.innerHTML = html;
         }
 
-        function filterSurahs() {
-            const searchTerm = document.getElementById('surahSearch').value.toLowerCase();
+        function filterSurahs(searchTermOverride = '') {
+            const input = document.getElementById('surahSearch');
+            const rawSearchTerm = searchTermOverride || input?.value || '';
+            const searchTerm = normalizeArabicText(rawSearchTerm);
             const items = document.querySelectorAll('.surah-item');
 
             items.forEach(item => {
-                const name = item.getAttribute('data-name').toLowerCase();
+                const name = normalizeArabicText(item.getAttribute('data-name'));
                 const number = item.getAttribute('data-number');
                 if (name.includes(searchTerm) || number.includes(searchTerm)) {
                     item.style.display = 'flex';
@@ -1621,11 +1891,71 @@
             loadSurah(number);
         }
 
+        async function openSurahAtPage(surahNumber, pageIndex = null, ayahNumberInSurah = null) {
+            showSurahReader();
+            await loadSurah(surahNumber);
+
+            if (totalPages <= 0) {
+                return;
+            }
+
+            if (Number.isInteger(pageIndex)) {
+                const safePageIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
+                currentPageIndex = safePageIndex;
+                renderCurrentPage();
+                updateNavigation();
+            }
+
+            if (ayahNumberInSurah) {
+                setTimeout(() => {
+                    highlightAyahInView(ayahNumberInSurah);
+                }, 120);
+            }
+        }
+
+        function highlightAyahInView(ayahNumberInSurah) {
+            const ayahElements = document.querySelectorAll('#quranContent .ayah');
+            let target = null;
+
+            ayahElements.forEach(element => {
+                const numberElement = element.querySelector('.ayah-number');
+                const currentAyahNumber = parseInt(numberElement?.textContent || '', 10);
+                if (currentAyahNumber === ayahNumberInSurah) {
+                    target = element;
+                }
+            });
+
+            if (!target) return;
+
+            target.classList.add('ayah-search-highlight');
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => target.classList.remove('ayah-search-highlight'), 2200);
+        }
+
+        function openSearchSurah(surahNumber) {
+            const searchInput = document.getElementById('surahSearch');
+            if (searchInput) searchInput.value = '';
+            clearInstantSearchResults();
+            filterSurahs();
+            selectSurah(surahNumber);
+        }
+
+        function openSearchAyah(surahNumber, ayahNumberInSurah) {
+            const searchInput = document.getElementById('surahSearch');
+            if (searchInput) searchInput.value = '';
+            clearInstantSearchResults();
+            filterSurahs();
+
+            const targetPageIndex = Math.floor((ayahNumberInSurah - 1) / AYAHS_PER_PAGE);
+            openSurahAtPage(surahNumber, targetPageIndex, ayahNumberInSurah);
+        }
+
         function showSurahList() {
             document.getElementById('surahListView').classList.add('active');
             document.getElementById('surahReaderView').classList.remove('active');
             document.getElementById('surahSearch').value = '';
             filterSurahs();
+            clearInstantSearchResults();
         }
 
         function showSurahReader() {
@@ -1946,15 +2276,23 @@
         const urlParams = new URLSearchParams(window.location.search);
         const surahParam = urlParams.get('surah');
         const pageParam = urlParams.get('page');
+        const ayahParam = urlParams.get('ayah');
 
-        if (surahParam && pageParam) {
-            // Load specific bookmark from URL
-            selectSurah(parseInt(surahParam));
-            setTimeout(() => {
-                currentPageIndex = parseInt(pageParam);
-                renderCurrentPage();
-                updateNavigation();
-            }, 100);
+        if (surahParam && ayahParam) {
+            const surahNumber = parseInt(surahParam, 10);
+            const ayahNumberInSurah = parseInt(ayahParam, 10);
+
+            if (!Number.isNaN(surahNumber) && !Number.isNaN(ayahNumberInSurah)) {
+                const targetPageIndex = Math.floor((ayahNumberInSurah - 1) / AYAHS_PER_PAGE);
+                openSurahAtPage(surahNumber, targetPageIndex, ayahNumberInSurah);
+            }
+        } else if (surahParam && pageParam) {
+            const surahNumber = parseInt(surahParam, 10);
+            const pageNumber = parseInt(pageParam, 10);
+
+            if (!Number.isNaN(surahNumber) && !Number.isNaN(pageNumber)) {
+                openSurahAtPage(surahNumber, pageNumber);
+            }
         }
         // If no URL params, stay on surah list (don't auto-load bookmark)
 
@@ -2502,23 +2840,23 @@
             <i class="bi bi-house-fill nav-icon"></i>
             <span class="nav-label">الرئيسية</span>
         </a>
-        <a href="quran" class="nav-item active">
+        <a href="quran.html" class="nav-item active">
             <i class="bi bi-book-fill nav-icon"></i>
             <span class="nav-label">القرآن</span>
         </a>
-        <a href="azkar" class="nav-item">
+        <a href="azkar.html" class="nav-item">
             <i class="bi bi-moon-stars-fill nav-icon"></i>
             <span class="nav-label">الأذكار</span>
         </a>
-        <a href="masbaha" class="nav-item">
+        <a href="masbaha.html" class="nav-item">
             <i class="bi bi-circle-fill nav-icon"></i>
             <span class="nav-label">المسبحة</span>
         </a>
-        <a href="sunan" class="nav-item">
+        <a href="sunan.html" class="nav-item">
             <i class="bi bi-sun-fill nav-icon"></i>
             <span class="nav-label">السنن</span>
         </a>
-        <a href="settings" class="nav-item">
+        <a href="settings.html" class="nav-item">
             <i class="bi bi-gear-fill nav-icon"></i>
             <span class="nav-label">الإعدادات</span>
         </a>
