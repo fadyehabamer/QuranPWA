@@ -68,6 +68,8 @@ function hideModal() {
     window.__swUpdateToastInitialized = true;
     let activeRegistration = null;
     let toastElement = null;
+    const SW_SIGNATURE_KEY = 'swScriptSignatureV1';
+    const SW_PENDING_SIGNATURE_KEY = 'swPendingSignatureV1';
 
     function ensureToastStyles() {
         if (document.getElementById('swUpdateToastStyles')) return;
@@ -78,7 +80,7 @@ function hideModal() {
             .sw-update-toast {
                 position: fixed;
                 right: 16px;
-                bottom: 86px;
+                bottom: calc(86px + env(safe-area-inset-bottom, 0px));
                 width: min(360px, calc(100vw - 24px));
                 background: var(--card-bg, #fff);
                 color: var(--text-color, #1a1a1a);
@@ -86,7 +88,7 @@ function hideModal() {
                 border-radius: 14px;
                 box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
                 padding: 14px;
-                z-index: 2000;
+                z-index: 10000;
                 transform: translateY(140%);
                 opacity: 0;
                 transition: transform 0.25s ease, opacity 0.25s ease;
@@ -161,11 +163,22 @@ function hideModal() {
         }
 
         if (updateBtn) {
-            updateBtn.addEventListener('click', () => {
-                if (activeRegistration && activeRegistration.waiting) {
-                    activeRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            updateBtn.addEventListener('click', async () => {
+                try {
+                    if (activeRegistration && typeof activeRegistration.update === 'function') {
+                        await activeRegistration.update();
+                    }
+
+                    if (activeRegistration && activeRegistration.waiting) {
+                        activeRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    } else {
+                        window.location.reload();
+                    }
+                } catch (_error) {
+                    window.location.reload();
+                } finally {
+                    hideUpdateToast();
                 }
-                hideUpdateToast();
             });
         }
 
@@ -215,15 +228,149 @@ function hideModal() {
     function checkForWaitingUpdate() {
         return navigator.serviceWorker.getRegistration()
             .then((registration) => {
-                if (registration && registration.waiting) {
-                    showUpdateToast(registration);
+                if (!registration) {
+                    return null;
                 }
-                return registration;
+
+                // Force the browser to check for a newer service worker in long-lived PWA sessions.
+                const doUpdate = typeof registration.update === 'function'
+                    ? registration.update().catch(() => { })
+                    : Promise.resolve();
+
+                return doUpdate.then(() => {
+                    if (registration.waiting) {
+                        showUpdateToast(registration);
+                    }
+                    return registration;
+                });
             })
             .catch(() => null);
     }
 
+    function hashString(input) {
+        let hash = 2166136261;
+        for (let i = 0; i < input.length; i++) {
+            hash ^= input.charCodeAt(i);
+            hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+        }
+        return (hash >>> 0).toString(16);
+    }
+
+    function fetchServiceWorkerSignature() {
+        return fetch(`/sw.js?swv=${Date.now()}`, { cache: 'no-store' })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('SW signature fetch failed');
+                }
+                return response.text();
+            })
+            .then(scriptText => hashString(scriptText))
+            .catch(() => null);
+    }
+
+    function checkDeploymentSignature(registration) {
+        if (!navigator.serviceWorker.controller) {
+            return Promise.resolve(false);
+        }
+
+        return fetchServiceWorkerSignature().then((latestSignature) => {
+            if (!latestSignature) {
+                return false;
+            }
+
+            const knownSignature = localStorage.getItem(SW_SIGNATURE_KEY);
+            const pendingSignature = localStorage.getItem(SW_PENDING_SIGNATURE_KEY);
+
+            if (!knownSignature) {
+                localStorage.setItem(SW_SIGNATURE_KEY, latestSignature);
+                return false;
+            }
+
+            if (pendingSignature && pendingSignature === latestSignature) {
+                showUpdateToast(registration);
+                return true;
+            }
+
+            if (latestSignature !== knownSignature) {
+                localStorage.setItem(SW_PENDING_SIGNATURE_KEY, latestSignature);
+                showUpdateToast(registration);
+                return true;
+            }
+
+            return false;
+        });
+    }
+
+    function schedulePeriodicUpdateChecks() {
+        if (window.__swUpdateCheckIntervalId) return;
+
+        // Polling helps iOS standalone PWAs where update events can be delayed.
+        window.__swUpdateCheckIntervalId = window.setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                checkForWaitingUpdate().then((registration) => {
+                    if (registration) {
+                        checkDeploymentSignature(registration);
+                    }
+                });
+            }
+        }, 120000);
+    }
+
+    function clearPeriodicUpdateChecks() {
+        if (!window.__swUpdateCheckIntervalId) return;
+        window.clearInterval(window.__swUpdateCheckIntervalId);
+        window.__swUpdateCheckIntervalId = null;
+    }
+
+    function bindNetworkAndLifecycleChecks() {
+        window.addEventListener('online', () => {
+            checkForWaitingUpdate().then((registration) => {
+                if (registration) {
+                    checkDeploymentSignature(registration);
+                }
+            });
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                schedulePeriodicUpdateChecks();
+                checkForWaitingUpdate().then((registration) => {
+                    if (registration) {
+                        checkDeploymentSignature(registration);
+                    }
+                });
+            } else {
+                clearPeriodicUpdateChecks();
+            }
+        });
+
+        window.addEventListener('focus', () => {
+            checkForWaitingUpdate().then((registration) => {
+                if (registration) {
+                    checkDeploymentSignature(registration);
+                }
+            });
+        });
+
+        window.addEventListener('pageshow', () => {
+            checkForWaitingUpdate().then((registration) => {
+                if (registration) {
+                    checkDeploymentSignature(registration);
+                }
+            });
+        });
+
+        window.addEventListener('beforeunload', () => {
+            clearPeriodicUpdateChecks();
+        });
+    }
+
     navigator.serviceWorker.addEventListener('controllerchange', () => {
+        const pendingSignature = localStorage.getItem(SW_PENDING_SIGNATURE_KEY);
+        if (pendingSignature) {
+            localStorage.setItem(SW_SIGNATURE_KEY, pendingSignature);
+            localStorage.removeItem(SW_PENDING_SIGNATURE_KEY);
+        }
         if (window.__swToastRefreshing) return;
         window.__swToastRefreshing = true;
         window.location.reload();
@@ -233,26 +380,17 @@ function hideModal() {
         .then(reg => reg || navigator.serviceWorker.register('/sw.js'))
         .then(registration => {
             watchRegistration(registration);
-            checkForWaitingUpdate();
+            checkForWaitingUpdate().then(() => checkDeploymentSignature(registration));
             if (registration && typeof registration.update === 'function') {
                 registration.update().catch(() => { });
             }
         })
         .catch(() => { });
 
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            checkForWaitingUpdate();
-        }
-    });
-
-    window.addEventListener('focus', () => {
-        checkForWaitingUpdate();
-    });
-
-    window.addEventListener('pageshow', () => {
-        checkForWaitingUpdate();
-    });
+    bindNetworkAndLifecycleChecks();
+    if (document.visibilityState === 'visible') {
+        schedulePeriodicUpdateChecks();
+    }
 })();
 
 // Close modal on overlay click
