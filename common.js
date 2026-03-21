@@ -1101,28 +1101,52 @@ async function initHomePrayerWidget() {
     const locationEl = document.getElementById('pwLocation');
     const nextEl = document.getElementById('pwNextPrayer');
 
-    let location = localStorage.getItem('userLocation');
-    if (!location) {
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                const loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-                localStorage.setItem('userLocation', JSON.stringify(loc));
-                updatePrayerUI(loc);
-            }, () => {
-                locationEl.textContent = 'الموقع غير محدد';
-                body.innerHTML = `
-                    <div class="detect-location-container">
-                        <button class="detect-location-btn" onclick="requestUserLocation()">
-                            <i class="bi bi-geo-alt-fill"></i>
-                            تحديد الموقع تلقائياً
-                        </button>
-                    </div>
-                `;
-            });
+    const isStandalonePwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    function renderDetectLocationButton(messageText) {
+        if (locationEl) {
+            locationEl.textContent = messageText || 'الموقع غير محدد';
         }
-    } else {
-        updatePrayerUI(JSON.parse(location));
+        if (body) {
+            body.innerHTML = `
+                <div class="detect-location-container">
+                    <button class="detect-location-btn" onclick="requestUserLocation()">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        تحديد الموقع تلقائياً
+                    </button>
+                </div>
+            `;
+        }
     }
+
+    let location = localStorage.getItem('userLocation');
+    if (location) {
+        updatePrayerUI(JSON.parse(location));
+        return;
+    }
+
+    if (!("geolocation" in navigator)) {
+        renderDetectLocationButton('الموقع غير مدعوم');
+        return;
+    }
+
+    if (isStandalonePwa) {
+        // In iOS standalone mode, explicit user interaction is more reliable.
+        renderDetectLocationButton('اضغط لتحديد الموقع');
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(pos => {
+        const loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        localStorage.setItem('userLocation', JSON.stringify(loc));
+        updatePrayerUI(loc);
+    }, () => {
+        renderDetectLocationButton('الموقع غير محدد');
+    }, {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 300000
+    });
 
     async function updatePrayerUI(loc) {
         try {
@@ -1188,11 +1212,12 @@ async function requestUserLocation() {
         initHomePrayerWidget();
     }, (err) => {
         console.error("Location error:", err);
-        if (locationEl) locationEl.textContent = 'فشل تحديد الموقع';
+        const denied = err && err.code === 1;
+        if (locationEl) locationEl.textContent = denied ? 'تم رفض إذن الموقع' : 'فشل تحديد الموقع';
         if (body) {
             body.innerHTML = `
                 <div class="detect-location-container">
-                    <p style="font-size:12px;color:var(--text-color);opacity:0.6;margin-bottom:10px;text-align:center">يرجى تفعيل صلاحية الموقع من إعدادات المتصفح</p>
+                    <p style="font-size:12px;color:var(--text-color);opacity:0.6;margin-bottom:10px;text-align:center">${denied ? 'يرجى السماح بالموقع من إعدادات Safari للتطبيق' : 'يرجى تفعيل صلاحية الموقع من إعدادات المتصفح'}</p>
                     <button class="detect-location-btn" onclick="requestUserLocation()">
                         <i class="bi bi-geo-alt-fill"></i>
                         إعادة المحاولة
@@ -1200,5 +1225,9 @@ async function requestUserLocation() {
                 </div>
             `;
         }
+    }, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
     });
 }
