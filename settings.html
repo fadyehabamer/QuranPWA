@@ -482,6 +482,14 @@
 
             <div class="setting-item">
                 <div class="setting-label">
+                    <span>التحقق من التحديثات</span>
+                    <span class="setting-desc">التحقق يدوياً من وجود إصدار جديد للتطبيق</span>
+                </div>
+                <button class="font-size-btn" onclick="checkForUpdates()">🔄</button>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
                     <span>مسح ذاكرة التخزين المؤقت</span>
                     <span class="setting-desc">حذف البيانات المخزنة مؤقتاً لتوفير المساحة</span>
                 </div>
@@ -1019,6 +1027,73 @@
                     icon: '❌',
                     title: 'خطأ',
                     message: 'حدث خطأ أثناء مسح الذاكرة'
+                });
+            }
+        }
+
+        async function checkForUpdates() {
+            try {
+                if (!('serviceWorker' in navigator)) {
+                    showModal({
+                        type: 'warning',
+                        icon: '⚠️',
+                        title: 'غير مدعوم',
+                        message: 'متصفحك لا يدعم Service Worker'
+                    });
+                    return;
+                }
+
+                if (typeof window.triggerSwUpdateCheck !== 'function') {
+                    showModal({
+                        type: 'warning',
+                        icon: '⚠️',
+                        title: 'تعذر التحقق',
+                        message: 'تعذر الوصول إلى خدمة التحقق من التحديثات'
+                    });
+                    return;
+                }
+
+                showModal({
+                    type: 'info',
+                    icon: '⏳',
+                    title: 'جارٍ التحقق',
+                    message: 'يتم الآن التحقق من وجود تحديثات...'
+                });
+
+                const result = await window.triggerSwUpdateCheck();
+
+                if (!result || !result.success) {
+                    showModal({
+                        type: 'error',
+                        icon: '❌',
+                        title: 'فشل التحقق',
+                        message: 'تعذر التحقق من التحديثات حالياً، حاول مرة أخرى'
+                    });
+                    return;
+                }
+
+                if (result.hasUpdate) {
+                    showModal({
+                        type: 'success',
+                        icon: '⬆️',
+                        title: 'تحديث متاح',
+                        message: 'تم العثور على تحديث جديد. ستظهر لك نافذة التحديث الآن.'
+                    });
+                } else {
+                    showModal({
+                        type: 'info',
+                        icon: '✅',
+                        title: 'أنت على أحدث إصدار',
+                        message: 'لا يوجد تحديث جديد حالياً.'
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking updates:', error);
+                showModal({
+                    type: 'error',
+                    icon: '❌',
+                    title: 'خطأ',
+                    message: 'حدث خطأ أثناء التحقق من التحديثات'
                 });
             }
         }

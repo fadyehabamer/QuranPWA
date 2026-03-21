@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quran-app-v10';
+const CACHE_NAME = 'quran-app-v12';
 const APP_SHELL_URLS = [
   '/',
   '/index.html',
@@ -64,6 +64,12 @@ self.addEventListener('fetch', event => {
   if (url.pathname.includes('radio') ||
     url.pathname.includes('stream') ||
     STREAM_HOST_BLOCKLIST.some(host => url.hostname.includes(host))) {
+    return;
+  }
+
+  // Never intercept the service worker script itself.
+  // This guarantees fresh SW checks and reliable update-banner detection.
+  if (url.pathname === '/sw.js') {
     return;
   }
 

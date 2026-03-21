@@ -387,6 +387,27 @@ function hideModal() {
         })
         .catch(() => { });
 
+    window.triggerSwUpdateCheck = async function triggerSwUpdateCheck() {
+        try {
+            const registration = await checkForWaitingUpdate();
+            if (!registration) {
+                return { success: false, reason: 'no-registration' };
+            }
+
+            const byWaiting = Boolean(registration.waiting);
+            const bySignature = await checkDeploymentSignature(registration);
+            const hasUpdate = byWaiting || bySignature;
+
+            return {
+                success: true,
+                hasUpdate,
+                waiting: Boolean(registration.waiting)
+            };
+        } catch (_error) {
+            return { success: false, reason: 'check-failed' };
+        }
+    };
+
     bindNetworkAndLifecycleChecks();
     if (document.visibilityState === 'visible') {
         schedulePeriodicUpdateChecks();
@@ -1263,6 +1284,19 @@ async function initHomePrayerWidget() {
         return;
     }
 
+    const selectedCountryRaw = localStorage.getItem('selectedCountry');
+    if (selectedCountryRaw) {
+        try {
+            const selectedCountry = JSON.parse(selectedCountryRaw);
+            const manualLoc = { latitude: selectedCountry.lat, longitude: selectedCountry.lng };
+            localStorage.setItem('locationText', selectedCountry.name || 'الموقع المختار يدوياً');
+            updatePrayerUI(manualLoc);
+            return;
+        } catch (_error) {
+            // Ignore malformed storage and continue with geolocation flow.
+        }
+    }
+
     if (!("geolocation" in navigator)) {
         renderDetectLocationButton('الموقع غير مدعوم');
         return;
@@ -1323,6 +1357,9 @@ async function initHomePrayerWidget() {
 async function requestUserLocation() {
     const locationEl = document.getElementById('pwLocation');
     const body = document.getElementById('pwBody');
+    const ua = (navigator.userAgent || '').toLowerCase();
+    const isAndroid = ua.includes('android');
+    const isIOS = /iphone|ipad|ipod/.test(ua);
 
     if (!("geolocation" in navigator)) {
         alert("متصفحك لا يدعم تحديد الموقع");
@@ -1353,12 +1390,24 @@ async function requestUserLocation() {
         const denied = err && err.code === 1;
         if (locationEl) locationEl.textContent = denied ? 'تم رفض إذن الموقع' : 'فشل تحديد الموقع';
         if (body) {
+            const deniedHint = denied
+                ? (isIOS
+                    ? 'يرجى السماح بالموقع من إعدادات Safari للتطبيق'
+                    : isAndroid
+                        ? 'يرجى السماح بالموقع من إعدادات الموقع للتطبيق'
+                        : 'يرجى السماح بإذن الموقع من إعدادات المتصفح')
+                : 'يرجى تفعيل صلاحية الموقع من إعدادات المتصفح';
+
             body.innerHTML = `
                 <div class="detect-location-container">
-                    <p style="font-size:12px;color:var(--text-color);opacity:0.6;margin-bottom:10px;text-align:center">${denied ? 'يرجى السماح بالموقع من إعدادات Safari للتطبيق' : 'يرجى تفعيل صلاحية الموقع من إعدادات المتصفح'}</p>
+                    <p style="font-size:12px;color:var(--text-color);opacity:0.6;margin-bottom:10px;text-align:center">${deniedHint}</p>
                     <button class="detect-location-btn" onclick="requestUserLocation()">
                         <i class="bi bi-geo-alt-fill"></i>
                         إعادة المحاولة
+                    </button>
+                    <button class="detect-location-btn" style="margin-top:8px" onclick="location.href='prayer-times.html'">
+                        <i class="bi bi-globe2"></i>
+                        اختيار الدولة يدوياً
                     </button>
                 </div>
             `;
