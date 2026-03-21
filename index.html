@@ -355,6 +355,140 @@
             font-size: 24px;
             opacity: 0.8;
         }
+
+        /* Khatma Planner */
+        .khatma-section {
+            margin-bottom: 32px;
+        }
+
+        .khatma-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .khatma-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .khatma-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary, #666);
+            margin-bottom: 14px;
+        }
+
+        .khatma-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .khatma-input {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            border-radius: 10px;
+            color: var(--text-color);
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .khatma-btn {
+            border: none;
+            border-radius: 10px;
+            background: var(--primary-color);
+            color: #fff;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .khatma-btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        .khatma-btn.secondary {
+            background: rgba(var(--primary-rgb), 0.12);
+            color: var(--text-color);
+        }
+
+        .khatma-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .khatma-stat {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .khatma-stat-value {
+            color: var(--primary-color);
+            font-size: 19px;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+
+        .khatma-stat-label {
+            color: var(--text-secondary, #666);
+            font-size: 12px;
+        }
+
+        .khatma-today-target {
+            background: rgba(var(--primary-rgb), 0.08);
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .khatma-progress {
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(var(--primary-rgb), 0.12);
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .khatma-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+            transition: width 0.2s ease;
+        }
+
+        .khatma-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .khatma-read-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 
@@ -459,6 +593,59 @@
                     </div>
                     <div class="resume-arrow">
                         <i class="bi bi-chevron-left"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khatma Planner -->
+            <div class="khatma-section animate-fade-up delay-2" id="khatmaPlannerSection">
+                <div class="khatma-card glass-card">
+                    <div class="khatma-title"><i class="bi bi-journal-check"></i> خطة الختمة</div>
+                    <div class="khatma-subtitle">خطة يومية تلقائية مع تعويض تلقائي عند فوات يوم</div>
+
+                    <div id="khatmaSetupView">
+                        <div class="khatma-form">
+                            <input class="khatma-input" type="date" id="khatmaStartDate" aria-label="تاريخ البداية">
+                            <input class="khatma-input" type="date" id="khatmaEndDate" aria-label="تاريخ النهاية">
+                        </div>
+                        <button class="khatma-btn" onclick="createKhatmaPlan()">إنشاء خطة الختمة</button>
+                    </div>
+
+                    <div id="khatmaSummaryView" style="display:none;">
+                        <div class="khatma-progress">
+                            <div class="khatma-progress-bar" id="khatmaProgressBar"></div>
+                        </div>
+
+                        <div class="khatma-stats">
+                            <div class="khatma-stat">
+                                <div class="khatma-stat-value" id="khatmaCompletedPages">0</div>
+                                <div class="khatma-stat-label">صفحات مكتملة</div>
+                            </div>
+                            <div class="khatma-stat">
+                                <div class="khatma-stat-value" id="khatmaRemainingPages">0</div>
+                                <div class="khatma-stat-label">صفحات متبقية</div>
+                            </div>
+                            <div class="khatma-stat">
+                                <div class="khatma-stat-value" id="khatmaRemainingDays">0</div>
+                                <div class="khatma-stat-label">أيام متبقية</div>
+                            </div>
+                            <div class="khatma-stat">
+                                <div class="khatma-stat-value" id="khatmaTodayPages">0</div>
+                                <div class="khatma-stat-label">هدف اليوم</div>
+                            </div>
+                        </div>
+
+                        <div class="khatma-today-target" id="khatmaTodayTargetText"></div>
+
+                        <div class="khatma-read-row">
+                            <input class="khatma-input" type="number" id="khatmaPagesReadInput" min="1" placeholder="كم صفحة قرأت اليوم؟">
+                            <button class="khatma-btn" onclick="addKhatmaProgress()">تحديث</button>
+                        </div>
+
+                        <div class="khatma-actions">
+                            <button class="khatma-btn" onclick="markTodayKhatmaDone()">إنهاء هدف اليوم</button>
+                            <button class="khatma-btn secondary" onclick="resetKhatmaPlan()">إعادة تعيين</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -743,9 +930,211 @@
             }
         }
 
+        // Khatma Planner Logic
+        const KHATMA_TOTAL_PAGES = 604;
+        const KHATMA_PLAN_KEY = 'khatmaPlanV1';
+
+        function toDateInputValue(date) {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function parseDateOnly(str) {
+            const [y, m, d] = str.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        function diffDaysInclusive(startDate, endDate) {
+            const msPerDay = 86400000;
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+            return Math.floor((end - start) / msPerDay) + 1;
+        }
+
+        function loadKhatmaPlan() {
+            try {
+                return JSON.parse(localStorage.getItem(KHATMA_PLAN_KEY) || 'null');
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function saveKhatmaPlan(plan) {
+            localStorage.setItem(KHATMA_PLAN_KEY, JSON.stringify(plan));
+        }
+
+        function createKhatmaPlan() {
+            const startDate = document.getElementById('khatmaStartDate').value;
+            const endDate = document.getElementById('khatmaEndDate').value;
+
+            if (!startDate || !endDate) {
+                alert('يرجى اختيار تاريخ البداية والنهاية');
+                return;
+            }
+
+            const start = parseDateOnly(startDate);
+            const end = parseDateOnly(endDate);
+            if (end < start) {
+                alert('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
+                return;
+            }
+
+            const plan = {
+                startDate,
+                endDate,
+                totalPages: KHATMA_TOTAL_PAGES,
+                completedPages: 0,
+                updatedAt: Date.now(),
+            };
+
+            saveKhatmaPlan(plan);
+            renderKhatmaPlanner();
+        }
+
+        function getKhatmaStatus(plan) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const start = parseDateOnly(plan.startDate);
+            const end = parseDateOnly(plan.endDate);
+
+            const totalDays = Math.max(1, diffDaysInclusive(start, end));
+            const completedPages = Math.max(0, Math.min(plan.totalPages, plan.completedPages || 0));
+            const remainingPages = Math.max(0, plan.totalPages - completedPages);
+
+            const started = today >= start;
+            const finishedWindow = today > end;
+
+            const elapsedDays = started ? Math.min(totalDays, diffDaysInclusive(start, today)) : 0;
+            const expectedByToday = started ? Math.ceil((plan.totalPages * elapsedDays) / totalDays) : 0;
+            const backlogPages = Math.max(0, expectedByToday - completedPages);
+
+            let remainingDays = 0;
+            let todayTargetPages = 0;
+
+            if (!started) {
+                remainingDays = totalDays;
+                todayTargetPages = Math.ceil(plan.totalPages / totalDays);
+            } else if (finishedWindow) {
+                remainingDays = 0;
+                todayTargetPages = remainingPages;
+            } else {
+                remainingDays = diffDaysInclusive(today, end);
+                todayTargetPages = Math.ceil(remainingPages / Math.max(1, remainingDays));
+            }
+
+            const todayStartPage = remainingPages > 0 ? completedPages + 1 : plan.totalPages;
+            const todayEndPage = Math.min(plan.totalPages, completedPages + todayTargetPages);
+            const progressPercent = Math.round((completedPages / plan.totalPages) * 100);
+
+            return {
+                started,
+                finishedWindow,
+                totalDays,
+                completedPages,
+                remainingPages,
+                remainingDays,
+                expectedByToday,
+                backlogPages,
+                todayTargetPages,
+                todayStartPage,
+                todayEndPage,
+                progressPercent,
+            };
+        }
+
+        function addKhatmaProgress(overridePages) {
+            const plan = loadKhatmaPlan();
+            if (!plan) return;
+
+            const input = document.getElementById('khatmaPagesReadInput');
+            const pages = overridePages || parseInt(input.value, 10);
+            if (!pages || pages < 1) {
+                alert('أدخل عدد صفحات صحيح');
+                return;
+            }
+
+            plan.completedPages = Math.min(plan.totalPages, (plan.completedPages || 0) + pages);
+            plan.updatedAt = Date.now();
+            saveKhatmaPlan(plan);
+
+            if (input) input.value = '';
+            renderKhatmaPlanner();
+        }
+
+        function markTodayKhatmaDone() {
+            const plan = loadKhatmaPlan();
+            if (!plan) return;
+
+            const status = getKhatmaStatus(plan);
+            if (status.todayTargetPages <= 0) {
+                return;
+            }
+
+            addKhatmaProgress(status.todayTargetPages);
+        }
+
+        function resetKhatmaPlan() {
+            const shouldReset = confirm('هل تريد إعادة تعيين خطة الختمة؟');
+            if (!shouldReset) return;
+
+            localStorage.removeItem(KHATMA_PLAN_KEY);
+            renderKhatmaPlanner();
+        }
+
+        function renderKhatmaPlanner() {
+            const setupView = document.getElementById('khatmaSetupView');
+            const summaryView = document.getElementById('khatmaSummaryView');
+            const startInput = document.getElementById('khatmaStartDate');
+            const endInput = document.getElementById('khatmaEndDate');
+
+            const today = new Date();
+            const defaultStart = toDateInputValue(today);
+            const defaultEnd = toDateInputValue(new Date(today.getFullYear(), today.getMonth() + 1, today.getDate()));
+
+            if (startInput && !startInput.value) startInput.value = defaultStart;
+            if (endInput && !endInput.value) endInput.value = defaultEnd;
+
+            const plan = loadKhatmaPlan();
+            if (!plan) {
+                setupView.style.display = 'block';
+                summaryView.style.display = 'none';
+                return;
+            }
+
+            const status = getKhatmaStatus(plan);
+
+            setupView.style.display = 'none';
+            summaryView.style.display = 'block';
+
+            document.getElementById('khatmaCompletedPages').textContent = status.completedPages;
+            document.getElementById('khatmaRemainingPages').textContent = status.remainingPages;
+            document.getElementById('khatmaRemainingDays').textContent = status.remainingDays;
+            document.getElementById('khatmaTodayPages').textContent = status.todayTargetPages;
+            document.getElementById('khatmaProgressBar').style.width = `${status.progressPercent}%`;
+
+            const textEl = document.getElementById('khatmaTodayTargetText');
+            if (status.completedPages >= plan.totalPages) {
+                textEl.textContent = 'تمت الختمة بنجاح! بارك الله فيك.';
+            } else if (!status.started) {
+                textEl.textContent = `لم تبدأ الخطة بعد. الهدف اليومي سيكون ${status.todayTargetPages} صفحات.`;
+            } else if (status.finishedWindow && status.remainingPages > 0) {
+                textEl.textContent = `انتهت المدة. للتعويض الآن تحتاج ${status.todayTargetPages} صفحات.`;
+            } else {
+                const backlogText = status.backlogPages > 0 ? ` • تعويض متراكم: ${status.backlogPages}` : '';
+                textEl.textContent = `هدف اليوم: من صفحة ${status.todayStartPage} إلى ${status.todayEndPage} (${status.todayTargetPages} صفحات)${backlogText}`;
+            }
+        }
+
         // Initialize
         loadDailyVerse();
         checkResumeReading();
+        renderKhatmaPlanner();
     </script>
 </body>
 

@@ -73,6 +73,7 @@
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
             border: none;
+            outline: none;
             color: white;
             font-size: 18px;
             font-weight: 600;
@@ -84,6 +85,13 @@
             justify-content: center;
             position: relative;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .tap-button:focus,
+        .tap-button:focus-visible {
+            outline: none;
         }
 
         .tap-button:active {
