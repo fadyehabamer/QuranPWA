@@ -450,6 +450,30 @@
             font-weight: 600;
         }
 
+        .modal-close-btn {
+            background: var(--bg-color);
+            border: none;
+            color: var(--text-color);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            border-radius: 50%;
+        }
+
+        .modal-close-btn:hover {
+            background: var(--border-color);
+        }
+
+        .modal-close-btn:active {
+            transform: scale(0.92);
+        }
+
         .country-list {
             max-height: 400px;
             overflow-y: auto;

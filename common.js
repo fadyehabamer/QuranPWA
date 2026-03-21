@@ -173,7 +173,6 @@ function hideModal() {
     }
 
     function showUpdateToast(registration) {
-        if (!navigator.serviceWorker.controller) return;
         activeRegistration = registration;
         ensureToastStyles();
 
@@ -213,6 +212,17 @@ function hideModal() {
         });
     }
 
+    function checkForWaitingUpdate() {
+        return navigator.serviceWorker.getRegistration()
+            .then((registration) => {
+                if (registration && registration.waiting) {
+                    showUpdateToast(registration);
+                }
+                return registration;
+            })
+            .catch(() => null);
+    }
+
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (window.__swToastRefreshing) return;
         window.__swToastRefreshing = true;
@@ -223,11 +233,26 @@ function hideModal() {
         .then(reg => reg || navigator.serviceWorker.register('/sw.js'))
         .then(registration => {
             watchRegistration(registration);
+            checkForWaitingUpdate();
             if (registration && typeof registration.update === 'function') {
                 registration.update().catch(() => { });
             }
         })
         .catch(() => { });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            checkForWaitingUpdate();
+        }
+    });
+
+    window.addEventListener('focus', () => {
+        checkForWaitingUpdate();
+    });
+
+    window.addEventListener('pageshow', () => {
+        checkForWaitingUpdate();
+    });
 })();
 
 // Close modal on overlay click
