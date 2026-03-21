@@ -1,0 +1,660 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المواضع المحفوظة</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1B5E20">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="common.js" defer></script>
+    <style>
+        .bookmarks-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .bookmarks-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .bookmarks-header-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .bookmarks-header-title {
+            font-size: 32px;
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .bookmarks-header-desc {
+            font-size: 16px;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        .bookmarks-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .bookmark-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bookmark-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: var(--primary-color);
+            opacity: 0.1;
+            border-radius: 0 16px 0 100%;
+        }
+
+        .bookmark-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px var(--shadow);
+            border-color: var(--primary-color);
+        }
+
+        .bookmark-card:active {
+            transform: translateY(-2px);
+        }
+
+        .bookmark-surah-name {
+            font-size: 24px;
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .bookmark-details {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .bookmark-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 15px;
+        }
+
+        .bookmark-timestamp {
+            font-size: 13px;
+            color: var(--text-color);
+            opacity: 0.6;
+            margin-bottom: 12px;
+        }
+
+        .bookmark-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .bookmark-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bookmark-btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .bookmark-btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .bookmark-btn-delete {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+            flex: 0 0 auto;
+            padding: 10px 16px;
+        }
+
+        .bookmark-btn-delete:hover {
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+            opacity: 0.3;
+        }
+
+        .empty-state-title {
+            font-size: 24px;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .empty-state-desc {
+            font-size: 16px;
+            color: var(--text-color);
+            opacity: 0.6;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .empty-state-btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .empty-state-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .bookmarks-stats {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Desktop Sidebar -->
+    <div class="desktop-sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+            <div class="sidebar-logo-text">القرآن الكريم</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الرئيسية</div>
+            </a>
+            <a href="quran" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">القرآن الكريم</div>
+            </a>
+            <a href="bookmarks" class="sidebar-nav-item active">
+                <div class="sidebar-nav-label">المواضع المحفوظة</div>
+            </a>
+            <a href="azkar" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الأذكار</div>
+            </a>
+            <a href="masbaha" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">المسبحة</div>
+            </a>
+            <a href="sunan" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">سنن النبي</div>
+            </a>
+            <a href="prayer-times" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">مواقيت الصلاة</div>
+            </a>
+            <a href="/bio" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">عن المطور</div>
+            </a>
+            <a href="settings" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الإعدادات</div>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-version">الإصدار 1.0.0</div>
+        </div>
+    </div>
+
+    <!-- Custom Modal -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon" id="modalIcon"></div>
+                <div class="modal-title" id="modalTitle">عنوان</div>
+            </div>
+            <div class="modal-message" id="modalMessage">رسالة</div>
+            <div class="modal-actions" id="modalActions"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="app-header">
+        <h1>المواضع المحفوظة</h1>
+        <div class="header-left-buttons">
+            <div class="visitor-badge">
+                <i class="bi bi-people-fill"></i>
+                <span class="count" id="visitorCount">-</span>
+            </div>
+            <button class="header-back-btn" onclick="window.location.href='/'">→</button>
+            <button class="settings-btn" onclick="window.location.href='settings'"><i
+                    class="bi bi-gear-fill"></i></button>
+            <button class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+    </div>
+
+    <div class="app-content">
+        <div class="bookmarks-container">
+            <div class="bookmarks-header">
+                <div class="bookmarks-header-icon"></div>
+                <h2 class="bookmarks-header-title">مواضع القراءة المحفوظة</h2>
+                <p class="bookmarks-header-desc">احفظ مكان قراءتك وارجع إليه في أي وقت</p>
+            </div>
+
+            <div class="bookmarks-stats" id="bookmarksStats" style="display: none;">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalBookmarks">0</div>
+                    <div class="stat-label">موضع محفوظ</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalSurahs">0</div>
+                    <div class="stat-label">سورة</div>
+                </div>
+            </div>
+
+            <div id="bookmarksContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const surahInfo = [
+            { name: "الفاتحة", verses: 7, type: "مكية" },
+            { name: "البقرة", verses: 286, type: "مدنية" },
+            { name: "آل عمران", verses: 200, type: "مدنية" },
+            { name: "النساء", verses: 176, type: "مدنية" },
+            { name: "المائدة", verses: 120, type: "مدنية" },
+            { name: "الأنعام", verses: 165, type: "مكية" },
+            { name: "الأعراف", verses: 206, type: "مكية" },
+            { name: "الأنفال", verses: 75, type: "مدنية" },
+            { name: "التوبة", verses: 129, type: "مدنية" },
+            { name: "يونس", verses: 109, type: "مكية" },
+            { name: "هود", verses: 123, type: "مكية" },
+            { name: "يوسف", verses: 111, type: "مكية" },
+            { name: "الرعد", verses: 43, type: "مدنية" },
+            { name: "إبراهيم", verses: 52, type: "مكية" },
+            { name: "الحجر", verses: 99, type: "مكية" },
+            { name: "النحل", verses: 128, type: "مكية" },
+            { name: "الإسراء", verses: 111, type: "مكية" },
+            { name: "الكهف", verses: 110, type: "مكية" },
+            { name: "مريم", verses: 98, type: "مكية" },
+            { name: "طه", verses: 135, type: "مكية" },
+            { name: "الأنبياء", verses: 112, type: "مكية" },
+            { name: "الحج", verses: 78, type: "مدنية" },
+            { name: "المؤمنون", verses: 118, type: "مكية" },
+            { name: "النور", verses: 64, type: "مدنية" },
+            { name: "الفرقان", verses: 77, type: "مكية" },
+            { name: "الشعراء", verses: 227, type: "مكية" },
+            { name: "النمل", verses: 93, type: "مكية" },
+            { name: "القصص", verses: 88, type: "مكية" },
+            { name: "العنكبوت", verses: 69, type: "مكية" },
+            { name: "الروم", verses: 60, type: "مكية" },
+            { name: "لقمان", verses: 34, type: "مكية" },
+            { name: "السجدة", verses: 30, type: "مكية" },
+            { name: "الأحزاب", verses: 73, type: "مدنية" },
+            { name: "سبأ", verses: 54, type: "مكية" },
+            { name: "فاطر", verses: 45, type: "مكية" },
+            { name: "يس", verses: 83, type: "مكية" },
+            { name: "الصافات", verses: 182, type: "مكية" },
+            { name: "ص", verses: 88, type: "مكية" },
+            { name: "الزمر", verses: 75, type: "مكية" },
+            { name: "غافر", verses: 85, type: "مكية" },
+            { name: "فصلت", verses: 54, type: "مكية" },
+            { name: "الشورى", verses: 53, type: "مكية" },
+            { name: "الزخرف", verses: 89, type: "مكية" },
+            { name: "الدخان", verses: 59, type: "مكية" },
+            { name: "الجاثية", verses: 37, type: "مكية" },
+            { name: "الأحقاف", verses: 35, type: "مكية" },
+            { name: "محمد", verses: 38, type: "مدنية" },
+            { name: "الفتح", verses: 29, type: "مدنية" },
+            { name: "الحجرات", verses: 18, type: "مدنية" },
+            { name: "ق", verses: 45, type: "مكية" },
+            { name: "الذاريات", verses: 60, type: "مكية" },
+            { name: "الطور", verses: 49, type: "مكية" },
+            { name: "النجم", verses: 62, type: "مكية" },
+            { name: "القمر", verses: 55, type: "مكية" },
+            { name: "الرحمن", verses: 78, type: "مدنية" },
+            { name: "الواقعة", verses: 96, type: "مكية" },
+            { name: "الحديد", verses: 29, type: "مدنية" },
+            { name: "المجادلة", verses: 22, type: "مدنية" },
+            { name: "الحشر", verses: 24, type: "مدنية" },
+            { name: "الممتحنة", verses: 13, type: "مدنية" },
+            { name: "الصف", verses: 14, type: "مدنية" },
+            { name: "الجمعة", verses: 11, type: "مدنية" },
+            { name: "المنافقون", verses: 11, type: "مدنية" },
+            { name: "التغابن", verses: 18, type: "مدنية" },
+            { name: "الطلاق", verses: 12, type: "مدنية" },
+            { name: "التحريم", verses: 12, type: "مدنية" },
+            { name: "الملك", verses: 30, type: "مكية" },
+            { name: "القلم", verses: 52, type: "مكية" },
+            { name: "الحاقة", verses: 52, type: "مكية" },
+            { name: "المعارج", verses: 44, type: "مكية" },
+            { name: "نوح", verses: 28, type: "مكية" },
+            { name: "الجن", verses: 28, type: "مكية" },
+            { name: "المزمل", verses: 20, type: "مكية" },
+            { name: "المدثر", verses: 56, type: "مكية" },
+            { name: "القيامة", verses: 40, type: "مكية" },
+            { name: "الإنسان", verses: 31, type: "مدنية" },
+            { name: "المرسلات", verses: 50, type: "مكية" },
+            { name: "النبأ", verses: 40, type: "مكية" },
+            { name: "النازعات", verses: 46, type: "مكية" },
+            { name: "عبس", verses: 42, type: "مكية" },
+            { name: "التكوير", verses: 29, type: "مكية" },
+            { name: "الإنفطار", verses: 19, type: "مكية" },
+            { name: "المطففين", verses: 36, type: "مكية" },
+            { name: "الإنشقاق", verses: 25, type: "مكية" },
+            { name: "البروج", verses: 22, type: "مكية" },
+            { name: "الطارق", verses: 17, type: "مكية" },
+            { name: "الأعلى", verses: 19, type: "مكية" },
+            { name: "الغاشية", verses: 26, type: "مكية" },
+            { name: "الفجر", verses: 30, type: "مكية" },
+            { name: "البلد", verses: 20, type: "مكية" },
+            { name: "الشمس", verses: 15, type: "مكية" },
+            { name: "الليل", verses: 21, type: "مكية" },
+            { name: "الضحى", verses: 11, type: "مكية" },
+            { name: "الشرح", verses: 8, type: "مكية" },
+            { name: "التين", verses: 8, type: "مكية" },
+            { name: "العلق", verses: 19, type: "مكية" },
+            { name: "القدر", verses: 5, type: "مكية" },
+            { name: "البينة", verses: 8, type: "مدنية" },
+            { name: "الزلزلة", verses: 8, type: "مدنية" },
+            { name: "العاديات", verses: 11, type: "مكية" },
+            { name: "القارعة", verses: 11, type: "مكية" },
+            { name: "التكاثر", verses: 8, type: "مكية" },
+            { name: "العصر", verses: 3, type: "مكية" },
+            { name: "الهمزة", verses: 9, type: "مكية" },
+            { name: "الفيل", verses: 5, type: "مكية" },
+            { name: "قريش", verses: 4, type: "مكية" },
+            { name: "الماعون", verses: 7, type: "مكية" },
+            { name: "الكوثر", verses: 3, type: "مكية" },
+            { name: "الكافرون", verses: 6, type: "مكية" },
+            { name: "النصر", verses: 3, type: "مدنية" },
+            { name: "المسد", verses: 5, type: "مكية" },
+            { name: "الإخلاص", verses: 4, type: "مكية" },
+            { name: "الفلق", verses: 5, type: "مكية" },
+            { name: "الناس", verses: 6, type: "مكية" }
+        ];
+
+        function renderBookmarks() {
+            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+            const content = document.getElementById('bookmarksContent');
+            const stats = document.getElementById('bookmarksStats');
+
+            if (bookmarks.length === 0) {
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="bi bi-bookmark" style="font-size: 80px;"></i></div>
+                        <h3 class="empty-state-title">لا توجد مواضع محفوظة</h3>
+                        <p class="empty-state-desc">لم تقم بحفظ أي موضع بعد.<br>اذهب إلى أي سورة واضغط على "حفظ الموضع" لحفظ مكان قراءتك.</p>
+                        <a href="quran" class="empty-state-btn"><i class="bi bi-book-fill"></i> ابدأ القراءة</a>
+                    </div>
+                `;
+                stats.style.display = 'none';
+                return;
+            }
+
+            // Show stats
+            stats.style.display = 'flex';
+            document.getElementById('totalBookmarks').textContent = bookmarks.length;
+            const uniqueSurahs = new Set(bookmarks.map(b => b.surah));
+            document.getElementById('totalSurahs').textContent = uniqueSurahs.size;
+
+            // Render bookmarks
+            const html = `
+                <div class="bookmarks-list">
+                    ${bookmarks.map((bookmark, index) => {
+                const surah = surahInfo[bookmark.surah - 1];
+                const date = new Date(bookmark.timestamp);
+                const timeAgo = formatTimeAgo(date);
+
+                return `
+                            <div class="bookmark-card">
+                                <div class="bookmark-surah-name">${surah.name}</div>
+                                <div class="bookmark-details">
+                                    <div class="bookmark-detail-item">
+                                        <span>📄</span>
+                                        <span>صفحة ${bookmark.page + 1}</span>
+                                    </div>
+                                    <div class="bookmark-detail-item">
+                                        <span>•</span>
+                                        <span>${surah.type}</span>
+                                    </div>
+                                </div>
+                                <div class="bookmark-timestamp"> ${timeAgo}</div>
+                                <div class="bookmark-actions">
+                                    <button class="bookmark-btn bookmark-btn-primary" onclick="loadBookmark(${index})">
+                                        <i class="bi bi-book-fill"></i> متابعة القراءة
+                                    </button>
+                                    <button class="bookmark-btn bookmark-btn-delete" onclick="deleteBookmark(${index})">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+            }).join('')}
+                </div>
+            `;
+
+            content.innerHTML = html;
+        }
+
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) return `منذ ${days} ${days === 1 ? 'يوم' : 'أيام'}`;
+            if (hours > 0) return `منذ ${hours} ${hours === 1 ? 'ساعة' : 'ساعات'}`;
+            if (minutes > 0) return `منذ ${minutes} ${minutes === 1 ? 'دقيقة' : 'دقائق'}`;
+            return 'الآن';
+        }
+
+        function loadBookmark(index) {
+            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+            if (!bookmarks[index]) return;
+
+            const bookmark = bookmarks[index];
+            window.location.href = `quran?surah=${bookmark.surah}&page=${bookmark.page}`;
+        }
+
+        function deleteBookmark(index) {
+            showModal({
+                type: 'warning',
+                icon: '',
+                title: 'حذف الموضع',
+                message: 'هل أنت متأكد من حذف هذا الموضع المحفوظ؟',
+                confirmText: 'نعم، احذف',
+                cancelText: 'إلغاء',
+                onConfirm: () => {
+                    const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+                    bookmarks.splice(index, 1);
+                    localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+                    renderBookmarks();
+                    showModal({
+                        type: 'success',
+                        icon: '',
+                        title: 'تم الحذف',
+                        message: 'تم حذف الموضع المحفوظ بنجاح'
+                    });
+                }
+            });
+        }
+
+        let currentModalConfirm = null;
+
+        function showModal({ type = 'info', icon = '', title = '', message = '', confirmText = 'حسناً', cancelText = '', onConfirm = null }) {
+            const modal = document.getElementById('customModal');
+            const modalIcon = document.getElementById('modalIcon');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalActions = document.getElementById('modalActions');
+
+            modalIcon.textContent = icon;
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            currentModalConfirm = onConfirm;
+
+            let actionsHTML = '';
+            if (cancelText && onConfirm) {
+                actionsHTML = `
+                    <button class="modal-btn modal-btn-secondary" onclick="hideModal()">${cancelText}</button>
+                    <button class="modal-btn modal-btn-primary" onclick="confirmModalAction()">${confirmText}</button>
+                `;
+            } else {
+                actionsHTML = `<button class="modal-btn modal-btn-primary" onclick="hideModal()">${confirmText}</button>`;
+            }
+            modalActions.innerHTML = actionsHTML;
+
+            modal.classList.add('active');
+        }
+
+        function confirmModalAction() {
+            hideModal();
+            if (currentModalConfirm) {
+                currentModalConfirm();
+                currentModalConfirm = null;
+            }
+        }
+
+        function hideModal() {
+            document.getElementById('customModal').classList.remove('active');
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        // Load theme settings
+        function loadThemeSettings() {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+
+            const color = localStorage.getItem('primaryColor');
+            if (color) {
+                const lightColor = adjustColor(color, 30);
+                document.documentElement.style.setProperty('--primary-color', color);
+                document.documentElement.style.setProperty('--primary-light', lightColor);
+
+                // Update shadow colors
+                const rgb = hexToRgb(color);
+                const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`;
+                const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
+                document.documentElement.style.setProperty('--shadow', shadowLight);
+                document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
+            }
+
+            const fontSize = localStorage.getItem('fontSize');
+            if (fontSize !== null) {
+                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
+                const baseSize = fontSizes[parseInt(fontSize)] || 16;
+                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
+            }
+
+            const fontWeight = localStorage.getItem('fontWeight');
+            if (fontWeight) {
+                const fontWeights = [300, 400, 500, 600, 700];
+                const weight = fontWeights[parseInt(fontWeight)];
+                document.documentElement.style.setProperty('--font-weight', weight);
+            }
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 27, g: 94, b: 32 };
+        }
+
+        function adjustColor(color, amount) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * amount);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255))
+                .toString(16).slice(1);
+        }
+
+        loadThemeSettings();
+        renderBookmarks();
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+
+</html>

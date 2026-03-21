@@ -1,0 +1,385 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عن المطور</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1B5E20">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="common.js" defer></script>
+    <style>
+        .bio-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .bio-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 12px var(--shadow);
+            text-align: center;
+        }
+
+        .bio-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .bio-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .bio-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .bio-title {
+            font-size: 18px;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        .bio-description {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-color);
+            margin-bottom: 32px;
+            text-align: justify;
+            display: none;
+        }
+
+        .bio-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .bio-btn {
+            padding: 12px 28px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .bio-btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .bio-btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .bio-btn-secondary {
+            background: var(--card-bg);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .bio-btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .bio-social {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            text-decoration: none;
+            transition: all 0.3s;
+            color: var(--text-color);
+        }
+
+        .social-link:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .bio-contact {
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 16px 0;
+            font-size: 16px;
+            color: var(--text-color);
+            direction: ltr;
+        }
+
+        .contact-icon {
+            font-size: 24px;
+        }
+
+        .contact-link {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .contact-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Desktop Sidebar -->
+    <div class="desktop-sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+            <div class="sidebar-logo-text">القرآن الكريم</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الرئيسية</div>
+            </a>
+            <a href="quran" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">القرآن الكريم</div>
+            </a>
+            <a href="bookmarks" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">المواضع المحفوظة</div>
+            </a>
+            <a href="azkar" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الأذكار</div>
+            </a>
+            <a href="masbaha" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">المسبحة</div>
+            </a>
+            <a href="sunan" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">سنن النبي</div>
+            </a>
+            <a href="prayer-times" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">مواقيت الصلاة</div>
+            </a>
+            <a href="/bio" class="sidebar-nav-item active">
+                <div class="sidebar-nav-label">عن المطور</div>
+            </a>
+            <a href="settings" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الإعدادات</div>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-version">الإصدار 1.0.0</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="app-header">
+        <h1>عن المطور</h1>
+        <div class="header-left-buttons">
+            <div class="visitor-badge">
+                <i class="bi bi-people-fill"></i>
+                <span class="count" id="visitorCount">-</span>
+            </div>
+            <button class="header-back-btn" onclick="window.location.href='/'">→</button>
+            <button class="settings-btn" onclick="window.location.href='settings'">
+                <i class="bi bi-gear-fill"></i>
+            </button>
+            <button class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+    </div>
+
+    <div class="app-content">
+        <div class="bio-container">
+            <div class="bio-card">
+                <div class="bio-avatar">
+                    <img src="https://fadyehabamer.com/wp-content/uploads/2025/07/image-1.png" alt="Fady Ehab Amer">
+                </div>
+
+                <h2 class="bio-name">فادي إيهاب عامر</h2>
+                <p class="bio-title">مهندس برمجيات</p>
+
+                <p class="bio-description">
+                    مطور تطبيقات ويب متخصص في بناء حلول رقمية حديثة وسهلة الاستخدام.
+                </p>
+
+                <div class="bio-social">
+                    <a href="https://facebook.com/fadyehabamer" target="_blank" class="social-link" title="Facebook">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
+                    </a>
+                    <a href="https://x.com/fadyehabamer" target="_blank" class="social-link" title="X (Twitter)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg>
+                    </a>
+                    <a href="https://linkedin.com/in/fadyehabamer" target="_blank" class="social-link" title="LinkedIn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>
+                    </a>
+                    <a href="https://github.com/fadyehabamer" target="_blank" class="social-link" title="GitHub">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="bio-contact">
+                    <div class="contact-item">
+                        <span class="contact-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path
+                                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                                </path>
+                            </svg>
+                        </span>
+                        <a href="https://fadyehabamer.com/" target="_blank" class="contact-link">fadyehabamer.com</a>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                                </path>
+                            </svg>
+                        </span>
+                        <a href="tel:+201554506314" class="contact-link">+20 155 450 6314</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        // Load theme settings
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 27, g: 94, b: 32 };
+        }
+
+        function loadThemeSettings() {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+
+            const color = localStorage.getItem('primaryColor');
+            if (color) {
+                const lightColor = adjustColor(color, 30);
+                document.documentElement.style.setProperty('--primary-color', color);
+                document.documentElement.style.setProperty('--primary-light', lightColor);
+
+                // Update shadow colors
+                const rgb = hexToRgb(color);
+                const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`;
+                const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
+                document.documentElement.style.setProperty('--shadow', shadowLight);
+                document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
+            }
+
+            const fontSize = localStorage.getItem('fontSize');
+            if (fontSize !== null) {
+                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
+                const baseSize = fontSizes[parseInt(fontSize)] || 16;
+                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
+            }
+
+            const fontWeight = localStorage.getItem('fontWeight');
+            if (fontWeight) {
+                const fontWeights = [300, 400, 500, 600, 700];
+                const weight = fontWeights[parseInt(fontWeight)];
+                document.documentElement.style.setProperty('--font-weight', weight);
+            }
+        }
+
+        function adjustColor(color, amount) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * amount);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255))
+                .toString(16).slice(1);
+        }
+
+        loadThemeSettings();
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+
+</html>

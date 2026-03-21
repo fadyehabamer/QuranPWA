@@ -1,0 +1,12 @@
+{
+    "name": "quranpwa",
+    "version": "1.0.0",
+    "description": "Quran Progressive Web App",
+    "scripts": {
+        "deploy": "vercel deploy --force --prod",
+        "dev": "vercel dev"
+    },
+    "keywords": [],
+    "author": "Fady Ehab Amer",
+    "license": "MIT"
+}

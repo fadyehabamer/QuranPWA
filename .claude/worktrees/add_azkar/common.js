@@ -74,16 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadVisitorCount();
 });
 
-// Feature flags (set to true to re-enable removed features).
-window.APP_FEATURE_FLAGS = Object.assign({
-    ramadanStreak: false,
-    ramadanDecorations: false,
-}, window.APP_FEATURE_FLAGS || {});
-
 // ===== Ramadan Streak Tracker =====
 (function initRamadanStreak() {
-    if (!window.APP_FEATURE_FLAGS.ramadanStreak) return;
-
     const savedStart = localStorage.getItem('ramadanStartDate');
     const RAMADAN_START = savedStart ? new Date(savedStart) : null;
     const RAMADAN_END = RAMADAN_START ? new Date(RAMADAN_START.getTime() + 30 * 86400000) : null;
@@ -420,8 +412,6 @@ window.APP_FEATURE_FLAGS = Object.assign({
 
 // ===== Ramadan Decorations =====
 (function initRamadanDecor() {
-    if (!window.APP_FEATURE_FLAGS.ramadanDecorations) return;
-
     const style = document.createElement('style');
     style.textContent = `
         .ramadan-corner {

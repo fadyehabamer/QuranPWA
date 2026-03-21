@@ -1,0 +1,165 @@
+const CACHE_NAME = 'quran-app-v8';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/quran',
+  '/quran.html',
+  '/azkar',
+  '/azkar.html',
+  '/masbaha',
+  '/masbaha.html',
+  '/settings',
+  '/settings.html',
+  '/bookmarks',
+  '/bookmarks.html',
+  '/sunan',
+  '/sunan.html',
+  '/prayer-times',
+  '/prayer-times.html',
+  '/bio',
+  '/bio.html',
+  '/styles.css',
+  '/common.js',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/manifest.json'
+];
+
+// Install event - cache resources
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+      .catch(err => {
+        console.log('Cache addAll error:', err);
+      })
+  );
+  // Force the waiting service worker to become active
+  self.skipWaiting();
+});
+
+// Fetch event - serve from cache, fallback to network
+self.addEventListener('fetch', event => {
+  // Skip caching for chrome-extension and other unsupported schemes
+  const url = new URL(event.request.url);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return;
+  }
+
+  // Skip caching for radio streams and any large audio playback
+  if (url.pathname.includes('radio') ||
+    url.pathname.includes('stream') ||
+    url.hostname.includes('mp3quran.net') ||
+    url.hostname.includes('radiojar.com') ||
+    url.hostname.includes('qurango.net') ||
+    url.hostname.includes('radio.co')) {
+    return;
+  }
+
+  // Handle Quran API requests (including tafsir)
+  if (url.hostname === 'api.alquran.cloud') {
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => {
+          if (response) {
+            return response;
+          }
+          return fetch(event.request).then(networkResponse => {
+            // Cache API responses for better performance
+            if (networkResponse.status === 200) {
+              const responseClone = networkResponse.clone();
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, responseClone);
+              });
+            }
+            return networkResponse;
+          });
+        })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+
+        // Try matching with .html extension for clean URLs
+        const urlPath = url.pathname;
+        if (!urlPath.endsWith('.html') && !urlPath.includes('.')) {
+          const htmlRequest = new Request(urlPath + '.html');
+          return caches.match(htmlRequest).then(htmlResponse => {
+            if (htmlResponse) {
+              return htmlResponse;
+            }
+            return fetchAndCache(event.request);
+          });
+        }
+
+        return fetchAndCache(event.request);
+      })
+  );
+});
+
+function fetchAndCache(request) {
+  return fetch(request).then(response => {
+    // Check if we received a valid response
+    if (!response || response.status !== 200 || response.type !== 'basic') {
+      return response;
+    }
+
+    // Clone the response
+    const responseToCache = response.clone();
+
+    caches.open(CACHE_NAME).then(cache => {
+      cache.put(request, responseToCache);
+    });
+
+    return response;
+  }).catch(() => {
+    // Return a fallback response if fetch fails
+    return new Response('Network error', {
+      status: 408,
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  });
+}
+
+// Activate event - clean up old caches
+self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+// Message event - handle cache clearing requests
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }).then(() => {
+        event.ports[0].postMessage({ success: true });
+      }).catch(error => {
+        event.ports[0].postMessage({ success: false, error: error.message });
+      })
+    );
+  }
+});

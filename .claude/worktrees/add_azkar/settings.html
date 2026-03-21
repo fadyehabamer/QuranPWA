@@ -444,7 +444,7 @@
         </div>
 
         <!-- Ramadan Settings -->
-        <div class="settings-section" id="ramadanSettingsSection">
+        <div class="settings-section">
             <div class="settings-section-title">إعدادات رمضان</div>
             <div class="setting-item">
                 <div class="setting-label">
@@ -530,9 +530,6 @@
         let currentFontSizeIndex = 2;
 
         function loadSettings() {
-            const featureFlags = window.APP_FEATURE_FLAGS || {};
-            const ramadanEnabled = featureFlags.ramadanStreak !== false;
-
             // Dark mode
             const darkMode = localStorage.getItem('darkMode') === 'true';
             if (darkMode) {
@@ -562,19 +559,11 @@
             notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
             renderNotifications();
 
-            // Ramadan settings section visibility
-            const ramadanSection = document.getElementById('ramadanSettingsSection');
-            if (ramadanSection && !ramadanEnabled) {
-                ramadanSection.style.display = 'none';
-            }
-
             // Ramadan Start
-            if (ramadanEnabled) {
-                const ramadanStart = localStorage.getItem('ramadanStartDate') || '2026-02-18';
-                const ramadanSelect = document.getElementById('ramadanStartSelect');
-                if (ramadanSelect) {
-                    ramadanSelect.value = ramadanStart;
-                }
+            const ramadanStart = localStorage.getItem('ramadanStartDate') || '2026-02-18';
+            const ramadanSelect = document.getElementById('ramadanStartSelect');
+            if (ramadanSelect) {
+                ramadanSelect.value = ramadanStart;
             }
         }
 

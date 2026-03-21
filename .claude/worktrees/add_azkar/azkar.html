@@ -1,0 +1,694 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأذكار</title>
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1B5E20">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .category-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 0 4px;
+            margin-top: 20px;
+        }
+
+        .category-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 12px;
+        }
+
+        .category-item:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-color);
+        }
+
+        .category-item:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .category-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--primary-color);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+        }
+
+        .category-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .category-name {
+            font-size: 15px;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .category-count {
+            background: var(--primary-color);
+            color: white;
+            min-width: 28px;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 400px) {
+            .category-list {
+                gap: 10px;
+            }
+
+            .category-item {
+                padding: 16px 12px;
+            }
+
+            .category-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
+            }
+
+            .category-name {
+                font-size: 14px;
+            }
+        }
+
+        .azkar-list {
+            display: none;
+        }
+
+        .azkar-list.active {
+            display: block;
+        }
+
+        .zikr-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .zikr-text {
+            font-family: 'Amiri', serif;
+            font-size: var(--font-size-ayah);
+            line-height: 2.2;
+            color: var(--primary-color);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .zikr-info {
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .zikr-desc {
+            font-size: var(--font-size-base);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .zikr-reference {
+            font-size: 13px;
+            color: var(--text-color);
+            opacity: 0.7;
+            margin-top: 8px;
+        }
+
+        .zikr-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .zikr-repeat {
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .zikr-counter-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .zikr-counter-btn.completed {
+            background: #2E7D32;
+            opacity: 0.8;
+        }
+
+        .favorite-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .favorite-btn.active {
+            color: #e91e63;
+        }
+
+        .progress-container {
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: var(--bg-color);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- App Header -->
+    <header class="app-header">
+        <button class="menu-toggle-btn" id="backBtn" onclick="showCategories()" style="display: none;">
+            <i class="bi bi-arrow-right"></i>
+        </button>
+        <button class="icon-btn menu-toggle-btn" id="menuBtn" onclick="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+        <h1 id="headerTitle">الأذكار</h1>
+        <div class="header-left-buttons">
+            <div class="visitor-badge">
+                <i class="bi bi-people-fill"></i>
+                <span class="count" id="visitorCount">-</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="desktop-sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+            <div class="sidebar-logo-text">القرآن الكريم</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الرئيسية</div>
+            </a>
+            <a href="quran" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">القرآن الكريم</div>
+            </a>
+            <a href="bookmarks" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">المواضع المحفوظة</div>
+            </a>
+            <a href="azkar" class="sidebar-nav-item active">
+                <div class="sidebar-nav-label">الأذكار</div>
+            </a>
+            <a href="masbaha" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">المسبحة</div>
+            </a>
+            <a href="sunan" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">سنن النبي</div>
+            </a>
+            <a href="prayer-times" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">مواقيت الصلاة</div>
+            </a>
+            <a href="/bio" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">عن المطور</div>
+            </a>
+            <a href="settings" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الإعدادات</div>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-version">الإصدار 1.0.0</div>
+        </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content -->
+    <main class="app-content">
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progressContainer">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span>التقدم:</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+
+        <!-- Category List -->
+        <div class="category-list" id="categoryList"></div>
+
+        <!-- Azkar List -->
+        <div class="azkar-list" id="azkarList"></div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item">
+            <i class="bi bi-house-door"></i>
+            <span class="nav-label">الرئيسية</span>
+        </a>
+        <a href="quran" class="nav-item">
+            <i class="bi bi-book"></i>
+            <span class="nav-label">القرآن</span>
+        </a>
+        <a href="azkar" class="nav-item active">
+            <i class="bi bi-moon-stars"></i>
+            <span class="nav-label">الأذكار</span>
+        </a>
+        <a href="masbaha" class="nav-item">
+            <i class="bi bi-circle"></i>
+            <span class="nav-label">المسبحة</span>
+        </a>
+        <a href="prayer-times" class="nav-item">
+            <i class="bi bi-clock"></i>
+            <span class="nav-label">الصلاة</span>
+        </a>
+        <a href="settings" class="nav-item">
+            <i class="bi bi-gear"></i>
+            <span class="nav-label">الإعدادات</span>
+        </a>
+    </nav>
+
+    <script src="common.js"></script>
+    <script>
+        let azkarData = {};
+        let currentCategory = null;
+        let zikrCounts = {};
+        let favorites = [];
+        // Load azkar data from JSON file
+        async function loadAzkarData() {
+            try {
+                const response = await fetch('azkar.json');
+                const jsonData = await response.json();
+
+                // Convert the JSON structure to our expected format
+                azkarData = {};
+                jsonData.forEach((category, index) => {
+                    const key = category.category.replace(/\s+/g, '_').toLowerCase();
+                    azkarData[key] = {
+                        name: category.category,
+                        azkar: category.array.map(item => ({
+                            text: item.text,
+                            repeat: getCountDescription(item.count),
+                            count: item.count
+                        }))
+                    };
+                });
+
+                // Render categories after data is loaded
+                renderCategories();
+            } catch (error) {
+                console.error('Error loading azkar data:', error);
+                // Fallback to original data if JSON fails to load
+                azkarData = {
+                    morning: {
+                        name: 'أذكار الصباح',
+                        azkar: [
+                            {
+                                text: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+                                repeat: "مرة واحدة",
+                                count: 1
+                            }
+                        ]
+                    }
+                };
+                renderCategories();
+            }
+        }
+
+        function getCountDescription(count) {
+            const countMap = {
+                1: "مرة واحدة",
+                3: "ثلاث مرات",
+                4: "أربع مرات",
+                7: "سبع مرات",
+                10: "عشر مرات",
+                33: "ثلاث وثلاثون",
+                34: "أربع وثلاثون",
+                100: "مائة مرة"
+            };
+            return countMap[count] || `${count} مرة`;
+        }
+
+        // Function to extract descriptions from text (looking for content in brackets)
+        function extractDescription(text) {
+            // Look for content in brackets [...]
+            const bracketMatches = text.match(/\[(.*?)\]/g);
+            if (bracketMatches && bracketMatches.length > 0) {
+                // Join all bracket contents with commas
+                return bracketMatches.map(match => match.slice(1, -1)).join(', ');
+            }
+
+            // Look for content in parentheses (...)
+            const parenMatches = text.match(/\((.*?)\)/g);
+            if (parenMatches && parenMatches.length > 0) {
+                // Take the first parenthetical content that looks like a description
+                for (let match of parenMatches) {
+                    const content = match.slice(1, -1);
+                    if (content.includes('مرة') || content.includes('مرات') || content.includes('قول') ||
+                        content.includes('قال') || content.includes('كان') || content.includes('من')) {
+                        return content;
+                    }
+                }
+            }
+
+            return '';
+        }
+
+        function loadUserData() {
+            const savedCounts = localStorage.getItem('zikrCounts');
+            if (savedCounts) {
+                zikrCounts = JSON.parse(savedCounts);
+            }
+
+            const savedFavorites = localStorage.getItem('azkarFavorites');
+            if (savedFavorites) {
+                favorites = JSON.parse(savedFavorites);
+            }
+        }
+
+        function saveUserData() {
+            localStorage.setItem('zikrCounts', JSON.stringify(zikrCounts));
+            localStorage.setItem('azkarFavorites', JSON.stringify(favorites));
+        }
+
+        function renderCategories() {
+            const list = document.getElementById('categoryList');
+
+            // Generate icons dynamically based on category names
+            function getCategoryIcon(categoryName) {
+                const iconMap = {
+                    'أذكار الصباح': 'bi-sunrise-fill',
+                    'أذكار المساء': 'bi-sunset-fill',
+                    'أذكار النوم': 'bi-moon-stars-fill',
+                    'أذكار الاستيقاظ': 'bi-alarm-fill',
+                    'أذكار الصلاة': 'bi-building',
+                    'الأذكار': 'bi-bookmark-star-fill'
+                };
+
+                // Default icon if category not found in map
+                return iconMap[categoryName] || 'bi-bookmark-star-fill';
+            }
+
+            let html = '';
+
+            // Add Favorites Category
+            html += `<div class="category-item" onclick="showFavorites()">
+                <div class="category-info">
+                    <div class="category-icon"><i class="bi bi-heart-fill"></i></div>
+                    <div class="category-name">المفضلة</div>
+                </div>
+                <div class="category-count">${favorites.length}</div>
+            </div>`;
+
+            for (const [key, category] of Object.entries(azkarData)) {
+                const icon = getCategoryIcon(category.name);
+                html += `<div class="category-item" onclick="showCategory('${key}')">
+                    <div class="category-info">
+                        <div class="category-icon"><i class="bi ${icon}"></i></div>
+                        <div class="category-name">${category.name}</div>
+                    </div>
+                    <div class="category-count">${category.azkar.length}</div>
+                </div>`;
+            }
+
+            list.innerHTML = html;
+        }
+
+        function showCategory(categoryKey) {
+            currentCategory = categoryKey;
+            const category = azkarData[categoryKey];
+            const list = document.getElementById('azkarList');
+            let html = '';
+
+            category.azkar.forEach((zikr, index) => {
+                const countKey = `${categoryKey}_${index}`;
+                const currentCount = zikrCounts[countKey] || 0;
+                const targetCount = getTargetCount(zikr.repeat);
+                const isCompleted = currentCount >= targetCount;
+                const isFav = favorites.some(f => f.text === zikr.text);
+
+                html += `<div class="zikr-card" id="card_${index}">
+                    <div class="zikr-text">${zikr.text}</div>
+                    <div class="zikr-info">
+                        ${extractDescription(zikr.text) ? `<div class="zikr-desc">${extractDescription(zikr.text)}</div>` : ''}
+                    </div>
+                    <div class="zikr-actions">
+                        <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${categoryKey}', ${index})">
+                            <i class="bi bi-heart${isFav ? '-fill' : ''}"></i>
+                        </button>
+                        <div class="zikr-repeat">${zikr.repeat}</div>
+                        <button class="zikr-counter-btn ${isCompleted ? 'completed' : ''}"
+                            onclick="incrementZikr('${categoryKey}', ${index}, ${targetCount})">
+                            ${isCompleted ? '✓' : `${currentCount}/${targetCount}`}
+                        </button>
+                    </div>
+                </div>`;
+            });
+
+            list.innerHTML = html;
+            document.getElementById('categoryList').style.display = 'none';
+            document.getElementById('azkarList').classList.add('active');
+            document.getElementById('headerTitle').textContent = category.name;
+            document.getElementById('backBtn').style.display = 'flex';
+            document.getElementById('menuBtn').style.display = 'none';
+
+            // Show and update progress bar
+            document.getElementById('progressContainer').style.display = 'block';
+            updateProgressBar();
+        }
+
+        function showFavorites() {
+            currentCategory = 'favorites';
+            const list = document.getElementById('azkarList');
+
+            if (favorites.length === 0) {
+                list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-color);"><i class="bi bi-heart" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 16px;"></i>لا توجد أذكار مفضلة<br><small style="opacity: 0.6;">اضغط على ❤️ لإضافة ذكر للمفضلة</small></div>';
+            } else {
+                let html = '';
+                favorites.forEach((zikr, index) => {
+                    html += `<div class="zikr-card">
+                        <div class="zikr-text">${zikr.text}</div>
+                        <div class="zikr-info">
+                            ${extractDescription(zikr.text) ? `<div class="zikr-desc">${extractDescription(zikr.text)}</div>` : ''}
+                        </div>
+                        <div class="zikr-actions">
+                            <button class="favorite-btn active" onclick="removeFromFavorites(${index})">
+                                <i class="bi bi-heart-fill"></i>
+                            </button>
+                            <div class="zikr-repeat">${zikr.repeat || getCountDescription(zikr.count)}</div>
+                        </div>
+                    </div>`;
+                });
+                list.innerHTML = html;
+            }
+
+            document.getElementById('categoryList').style.display = 'none';
+            document.getElementById('azkarList').classList.add('active');
+            document.getElementById('headerTitle').textContent = 'المفضلة';
+            document.getElementById('backBtn').style.display = 'flex';
+            document.getElementById('menuBtn').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+
+        function showCategories() {
+            document.getElementById('categoryList').style.display = 'grid';
+            document.getElementById('azkarList').classList.remove('active');
+            document.getElementById('headerTitle').textContent = 'الأذكار';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('menuBtn').style.display = 'flex';
+            document.getElementById('progressContainer').style.display = 'none';
+            renderCategories();
+        }
+
+        function getTargetCount(repeatText) {
+            if (!repeatText) return 1;
+            if (repeatText.includes('ثلاث مرات')) return 3;
+            if (repeatText.includes('ثلاث وثلاثون')) return 33;
+            if (repeatText.includes('أربع وثلاثون')) return 34;
+            if (repeatText.includes('سبع مرات')) return 7;
+            if (repeatText.includes('أربع مرات')) return 4;
+            if (repeatText.includes('مائة مرة')) return 100;
+            if (repeatText.includes('عشر مرات')) return 10;
+
+            // Extract number from strings like "5 مرة"
+            const match = repeatText.match(/(\d+)\s*(مرة|مرات)/);
+            if (match) {
+                return parseInt(match[1]);
+            }
+
+            return 1;
+        }
+
+        function incrementZikr(categoryKey, index, target) {
+            const countKey = `${categoryKey}_${index}`;
+            let current = zikrCounts[countKey] || 0;
+            const btn = document.querySelector(`#card_${index} .zikr-counter-btn`);
+
+            // If already completed, reset the count
+            if (current >= target) {
+                zikrCounts[countKey] = 0;
+                saveUserData();
+                btn.textContent = `0/${target}`;
+                btn.classList.remove('completed');
+                updateProgressBar();
+                return;
+            }
+
+            current++;
+            zikrCounts[countKey] = current;
+            saveUserData();
+
+            if (current >= target) {
+                btn.textContent = '✓';
+                btn.classList.add('completed');
+                if (navigator.vibrate) navigator.vibrate(50);
+            } else {
+                btn.textContent = `${current}/${target}`;
+            }
+
+            updateProgressBar();
+        }
+
+        function toggleFavorite(categoryKey, index) {
+            const zikr = azkarData[categoryKey].azkar[index];
+            const favIndex = favorites.findIndex(f => f.text === zikr.text);
+
+            const btn = document.querySelector(`#card_${index} .favorite-btn`);
+            const icon = btn.querySelector('i');
+
+            if (favIndex === -1) {
+                favorites.push(zikr);
+                btn.classList.add('active');
+                icon.classList.remove('bi-heart');
+                icon.classList.add('bi-heart-fill');
+            } else {
+                favorites.splice(favIndex, 1);
+                btn.classList.remove('active');
+                icon.classList.remove('bi-heart-fill');
+                icon.classList.add('bi-heart');
+            }
+
+            saveUserData();
+        }
+
+        function removeFromFavorites(index) {
+            favorites.splice(index, 1);
+            saveUserData();
+            showFavorites();
+        }
+
+        function updateProgressBar() {
+            if (!currentCategory || currentCategory === 'favorites') return;
+
+            const category = azkarData[currentCategory];
+            let totalTarget = 0;
+            let totalCurrent = 0;
+
+            category.azkar.forEach((zikr, index) => {
+                const target = getTargetCount(zikr.repeat);
+                const current = Math.min(zikrCounts[`${currentCategory}_${index}`] || 0, target);
+                totalTarget += target;
+                totalCurrent += current;
+            });
+
+            const percent = Math.round((totalCurrent / totalTarget) * 100) || 0;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('progressPercent').textContent = `${percent}%`;
+        }
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        // Initialize
+        loadUserData();
+        loadAzkarData();
+
+        // Load theme settings
+        (function () {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
+
+            const color = localStorage.getItem('primaryColor');
+            if (color) {
+                document.documentElement.style.setProperty('--primary-color', color);
+            }
+
+            const fontSize = localStorage.getItem('fontSize');
+            if (fontSize !== null) {
+                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
+                const baseSize = fontSizes[parseInt(fontSize)] || 16;
+                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
+                document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
+            }
+        })();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</body>
+</html>
