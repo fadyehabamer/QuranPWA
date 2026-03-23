@@ -343,7 +343,7 @@
 
         .qibla-calibration {
             display: none;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             gap: 10px;
             background: rgba(var(--primary-rgb), 0.06);
@@ -359,41 +359,71 @@
 
         .qibla-eight-track {
             width: 110px;
-            height: 52px;
+            height: 56px;
             position: relative;
             flex-shrink: 0;
         }
 
-        .qibla-eight-track::before,
+        .qibla-eight-track::before {
+            content: '∞';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -56%);
+            font-size: 78px;
+            line-height: 1;
+            color: rgba(var(--primary-rgb), 0.32);
+            font-weight: 700;
+            letter-spacing: -5px;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+
         .qibla-eight-track::after {
             content: '';
             position: absolute;
-            top: 4px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 2px solid rgba(var(--primary-rgb), 0.24);
-            background: rgba(var(--primary-rgb), 0.05);
-        }
-
-        .qibla-eight-track::before {
-            right: 8px;
-        }
-
-        .qibla-eight-track::after {
             left: 8px;
+            right: 8px;
+            top: 26px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, transparent, rgba(var(--primary-rgb), 0.26), transparent);
         }
 
         .qibla-phone-dot {
             position: absolute;
-            width: 24px;
-            height: 24px;
-            border-radius: 8px;
+            width: 18px;
+            height: 30px;
+            border-radius: 6px;
             background: linear-gradient(135deg, var(--primary-color), #2e8b57);
             box-shadow: 0 5px 12px rgba(var(--primary-rgb), 0.35);
-            top: 14px;
-            right: 44px;
+            top: 10px;
+            right: 47px;
             animation: qiblaFigureEight 2s ease-in-out infinite;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+        }
+
+        .qibla-phone-dot::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 2px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.65);
+            top: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .qibla-phone-dot::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.75);
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .qibla-calibration-text {
@@ -401,7 +431,45 @@
             line-height: 1.6;
             color: var(--text-secondary);
             text-align: right;
-            margin: 0;
+            margin: 0 0 8px;
+        }
+
+        .qibla-calibration-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .qibla-calibration-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qibla-calibration-btn {
+            border: none;
+            border-radius: 999px;
+            background: var(--primary-color);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 11px;
+            cursor: pointer;
+        }
+
+        .qibla-calibration-btn:disabled {
+            opacity: 0.75;
+            cursor: default;
+        }
+
+        .qibla-calibration-countdown {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary-color);
+            min-width: 56px;
+            text-align: center;
         }
 
         @keyframes qiblaFigureEight {
@@ -563,6 +631,36 @@
             max-height: 400px;
             overflow-y: auto;
             padding: 0;
+        }
+
+        .country-search-wrap {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--card-bg);
+        }
+
+        .country-search {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .country-search:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.15);
+        }
+
+        .country-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding: 20px 12px;
         }
 
         .country-item {
@@ -745,7 +843,13 @@
                     <div class="qibla-eight-track" aria-hidden="true">
                         <div class="qibla-phone-dot"></div>
                     </div>
-                    <p class="qibla-calibration-text">حرّك الهاتف بحركة شكل 8 لمدة ثانيتين لمعايرة البوصلة</p>
+                    <div class="qibla-calibration-content">
+                        <p class="qibla-calibration-text">حرّك الهاتف بحركة شكل 8 لمدة ثانيتين لمعايرة البوصلة</p>
+                        <div class="qibla-calibration-actions">
+                            <button type="button" class="qibla-calibration-btn" id="qiblaCalibrationBtn" onclick="startQiblaCalibrationGuide()">أعد المعايرة الآن</button>
+                            <span class="qibla-calibration-countdown" id="qiblaCalibrationCountdown">02:00</span>
+                        </div>
+                    </div>
                 </div>
                 <button class="location-btn secondary qibla-permission-btn" id="qiblaPermissionBtn"
                     onclick="requestQiblaPermission()" style="display: none;">
@@ -771,6 +875,16 @@
                 <button class="modal-close-btn" onclick="closeCountryModal()">
                     <i class="bi bi-x-lg"></i>
                 </button>
+            </div>
+            <div class="country-search-wrap">
+                <input
+                    type="search"
+                    id="countrySearchInput"
+                    class="country-search"
+                    placeholder="ابحث عن الدولة..."
+                    aria-label="بحث عن الدولة"
+                    oninput="filterCountryList()"
+                >
             </div>
             <div class="country-list" id="countryList">
                 <!-- Countries will be populated by JavaScript -->
@@ -829,6 +943,13 @@
         let headingSourceName = null;
         let lastRawHeading = null;
         let lastRawHeadingTs = 0;
+        let lastAcceptedHeadingTs = 0;
+        let headingUnstableUntilTs = 0;
+        let headingUnstableReason = '';
+        let orientationTiltPoor = false;
+        let calibrationGuideInterval = null;
+        let calibrationGuideEndsAt = 0;
+        let calibrationGuideRunning = false;
 
         const ORIENTATION_UPDATE_INTERVAL_MS = 80;
         const HEADING_SMOOTH_FACTOR = 0.22;
@@ -836,6 +957,14 @@
         const MAX_HEADING_JUMP_DEG = 45;
         const OUTLIER_IGNORE_WINDOW_MS = 900;
         const HEADING_DEAD_BAND_DEG = 0.7;
+        const HEADING_STALE_TIMEOUT_MS = 1800;
+        const CALIBRATION_HINT_HOLD_MS = 6000;
+        const CALIBRATION_GUIDE_MS = 2000;
+        const TILT_POOR_DEG = 65;
+        const SHARED_COUNTRY_STORAGE_KEY = 'preferredManualCountryV1';
+        const LEGACY_COUNTRY_STORAGE_KEY = 'selectedCountry';
+
+        let allCountries = [];
 
         const KAABA_COORDS = { latitude: 21.4225, longitude: 39.8262 };
 
@@ -858,6 +987,35 @@
             Isha: '🌙',
             Tahajjud: '⭐'
         };
+
+        function getStoredCountrySelection() {
+            const raw = localStorage.getItem(SHARED_COUNTRY_STORAGE_KEY) || localStorage.getItem(LEGACY_COUNTRY_STORAGE_KEY);
+            if (!raw) return null;
+
+            try {
+                const country = JSON.parse(raw);
+                if (!country || typeof country.lat !== 'number' || typeof country.lng !== 'number') {
+                    return null;
+                }
+                return country;
+            } catch (_error) {
+                return null;
+            }
+        }
+
+        function saveCountrySelection(country) {
+            const payload = JSON.stringify(country);
+            localStorage.setItem(SHARED_COUNTRY_STORAGE_KEY, payload);
+            // Backward compatibility for existing code paths.
+            localStorage.setItem(LEGACY_COUNTRY_STORAGE_KEY, payload);
+            localStorage.setItem('locationText', country.name || 'الموقع المختار يدوياً');
+            localStorage.setItem('userLocation', JSON.stringify({ latitude: country.lat, longitude: country.lng }));
+        }
+
+        function clearCountrySelection() {
+            localStorage.removeItem(SHARED_COUNTRY_STORAGE_KEY);
+            localStorage.removeItem(LEGACY_COUNTRY_STORAGE_KEY);
+        }
 
         function toRadians(value) {
             return value * (Math.PI / 180);
@@ -930,12 +1088,74 @@
             };
         }
 
+        function formatCalibrationCountdown(ms) {
+            const safeMs = Math.max(0, ms);
+            const seconds = Math.floor(safeMs / 1000);
+            const centi = Math.floor((safeMs % 1000) / 10);
+            return `${String(seconds).padStart(2, '0')}:${String(centi).padStart(2, '0')}`;
+        }
+
+        function clearCalibrationGuideInterval() {
+            if (calibrationGuideInterval) {
+                clearInterval(calibrationGuideInterval);
+                calibrationGuideInterval = null;
+            }
+        }
+
+        function updateCalibrationGuideUI(showCalibration) {
+            const calibrationBtn = document.getElementById('qiblaCalibrationBtn');
+            const calibrationCountdown = document.getElementById('qiblaCalibrationCountdown');
+            if (!calibrationBtn || !calibrationCountdown) return;
+
+            if (!showCalibration) {
+                calibrationCountdown.textContent = '';
+                calibrationBtn.disabled = false;
+                return;
+            }
+
+            if (!calibrationGuideRunning) {
+                calibrationCountdown.textContent = '02:00';
+                calibrationBtn.disabled = false;
+                return;
+            }
+
+            const remainingMs = Math.max(0, calibrationGuideEndsAt - Date.now());
+            calibrationCountdown.textContent = formatCalibrationCountdown(remainingMs);
+            calibrationBtn.disabled = true;
+        }
+
+        function startQiblaCalibrationGuide() {
+            const now = Date.now();
+            calibrationGuideRunning = true;
+            calibrationGuideEndsAt = now + CALIBRATION_GUIDE_MS;
+            headingUnstableUntilTs = Math.max(headingUnstableUntilTs, now + CALIBRATION_GUIDE_MS + 600);
+            headingUnstableReason = 'حرّك الهاتف الآن بشكل 8 حتى ينتهي العداد';
+
+            clearCalibrationGuideInterval();
+            updateQiblaDisplay();
+
+            calibrationGuideInterval = setInterval(() => {
+                const remaining = calibrationGuideEndsAt - Date.now();
+                if (remaining <= 0) {
+                    clearCalibrationGuideInterval();
+                    calibrationGuideRunning = false;
+                    headingUnstableUntilTs = Date.now() + 1600;
+                    headingUnstableReason = 'تمت المعايرة، ثبّت الهاتف للحظة';
+                    updateQiblaDisplay();
+                    return;
+                }
+
+                updateQiblaDisplay();
+            }, 100);
+        }
+
         function updateQiblaDisplay() {
             const section = document.getElementById('qiblaSection');
             const needle = document.getElementById('qiblaNeedle');
             const meta = document.getElementById('qiblaMeta');
             const permissionBtn = document.getElementById('qiblaPermissionBtn');
             const calibrationHint = document.getElementById('qiblaCalibrationHint');
+            const now = Date.now();
 
             if (!section || !needle || !meta) return;
 
@@ -979,6 +1199,10 @@
                 meta.textContent = `اتجاه القبلة: ${qiblaText} • اتجاه الهاتف: ${headingText}${alignmentText}${headingSourceText}`;
             }
 
+            if (orientationTiltPoor) {
+                meta.textContent += ' • وضع الهاتف غير مناسب، اجعله ثابتًا وبعيدًا عن المعادن';
+            }
+
             const needsIOSPermission = typeof DeviceOrientationEvent !== 'undefined'
                 && typeof DeviceOrientationEvent.requestPermission === 'function'
                 && !orientationPermissionGranted
@@ -989,7 +1213,24 @@
             }
 
             if (calibrationHint) {
-                calibrationHint.classList.toggle('active', currentHeading === null);
+                const headingStale = currentHeading !== null && (now - lastAcceptedHeadingTs > HEADING_STALE_TIMEOUT_MS);
+                const showCalibration = currentHeading === null || headingStale || now < headingUnstableUntilTs;
+
+                calibrationHint.classList.toggle('active', showCalibration);
+
+                if (showCalibration && headingUnstableReason) {
+                    const label = calibrationHint.querySelector('.qibla-calibration-text');
+                    if (label) {
+                        label.textContent = `حرّك الهاتف بحركة شكل 8 لمدة ثانيتين (${headingUnstableReason})`;
+                    }
+                } else {
+                    const label = calibrationHint.querySelector('.qibla-calibration-text');
+                    if (label) {
+                        label.textContent = 'حرّك الهاتف بحركة شكل 8 لمدة ثانيتين لمعايرة البوصلة';
+                    }
+                }
+
+                updateCalibrationGuideUI(showCalibration);
             }
         }
 
@@ -1017,12 +1258,28 @@
                 headingSourceName = resolveHeadingSourceName(sample.source);
             }
 
+            const hasTiltData = typeof event.beta === 'number' && typeof event.gamma === 'number';
+            if (hasTiltData) {
+                const maxTilt = Math.max(Math.abs(event.beta), Math.abs(event.gamma));
+                orientationTiltPoor = maxTilt > TILT_POOR_DEG;
+
+                if (orientationTiltPoor && sample.source !== 'webkit') {
+                    headingUnstableUntilTs = now + CALIBRATION_HINT_HOLD_MS;
+                    headingUnstableReason = 'ثبّت الهاتف على سطح غير معدني ومستوٍ';
+                    updateQiblaDisplay();
+                    return;
+                }
+            }
+
             const normalized = sample.heading;
 
             if (lastRawHeading !== null) {
                 const jump = getAngularDifference(lastRawHeading, normalized);
                 const dt = now - lastRawHeadingTs;
                 if (jump > MAX_HEADING_JUMP_DEG && dt < OUTLIER_IGNORE_WINDOW_MS) {
+                    headingUnstableUntilTs = now + CALIBRATION_HINT_HOLD_MS;
+                    headingUnstableReason = 'القراءة غير مستقرة، أعد المعايرة بحركة 8';
+                    updateQiblaDisplay();
                     return;
                 }
             }
@@ -1042,6 +1299,7 @@
 
             currentHeading = smoothedHeading;
             orientationLastUpdateTs = now;
+            lastAcceptedHeadingTs = now;
             updateQiblaDisplay();
         }
 
@@ -1085,6 +1343,12 @@
             headingSourceName = null;
             lastRawHeading = null;
             lastRawHeadingTs = 0;
+            lastAcceptedHeadingTs = 0;
+            headingUnstableUntilTs = Date.now() + CALIBRATION_HINT_HOLD_MS;
+            headingUnstableReason = 'حرّك الهاتف بحركة 8 بعد تغيير المكان';
+            orientationTiltPoor = false;
+            calibrationGuideRunning = false;
+            clearCalibrationGuideInterval();
             startQiblaOrientation();
             updateQiblaDisplay();
         }
@@ -1296,7 +1560,7 @@
                     return;
                 } else if (lat && lng) {
                     userLocation = { latitude: lat, longitude: lng };
-                    const selectedCountry = JSON.parse(localStorage.getItem('selectedCountry'));
+                    const selectedCountry = getStoredCountrySelection();
                     showLocationSelected(selectedCountry ? selectedCountry.name : 'تم تحديد الموقع يدوياً');
                 }
 
@@ -1343,7 +1607,9 @@
             // Clear stored location data
             userLocation = null;
             locationMethod = null;
-            localStorage.removeItem('selectedCountry');
+            clearCountrySelection();
+            localStorage.removeItem('userLocation');
+            localStorage.removeItem('locationText');
 
             // Reset UI to show buttons
             document.getElementById('locationButtons').style.display = 'flex';
@@ -1364,6 +1630,12 @@
             headingSourceName = null;
             lastRawHeading = null;
             lastRawHeadingTs = 0;
+            lastAcceptedHeadingTs = 0;
+            headingUnstableUntilTs = 0;
+            headingUnstableReason = '';
+            orientationTiltPoor = false;
+            calibrationGuideRunning = false;
+            clearCalibrationGuideInterval();
 
             // Clear any intervals
             if (updateInterval) {
@@ -1424,7 +1696,7 @@
             }
 
             // Check if location was previously selected
-            const selectedCountry = JSON.parse(localStorage.getItem('selectedCountry'));
+            const selectedCountry = getStoredCountrySelection();
             if (selectedCountry) {
                 locationMethod = 'manual';
                 userLocation = { latitude: selectedCountry.lat, longitude: selectedCountry.lng };
@@ -1439,8 +1711,13 @@
         // Country selection modal functions
         function openCountryModal() {
             const modal = document.getElementById('countryModal');
+            const searchInput = document.getElementById('countrySearchInput');
             modal.style.display = 'flex';
             populateCountryList();
+            if (searchInput) {
+                searchInput.value = '';
+                window.setTimeout(() => searchInput.focus(), 50);
+            }
         }
 
         function closeCountryModal() {
@@ -1454,8 +1731,7 @@
         }
 
         function populateCountryList() {
-            const countryList = document.getElementById('countryList');
-            const countries = [
+            allCountries = [
                 { name: 'السعودية', lat: 24.7136, lng: 46.6753 },
                 { name: 'الإمارات العربية المتحدة', lat: 24.4539, lng: 54.3773 },
                 { name: 'الكويت', lat: 29.3759, lng: 47.9774 },
@@ -1586,18 +1862,47 @@
                 { name: 'غويانا الفرنسية', lat: 4.9224, lng: -52.3135 }
             ];
 
+            renderCountryList(allCountries);
+        }
+
+        function renderCountryList(countries) {
+            const countryList = document.getElementById('countryList');
+            const selected = getStoredCountrySelection();
+
             countryList.innerHTML = '';
+
+            if (!countries.length) {
+                countryList.innerHTML = '<div class="country-empty">لا توجد نتائج مطابقة</div>';
+                return;
+            }
+
             countries.forEach(country => {
                 const countryItem = document.createElement('div');
                 countryItem.className = 'country-item';
                 countryItem.textContent = country.name;
+                if (selected && selected.name === country.name) {
+                    countryItem.classList.add('active');
+                }
                 countryItem.onclick = () => selectCountry(country);
                 countryList.appendChild(countryItem);
             });
         }
 
+        function filterCountryList() {
+            const searchInput = document.getElementById('countrySearchInput');
+            const query = (searchInput?.value || '').trim().toLowerCase();
+
+            if (!query) {
+                renderCountryList(allCountries);
+                return;
+            }
+
+            const filtered = allCountries.filter(country => country.name.toLowerCase().includes(query));
+            renderCountryList(filtered);
+        }
+
         function selectCountry(country) {
-            localStorage.setItem('selectedCountry', JSON.stringify(country));
+            saveCountrySelection(country);
             closeCountryModal();
             document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner"><i class="bi bi-clock-history"></i></div>';
             loadPrayerTimes(country.lat, country.lng);
@@ -1608,6 +1913,7 @@
             if (updateInterval) {
                 clearInterval(updateInterval);
             }
+            clearCalibrationGuideInterval();
             if (qiblaOrientationStarted) {
                 window.removeEventListener('deviceorientationabsolute', handleDeviceOrientation, true);
                 window.removeEventListener('deviceorientation', handleDeviceOrientation, true);

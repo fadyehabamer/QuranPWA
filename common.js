@@ -1259,6 +1259,8 @@ async function initHomePrayerWidget() {
     const body = document.getElementById('pwBody');
     const locationEl = document.getElementById('pwLocation');
     const nextEl = document.getElementById('pwNextPrayer');
+    const SHARED_COUNTRY_STORAGE_KEY = 'preferredManualCountryV1';
+    const LEGACY_COUNTRY_STORAGE_KEY = 'selectedCountry';
 
     const isStandalonePwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
@@ -1284,7 +1286,7 @@ async function initHomePrayerWidget() {
         return;
     }
 
-    const selectedCountryRaw = localStorage.getItem('selectedCountry');
+    const selectedCountryRaw = localStorage.getItem(SHARED_COUNTRY_STORAGE_KEY) || localStorage.getItem(LEGACY_COUNTRY_STORAGE_KEY);
     if (selectedCountryRaw) {
         try {
             const selectedCountry = JSON.parse(selectedCountryRaw);
