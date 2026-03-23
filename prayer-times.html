@@ -343,9 +343,9 @@
 
         .qibla-calibration {
             display: none;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 10px;
+            grid-template-columns: 110px 1fr;
+            align-items: center;
+            column-gap: 12px;
             background: rgba(var(--primary-rgb), 0.06);
             border: 1px dashed rgba(var(--primary-rgb), 0.28);
             border-radius: 10px;
@@ -354,7 +354,7 @@
         }
 
         .qibla-calibration.active {
-            display: flex;
+            display: grid;
         }
 
         .qibla-eight-track {
@@ -437,7 +437,7 @@
         .qibla-calibration-content {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: flex-start;
             gap: 4px;
             min-width: 0;
         }
@@ -446,17 +446,25 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            justify-content: flex-start;
+            flex-wrap: wrap;
         }
 
         .qibla-calibration-btn {
             border: none;
-            border-radius: 999px;
+            border-radius: 12px;
             background: var(--primary-color);
             color: #fff;
             font-size: 12px;
             font-weight: 700;
-            padding: 6px 11px;
+            line-height: 1.2;
+            padding: 8px 14px;
+            min-height: 38px;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
         }
 
         .qibla-calibration-btn:disabled {
@@ -468,8 +476,37 @@
             font-size: 12px;
             font-weight: 700;
             color: var(--primary-color);
-            min-width: 56px;
+            min-width: 60px;
             text-align: center;
+        }
+
+        @media (max-width: 520px) {
+            .qibla-calibration {
+                grid-template-columns: 1fr;
+                row-gap: 8px;
+                padding: 10px 8px;
+            }
+
+            .qibla-eight-track {
+                margin: 0 auto;
+            }
+
+            .qibla-calibration-content {
+                align-items: center;
+            }
+
+            .qibla-calibration-text {
+                text-align: center;
+                margin-bottom: 6px;
+            }
+
+            .qibla-calibration-actions {
+                justify-content: center;
+            }
+
+            .qibla-calibration-btn {
+                min-width: 128px;
+            }
         }
 
         @keyframes qiblaFigureEight {
