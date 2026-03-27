@@ -3099,6 +3099,25 @@
             return y;
         }
 
+        function countWrappedRtlLines(ctx, text, maxWidth, maxLines = 8) {
+            const words = String(text || '').split(' ');
+            const lines = [];
+            let line = '';
+
+            words.forEach(word => {
+                const candidate = line ? `${line} ${word}` : word;
+                if (ctx.measureText(candidate).width <= maxWidth) {
+                    line = candidate;
+                } else {
+                    if (line) lines.push(line);
+                    line = word;
+                }
+            });
+
+            if (line) lines.push(line);
+            return Math.max(1, Math.min(lines.length || 1, maxLines));
+        }
+
         function buildAyahCardCanvasData() {
             const selectedAyah = getSelectedShareAyah();
             if (!selectedAyah || !currentSurah) {
@@ -3123,9 +3142,43 @@
                 throw new Error('لم يتم اختيار آية للمشاركة');
             }
 
+            const measureCanvas = document.createElement('canvas');
+            const measureCtx = measureCanvas.getContext('2d');
+            if (!measureCtx) {
+                throw new Error('تعذر قياس أبعاد البطاقة');
+            }
+
+            const canvasWidth = 1080;
+            const cardX = 90;
+            const cardY = 120;
+            const cardW = canvasWidth - 180;
+            const contentMaxWidth = cardW - 120;
+
+            measureCtx.font = '700 54px Amiri';
+            const ayahLines = countWrappedRtlLines(measureCtx, cardData.ayahText, contentMaxWidth, 6);
+
+            let contentHeightEstimate = 0;
+            contentHeightEstimate += 100; // Top padding before heading baseline
+            contentHeightEstimate += 64; // Heading block
+            contentHeightEstimate += 72; // Divider + spacing to ayah text
+            contentHeightEstimate += ayahLines * 86; // Ayah block height
+
+            if (cardData.tafsirText) {
+                measureCtx.font = '600 32px Cairo';
+                const tafsirLines = countWrappedRtlLines(measureCtx, cardData.tafsirText, contentMaxWidth, 6);
+                contentHeightEstimate += 22; // Gap before tafsir divider
+                contentHeightEstimate += 48; // Divider + spacing
+                contentHeightEstimate += tafsirLines * 56; // Tafsir block height
+            }
+
+            const footerReservedSpace = 130;
+            const minCardHeight = 760;
+            const maxCardHeight = 1900;
+            const cardH = Math.max(minCardHeight, Math.min(maxCardHeight, contentHeightEstimate + footerReservedSpace));
+
             const canvas = document.createElement('canvas');
-            canvas.width = 1080;
-            canvas.height = 1350;
+            canvas.width = canvasWidth;
+            canvas.height = cardH + (cardY * 2);
 
             const ctx = canvas.getContext('2d');
             if (!ctx) {
@@ -3144,13 +3197,8 @@
             ctx.fill();
 
             ctx.beginPath();
-            ctx.arc(120, 1180, 180, 0, Math.PI * 2);
+            ctx.arc(120, canvas.height - 170, 180, 0, Math.PI * 2);
             ctx.fill();
-
-            const cardX = 90;
-            const cardY = 120;
-            const cardW = canvas.width - 180;
-            const cardH = canvas.height - 240;
 
             ctx.fillStyle = '#ffffff';
             ctx.strokeStyle = 'rgba(27, 94, 32, 0.16)';
