@@ -472,6 +472,24 @@
             cursor: default;
         }
 
+        .qibla-recalibrate-btn {
+            margin: 4px auto 8px;
+            min-width: 150px;
+            display: inline-flex;
+        }
+
+        .qibla-calibration-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .qibla-toggle-btn {
+            min-width: 150px;
+        }
+
         .qibla-calibration-countdown {
             font-size: 12px;
             font-weight: 700;
@@ -883,10 +901,17 @@
                     <div class="qibla-calibration-content">
                         <p class="qibla-calibration-text">حرّك الهاتف بحركة شكل 8 لمدة ثانيتين لمعايرة البوصلة</p>
                         <div class="qibla-calibration-actions">
-                            <button type="button" class="qibla-calibration-btn" id="qiblaCalibrationBtn" onclick="startQiblaCalibrationGuide()">أعد المعايرة الآن</button>
                             <span class="qibla-calibration-countdown" id="qiblaCalibrationCountdown">02:00</span>
                         </div>
                     </div>
+                </div>
+                <div class="qibla-calibration-controls">
+                    <button type="button" class="qibla-calibration-btn qibla-recalibrate-btn" id="qiblaCalibrationBtn"
+                        onclick="startQiblaCalibrationGuide()">إعادة المعايرة</button>
+                    <button type="button" class="location-btn secondary qibla-toggle-btn" id="qiblaCalibrationToggleBtn"
+                        onclick="toggleQiblaCalibrationHint()">
+                        <i class="bi bi-sliders"></i> اعادة المعايرة
+                    </button>
                 </div>
                 <button class="location-btn secondary qibla-permission-btn" id="qiblaPermissionBtn"
                     onclick="requestQiblaPermission()" style="display: none;">
@@ -994,14 +1019,15 @@
         const MAX_HEADING_JUMP_DEG = 45;
         const OUTLIER_IGNORE_WINDOW_MS = 900;
         const HEADING_DEAD_BAND_DEG = 0.7;
-        const HEADING_STALE_TIMEOUT_MS = 1800;
         const CALIBRATION_HINT_HOLD_MS = 6000;
         const CALIBRATION_GUIDE_MS = 2000;
+        const CALIBRATION_HINT_HIDDEN_STORAGE_KEY = 'qiblaCalibrationHintHiddenV1';
         const TILT_POOR_DEG = 65;
         const SHARED_COUNTRY_STORAGE_KEY = 'preferredManualCountryV1';
         const LEGACY_COUNTRY_STORAGE_KEY = 'selectedCountry';
 
         let allCountries = [];
+        let calibrationHintManuallyHidden = localStorage.getItem(CALIBRATION_HINT_HIDDEN_STORAGE_KEY) === '1';
 
         const KAABA_COORDS = { latitude: 21.4225, longitude: 39.8262 };
 
@@ -1139,6 +1165,30 @@
             }
         }
 
+        function updateCalibrationHintToggleUI() {
+            const toggleBtn = document.getElementById('qiblaCalibrationToggleBtn');
+            if (!toggleBtn) return;
+
+            if (calibrationHintManuallyHidden) {
+                toggleBtn.textContent = 'إظهار الإرشادات';
+                toggleBtn.setAttribute('aria-pressed', 'true');
+            } else {
+                toggleBtn.textContent = 'إخفاء الإرشادات';
+                toggleBtn.setAttribute('aria-pressed', 'false');
+            }
+        }
+
+        function setCalibrationHintHidden(hidden) {
+            calibrationHintManuallyHidden = hidden;
+            localStorage.setItem(CALIBRATION_HINT_HIDDEN_STORAGE_KEY, hidden ? '1' : '0');
+            updateCalibrationHintToggleUI();
+        }
+
+        function toggleQiblaCalibrationHint() {
+            setCalibrationHintHidden(!calibrationHintManuallyHidden);
+            updateQiblaDisplay();
+        }
+
         function updateCalibrationGuideUI(showCalibration) {
             const calibrationBtn = document.getElementById('qiblaCalibrationBtn');
             const calibrationCountdown = document.getElementById('qiblaCalibrationCountdown');
@@ -1163,6 +1213,10 @@
 
         function startQiblaCalibrationGuide() {
             const now = Date.now();
+
+            // Always reveal the guide while a manual recalibration is in progress.
+            setCalibrationHintHidden(false);
+
             calibrationGuideRunning = true;
             calibrationGuideEndsAt = now + CALIBRATION_GUIDE_MS;
             headingUnstableUntilTs = Math.max(headingUnstableUntilTs, now + CALIBRATION_GUIDE_MS + 600);
@@ -1250,8 +1304,8 @@
             }
 
             if (calibrationHint) {
-                const headingStale = currentHeading !== null && (now - lastAcceptedHeadingTs > HEADING_STALE_TIMEOUT_MS);
-                const showCalibration = currentHeading === null || headingStale || now < headingUnstableUntilTs;
+                const autoShowCalibration = currentHeading === null || calibrationGuideRunning || now < headingUnstableUntilTs;
+                const showCalibration = autoShowCalibration && !calibrationHintManuallyHidden;
 
                 calibrationHint.classList.toggle('active', showCalibration);
 
@@ -1269,6 +1323,8 @@
 
                 updateCalibrationGuideUI(showCalibration);
             }
+
+            updateCalibrationHintToggleUI();
         }
 
         function handleDeviceOrientation(event) {

@@ -1401,7 +1401,8 @@
         <!-- Surah List View -->
         <div id="surahListView" class="surah-list-view active">
             <div class="search-container">
-                <input type="text" id="surahSearch" placeholder="ابحث باسم السورة أو نص الآية..." oninput="onSearchInput()">
+                <input type="text" id="surahSearch" placeholder="ابحث باسم السورة أو نص الآية..."
+                    oninput="onSearchInput()">
                 <div id="instantSearchResults" class="instant-search-results"></div>
             </div>
             <div id="surahList" class="surah-list"></div>
@@ -1610,7 +1611,8 @@
 
                     <div class="share-field" id="shareTafsirField">
                         <label for="shareTafsirSnippet">النص المرافق (يمكن تعديله قبل الإنشاء)</label>
-                        <textarea id="shareTafsirSnippet" placeholder="سيتم تحميل التفسير المختصر تلقائياً..."></textarea>
+                        <textarea id="shareTafsirSnippet"
+                            placeholder="سيتم تحميل التفسير المختصر تلقائياً..."></textarea>
                     </div>
 
                     <div class="share-preview" id="shareCardPreview">
@@ -1620,8 +1622,10 @@
                     </div>
 
                     <div class="share-actions">
-                        <button class="share-action-btn secondary" id="downloadShareCardBtn" onclick="downloadAyahCardImage()">تحميل الصورة</button>
-                        <button class="share-action-btn primary" id="shareShareCardBtn" onclick="shareAyahCardImage()">مشاركة الآن</button>
+                        <button class="share-action-btn secondary" id="downloadShareCardBtn"
+                            onclick="downloadAyahCardImage()">تحميل الصورة</button>
+                        <button class="share-action-btn primary" id="shareShareCardBtn"
+                            onclick="shareAyahCardImage()">مشاركة الآن</button>
                     </div>
                 </div>
             </div>
@@ -1634,7 +1638,7 @@
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
-        
+
         // Mapping of surah numbers to their corresponding juz (parts) numbers
         const surahToJuz = {
             1: 1,

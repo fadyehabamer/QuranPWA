@@ -70,6 +70,34 @@ function hideModal() {
     let toastElement = null;
     const SW_SIGNATURE_KEY = 'swScriptSignatureV1';
     const SW_PENDING_SIGNATURE_KEY = 'swPendingSignatureV1';
+    const SW_UPDATE_COOLDOWN_UNTIL_KEY = 'swUpdateCooldownUntilV1';
+    const SW_UPDATE_COOLDOWN_MS = 10 * 60 * 1000;
+
+    function setUpdateToastCooldown() {
+        localStorage.setItem(SW_UPDATE_COOLDOWN_UNTIL_KEY, String(Date.now() + SW_UPDATE_COOLDOWN_MS));
+    }
+
+    function clearUpdateToastCooldown() {
+        localStorage.removeItem(SW_UPDATE_COOLDOWN_UNTIL_KEY);
+    }
+
+    function isUpdateToastInCooldown() {
+        const raw = localStorage.getItem(SW_UPDATE_COOLDOWN_UNTIL_KEY);
+        if (!raw) return false;
+
+        const until = Number(raw);
+        if (!Number.isFinite(until)) {
+            localStorage.removeItem(SW_UPDATE_COOLDOWN_UNTIL_KEY);
+            return false;
+        }
+
+        if (Date.now() >= until) {
+            localStorage.removeItem(SW_UPDATE_COOLDOWN_UNTIL_KEY);
+            return false;
+        }
+
+        return true;
+    }
 
     function ensureToastStyles() {
         if (document.getElementById('swUpdateToastStyles')) return;
@@ -159,22 +187,43 @@ function hideModal() {
         const updateBtn = toastElement.querySelector('#swUpdateNowBtn');
 
         if (laterBtn) {
-            laterBtn.addEventListener('click', hideUpdateToast);
+            laterBtn.addEventListener('click', () => {
+                setUpdateToastCooldown();
+                hideUpdateToast();
+            });
         }
 
         if (updateBtn) {
             updateBtn.addEventListener('click', async () => {
                 try {
+                    const pendingSignature = localStorage.getItem(SW_PENDING_SIGNATURE_KEY);
+
                     if (activeRegistration && typeof activeRegistration.update === 'function') {
                         await activeRegistration.update();
                     }
 
                     if (activeRegistration && activeRegistration.waiting) {
+                        clearUpdateToastCooldown();
                         activeRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
                     } else {
+                        // If no waiting worker exists, treat the pending signature as applied
+                        // so we do not keep showing the same update toast after reload.
+                        if (pendingSignature) {
+                            localStorage.setItem(SW_SIGNATURE_KEY, pendingSignature);
+                            localStorage.removeItem(SW_PENDING_SIGNATURE_KEY);
+                        }
+                        clearUpdateToastCooldown();
+                        window.__swToastRefreshing = true;
                         window.location.reload();
                     }
                 } catch (_error) {
+                    const pendingSignature = localStorage.getItem(SW_PENDING_SIGNATURE_KEY);
+                    if (pendingSignature) {
+                        localStorage.setItem(SW_SIGNATURE_KEY, pendingSignature);
+                        localStorage.removeItem(SW_PENDING_SIGNATURE_KEY);
+                    }
+                    clearUpdateToastCooldown();
+                    window.__swToastRefreshing = true;
                     window.location.reload();
                 } finally {
                     hideUpdateToast();
@@ -186,6 +235,10 @@ function hideModal() {
     }
 
     function showUpdateToast(registration) {
+        if (isUpdateToastInCooldown()) {
+            return;
+        }
+
         activeRegistration = registration;
         ensureToastStyles();
 
@@ -287,8 +340,16 @@ function hideModal() {
             }
 
             if (pendingSignature && pendingSignature === latestSignature) {
-                showUpdateToast(registration);
-                return true;
+                if (registration.waiting) {
+                    showUpdateToast(registration);
+                    return true;
+                }
+
+                // Signature already became current without an explicit waiting worker.
+                // Finalize state to avoid an endless "new update" loop.
+                localStorage.setItem(SW_SIGNATURE_KEY, latestSignature);
+                localStorage.removeItem(SW_PENDING_SIGNATURE_KEY);
+                return false;
             }
 
             if (latestSignature !== knownSignature) {
