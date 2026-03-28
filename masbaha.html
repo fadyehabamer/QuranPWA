@@ -130,6 +130,7 @@
             transition: all 0.2s;
             font-weight: 500;
             color: var(--primary-color);
+            font-family: 'cairo', sans-serif;
         }
 
         .control-btn:hover {
@@ -207,6 +208,7 @@
             color: var(--text-color);
             cursor: pointer;
             transition: all 0.2s;
+            font-family: 'cairo', sans-serif;
         }
 
         .sound-toggle:hover {
@@ -232,6 +234,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 12px var(--shadow);
             padding: 5px;
+             font-family: 'cairo', sans-serif;
         }
 
         .sound-selector.show {
@@ -631,7 +634,9 @@
 
             <div class="custom-target">
                 <input type="number" id="customTargetInput" placeholder="هدف مخصص" min="1">
-                <button onclick="setCustomTarget()">حفظ</button>
+                <button onclick="setCustomTarget()" 
+                    style="font-family: 'cairo';"
+                >حفظ</button>
             </div>
 
             <div class="controls">

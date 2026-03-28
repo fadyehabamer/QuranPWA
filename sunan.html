@@ -98,15 +98,6 @@
             font-weight: 600;
         }
 
-        .header-back-btn {
-            background: none;
-            border: none;
-            color: var(--primary-color);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 5px;
-            display: none;
-        }
     </style>
 </head>
 
@@ -164,7 +155,7 @@
                 <i class="bi bi-people-fill"></i>
                 <span class="count" id="visitorCount">-</span>
             </div>
-            <button class="icon-btn" id="backBtn" onclick="showCategories()" style="display: none;">
+            <button class="header-back-btn" id="backBtn" onclick="showCategories()" style="display: none;">
                 <i class="bi bi-arrow-right"></i>
             </button>
             <button class="settings-btn" onclick="window.location.href='settings.html'">
