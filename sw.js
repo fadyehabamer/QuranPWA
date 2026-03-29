@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quran-app-v13';
+const CACHE_NAME = 'quran-app-v14';
 const APP_SHELL_URLS = [
   '/',
   '/index.html',
@@ -13,6 +13,18 @@ const APP_SHELL_URLS = [
   '/home-more.html',
   '/bio.html',
   '/styles.css',
+  '/theme-preload.js',
+  '/page-styles/index.css',
+  '/page-styles/quran.css',
+  '/page-styles/azkar.css',
+  '/page-styles/masbaha.css',
+  '/page-styles/settings.css',
+  '/page-styles/bookmarks.css',
+  '/page-styles/sunan.css',
+  '/page-styles/prayer-times.css',
+  '/page-styles/features.css',
+  '/page-styles/home-more.css',
+  '/page-styles/bio.css',
   '/common.js',
   '/icon-192.png',
   '/icon-512.png',

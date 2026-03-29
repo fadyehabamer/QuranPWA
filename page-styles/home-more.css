@@ -1,0 +1,143 @@
+        html,
+        body,
+        body * {
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .home-more-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .more-hero {
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.14), rgba(var(--primary-rgb), 0.04));
+            padding: 22px;
+            margin-bottom: 26px;
+        }
+
+        .more-hero h2 {
+            font-size: 30px;
+            margin-bottom: 8px;
+            color: var(--text-color);
+        }
+
+        .more-hero p {
+            color: var(--text-secondary, #666);
+            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 14px;
+        }
+
+        .more-hero a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            background: var(--primary-color);
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .quick-actions {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 22px;
+        }
+
+        .quick-actions-title {
+            font-size: 18px;
+            color: var(--text-color);
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.secondary {
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .quick-tools {
+            margin-bottom: 26px;
+        }
+
+        .tool-btn {
+            color: var(--text-color);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            min-width: 96px;
+        }
+
+        .tool-btn i,
+        .tool-btn .tool-label {
+            color: inherit;
+        }
+
+        [data-theme="dark"] .tool-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+        }
+
+        [data-theme="dark"] .tool-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .more-hero h2 {
+                font-size: 24px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    

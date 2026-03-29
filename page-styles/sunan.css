@@ -1,0 +1,83 @@
+        .sunan-container {
+            padding: 20px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .category-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px var(--shadow-heavy);
+            border-color: var(--primary-color);
+        }
+
+        .category-icon {
+            font-size: 32px;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .sunan-list {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sunan-list.active {
+            display: flex;
+        }
+
+        .sunnah-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px var(--shadow);
+            transition: all 0.2s;
+        }
+
+        .sunnah-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        .sunnah-text {
+            font-size: 18px;
+            line-height: 1.8;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .sunnah-source {
+            font-size: 14px;
+            color: var(--primary-color);
+            opacity: 0.8;
+            font-weight: 600;
+        }
+
+    
