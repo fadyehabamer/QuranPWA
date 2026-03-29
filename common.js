@@ -1000,17 +1000,20 @@ function loadVisitorCount() {
             bottom: 200px;
             left: 20px;
             width: 290px;
-            background: #fff;
+            background: var(--card-bg, #fff);
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.18);
             z-index: 1099;
             overflow: hidden;
             display: none;
             flex-direction: column;
-            border: 1px solid #e8e8e8;
+            border: 1px solid var(--border-color, #e8e8e8);
             font-family: 'Cairo', sans-serif;
         }
-        [data-theme="dark"] .radio-panel { border-color: #333; }
+        [data-theme="dark"] .radio-panel {
+            background: rgba(24, 24, 24, 0.96);
+            border-color: var(--border-color, #333);
+        }
 .radio-panel.open { display: flex; }
         .radio-panel-header {
             background: linear-gradient(135deg, var(--primary-color, #1B5E20), var(--primary-light, #2E7D32));
