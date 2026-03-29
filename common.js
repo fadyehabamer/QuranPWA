@@ -1289,7 +1289,7 @@ function buildSidebarMarkup(currentKey) {
             <nav class="sidebar-nav">${linksMarkup}
             </nav>
             <div class="sidebar-footer">
-                <div class="sidebar-version">الإصدار 1.0.0</div>
+                <div class="sidebar-version">الإصدار 2.0</div>
             </div>
         </aside>
     `;
