@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كل الميزات</title>
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1B5E20">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .features-hub-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 18px;
+        }
+
+        .hub-hero {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .hub-title {
+            font-size: 32px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .hub-subtitle {
+            opacity: 0.95;
+            line-height: 1.8;
+        }
+
+        .hub-stats {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .hub-stat {
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .hub-stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .hub-stat-label {
+            font-size: 13px;
+            opacity: 0.92;
+        }
+
+        .search-wrap {
+            margin-bottom: 16px;
+        }
+
+        .feature-search {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 14px 16px;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .feature-search:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.16);
+        }
+
+        .quick-page-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .quick-link-card {
+            text-decoration: none;
+            color: var(--text-color);
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            transition: all var(--transition-fast);
+        }
+
+        .quick-link-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow);
+        }
+
+        .quick-link-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(var(--primary-rgb), 0.14);
+            color: var(--primary-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 14px;
+        }
+
+        .feature-section {
+            border-radius: 18px;
+            border: 1px solid var(--glass-border);
+            padding: 16px;
+        }
+
+        .feature-section.hidden-by-filter {
+            display: none;
+        }
+
+        .feature-section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .feature-section-title {
+            font-size: 20px;
+            color: var(--primary-color);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-open-link {
+            text-decoration: none;
+            font-size: 12px;
+            border: 1px solid rgba(var(--primary-rgb), 0.25);
+            color: var(--primary-color);
+            background: rgba(var(--primary-rgb), 0.08);
+            border-radius: 999px;
+            padding: 6px 10px;
+            white-space: nowrap;
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .feature-item {
+            font-size: 14px;
+            color: var(--text-color);
+            line-height: 1.7;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .feature-item i {
+            color: var(--primary-color);
+            margin-top: 4px;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .results-hint {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            margin-bottom: 10px;
+        }
+
+        .empty-filter-state {
+            border-radius: 14px;
+            border: 1px dashed var(--border-color);
+            padding: 24px;
+            text-align: center;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .empty-filter-state.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .features-hub-container {
+                padding: 12px;
+            }
+
+            .hub-title {
+                font-size: 26px;
+            }
+
+            .hub-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <aside class="desktop-sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+            <div class="sidebar-logo-text">القرآن الكريم</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الرئيسية</div>
+            </a>
+            <a href="quran.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">القرآن الكريم</div>
+            </a>
+            <a href="bookmarks.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">المواضع المحفوظة</div>
+            </a>
+            <a href="azkar.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الأذكار</div>
+            </a>
+            <a href="masbaha.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">المسبحة</div>
+            </a>
+            <a href="sunan.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">سنن النبي</div>
+            </a>
+            <a href="prayer-times.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">مواقيت الصلاة</div>
+            </a>
+            <a href="features.html" class="sidebar-nav-item active">
+                <div class="sidebar-nav-label">كل الميزات</div>
+            </a>
+            <a href="bio.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">عن المطور</div>
+            </a>
+            <a href="settings.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">الإعدادات</div>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-version">الإصدار 1.0.0</div>
+        </div>
+    </aside>
+
+    <header class="app-header glass-card">
+        <button class="menu-toggle-btn" onclick="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+        <h1>كل الميزات</h1>
+        <div class="header-left-buttons">
+            <button class="settings-btn" onclick="window.location.href='settings.html'">
+                <i class="bi bi-gear-fill"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="app-content">
+        <div class="features-hub-container">
+            <section class="hub-hero animate-scale-in">
+                <h2 class="hub-title">لوحة الميزات الكاملة</h2>
+                <p class="hub-subtitle">
+                    هذه الصفحة تجمع كل قدرات التطبيق في مكان واحد: القراءة، الأذكار، المسبحة، الصلاة، الإعدادات،
+                    وإدارة المحفوظات مع روابط مباشرة لكل قسم.
+                </p>
+                <div class="hub-stats">
+                    <div class="hub-stat">
+                        <div class="hub-stat-value" id="pagesCount">0</div>
+                        <div class="hub-stat-label">صفحات رئيسية</div>
+                    </div>
+                    <div class="hub-stat">
+                        <div class="hub-stat-value" id="sectionsCount">0</div>
+                        <div class="hub-stat-label">أقسام ميزات</div>
+                    </div>
+                    <div class="hub-stat">
+                        <div class="hub-stat-value" id="featuresCount">0</div>
+                        <div class="hub-stat-label">ميزة موثقة</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="search-wrap animate-fade-up delay-1">
+                <input id="featureSearch" class="feature-search" type="search"
+                    placeholder="ابحث عن ميزة: مثال (تفسير، إشعارات، قبلة، مفضلة...)" oninput="filterFeatures()">
+                <div class="results-hint" id="resultsHint">اكتب كلمة للفلترة داخل جميع الأقسام.</div>
+            </div>
+
+            <section class="quick-page-links animate-fade-up delay-1">
+                <a class="quick-link-card" href="quran.html">
+                    <span class="quick-link-icon"><i class="bi bi-book-fill"></i></span>
+                    <span>القرآن الكريم</span>
+                </a>
+                <a class="quick-link-card" href="bookmarks.html">
+                    <span class="quick-link-icon"><i class="bi bi-bookmarks-fill"></i></span>
+                    <span>المواضع المحفوظة</span>
+                </a>
+                <a class="quick-link-card" href="azkar.html">
+                    <span class="quick-link-icon"><i class="bi bi-moon-stars-fill"></i></span>
+                    <span>الأذكار</span>
+                </a>
+                <a class="quick-link-card" href="masbaha.html">
+                    <span class="quick-link-icon"><i class="bi bi-circle-fill"></i></span>
+                    <span>المسبحة</span>
+                </a>
+                <a class="quick-link-card" href="prayer-times.html">
+                    <span class="quick-link-icon"><i class="bi bi-clock-fill"></i></span>
+                    <span>مواقيت الصلاة</span>
+                </a>
+                <a class="quick-link-card" href="sunan.html">
+                    <span class="quick-link-icon"><i class="bi bi-sun-fill"></i></span>
+                    <span>سنن النبي</span>
+                </a>
+                <a class="quick-link-card" href="settings.html">
+                    <span class="quick-link-icon"><i class="bi bi-gear-fill"></i></span>
+                    <span>الإعدادات</span>
+                </a>
+                <a class="quick-link-card" href="bio.html">
+                    <span class="quick-link-icon"><i class="bi bi-person-fill"></i></span>
+                    <span>عن المطور</span>
+                </a>
+            </section>
+
+            <div class="empty-filter-state" id="emptyFilterState">لا توجد ميزات مطابقة للبحث الحالي.</div>
+
+            <section class="features-grid" id="featuresGrid">
+                <article class="feature-section glass-card animate-fade-up delay-1"
+                    data-keywords="الرئيسية لوحة اليوم متابعة القراءة موضع محفوظ خطة ختمة آية اليوم حديث اليوم نفسي">
+                    <div class="feature-section-head">
+                        <div class="feature-section-title"><i class="bi bi-house-fill"></i> الصفحة الرئيسية</div>
+                        <a class="feature-open-link" href="/">فتح الصفحة</a>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>لوحة اليوم الذكية: متابعة القراءة، الصلاة القادمة، ملخص المحفوظات.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>سلسلة القراءة + حلقات عادات أسبوعية للقرآن والأذكار والمسبحة.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>خطة ختمة مرنة مع هدف يومي وتعويض تلقائي.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>آية اليوم وحديث اليوم.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>دعم نفسي بالقرآن مع اقتراح آيات بحسب الشعور.</span></li>
+                    </ul>
+                </article>
+
+                <article class="feature-section glass-card animate-fade-up delay-2"
+                    data-keywords="قرآن سور بحث آية تفسير صوت قارئ مشاركة علامة مرجعية صفحات">
+                    <div class="feature-section-head">
+                        <div class="feature-section-title"><i class="bi bi-book-fill"></i> القرآن الكريم</div>
+                        <a class="feature-open-link" href="quran.html">فتح الصفحة</a>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>قائمة السور مع بحث فوري بالاسم ونص الآية.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>عرض الصفحات مع أزرار تنقل وسحب بين الصفحات.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>حفظ/إلغاء حفظ الموضع مباشرة من القارئ.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>وضع التفسير + اختيار القارئ + مشغل صوت مع شريط تقدم.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>مشاركة آية عبر بطاقة صورة مع خيارات متقدمة.</span></li>
+                    </ul>
+                </article>
+
+                <article class="feature-section glass-card animate-fade-up delay-3"
+                    data-keywords="محفوظات مجلد وسوم ملاحظة فلترة بحث زيارات حديثة">
+                    <div class="feature-section-head">
+                        <div class="feature-section-title"><i class="bi bi-bookmarks-fill"></i> إدارة المحفوظات</div>
+                        <a class="feature-open-link" href="bookmarks.html">فتح الصفحة</a>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>عرض كل مواضع القراءة المحفوظة مع العودة المباشرة للموضع.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>مجلدات مخصصة، وسوم، وملاحظات لكل موضع.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>فلترة بالبحث/المجلد/الوسم.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>قسم آخر الزيارات وإحصاءات متقدمة.</span></li>
+                    </ul>
+                </article>
+
+                <article class="feature-section glass-card animate-fade-up delay-1"
+                    data-keywords="أذكار صباح مساء نوم استيقاظ صلاة عامة مفضلة عداد تقدم">
+                    <div class="feature-section-head">
+                        <div class="feature-section-title"><i class="bi bi-moon-stars-fill"></i> الأذكار</div>
+                        <a class="feature-open-link" href="azkar.html">فتح الصفحة</a>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>فئات متعددة: صباح، مساء، نوم، استيقاظ، صلاة، عامة وغيرها.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>عداد لكل ذكر مع هدف تلقائي حسب عدد التكرار.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>مفضلة للأذكار المهمة.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>شريط تقدم داخل كل فئة.</span></li>
+                    </ul>
+                </article>
+
+                <article class="feature-section glass-card animate-fade-up delay-2"
+                    data-keywords="مسبحة عداد هدف مخصص أصوات اهتزاز سجل تاريخي">
+                    <div class="feature-section-head">
+                        <div class="feature-section-title"><i class="bi bi-circle-fill"></i> المسبحة الإلكترونية</div>
+                        <a class="feature-open-link" href="masbaha.html">فتح الصفحة</a>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>عداد رقمي مع حلقة تقدم بصرية.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>أهداف جاهزة (33/99/100/1000) + هدف مخصص.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>إعدادات صوتية، اهتزاز، واختيار نوع النغمة.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>سجل آخر الجلسات مع حذف عنصر أو مسح كامل.</span></li>
+                    </ul>
+                </article>
+
+                <article class="feature-section glass-card animate-fade-up delay-3"
+                    data-keywords="صلاة مواقيت موقع تلقائي دولة يدويا قبلة بوصلة تهجد عد تنازلي">
+                    <div class="feature-section-head">
+                        <div class="feature-section-title"><i class="bi bi-clock-fill"></i> مواقيت الصلاة والقبلة</div>
+                        <a class="feature-open-link" href="prayer-times.html">فتح الصفحة</a>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>تحديد الموقع تلقائيا أو اختيار الدولة يدويا.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>عرض الصلوات الخمس مع إبراز الصلاة القادمة والوقت المتبقي.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>معلومات صلاة التهجد.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>بوصلة قبلة تفاعلية مع تحديث مباشر للاتجاه.</span></li>
+                    </ul>
+                </article>
+
+                <article class="feature-section glass-card animate-fade-up delay-1"
+                    data-keywords="سنن النبي فئات وضوء صلاة نوم طعام عامة مصادر حديث">
+                    <div class="feature-section-head">
+                        <div class="feature-section-title"><i class="bi bi-sun-fill"></i> سنن النبي ﷺ</div>
+                        <a class="feature-open-link" href="sunan.html">فتح الصفحة</a>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>تصنيف السنن إلى فئات يومية (الاستيقاظ، الوضوء، الصلاة، الطعام، النوم، عامة).</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>نصوص مختصرة لكل سنة مع المصدر.</span></li>
+                    </ul>
+                </article>
+
+                <article class="feature-section glass-card animate-fade-up delay-2"
+                    data-keywords="إعدادات مظهر داكن لون خط وزن إشعارات تثبيت تحديث كاش">
+                    <div class="feature-section-head">
+                        <div class="feature-section-title"><i class="bi bi-gear-fill"></i> الإعدادات</div>
+                        <a class="feature-open-link" href="settings.html">فتح الصفحة</a>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>الوضع الليلي، اختيار اللون، حجم الخط، ووزن الخط.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>تنبيهات مخصصة بالأيام والوقت.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>تثبيت التطبيق كـ PWA مع إرشادات حسب الجهاز.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>مسح الكاش والتحقق من التحديثات.</span></li>
+                    </ul>
+                </article>
+
+                <article class="feature-section glass-card animate-fade-up delay-3"
+                    data-keywords="تطبيق تدريجي pwa اوفلاين خدمة عامل service worker localstorage">
+                    <div class="feature-section-head">
+                        <div class="feature-section-title"><i class="bi bi-phone-fill"></i> تجربة التطبيق</div>
+                        <a class="feature-open-link" href="/">الرئيسية</a>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>تشغيل كتطبيق PWA قابل للتثبيت.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>دعم العمل دون اتصال بعد التحميل الأول.</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>تخزين محلي لإعداداتك وتقدمك (LocalStorage).</span></li>
+                        <li class="feature-item"><i class="bi bi-check2-circle"></i><span>تحديثات Service Worker برسالة تنبيه عند توفر نسخة جديدة.</span></li>
+                    </ul>
+                </article>
+            </section>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item">
+            <i class="bi bi-house-fill nav-icon"></i>
+            <span class="nav-label">الرئيسية</span>
+        </a>
+        <a href="quran.html" class="nav-item">
+            <i class="bi bi-book-fill nav-icon"></i>
+            <span class="nav-label">القرآن</span>
+        </a>
+        <a href="azkar.html" class="nav-item">
+            <i class="bi bi-moon-stars-fill nav-icon"></i>
+            <span class="nav-label">الأذكار</span>
+        </a>
+        <a href="masbaha.html" class="nav-item">
+            <i class="bi bi-circle-fill nav-icon"></i>
+            <span class="nav-label">المسبحة</span>
+        </a>
+        <a href="prayer-times.html" class="nav-item">
+            <i class="bi bi-clock-fill nav-icon"></i>
+            <span class="nav-label">الصلاة</span>
+        </a>
+        <a href="features.html" class="nav-item active">
+            <i class="bi bi-grid-fill nav-icon"></i>
+            <span class="nav-label">الميزات</span>
+        </a>
+    </nav>
+
+    <script src="common.js"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 27, g: 94, b: 32 };
+        }
+
+        function adjustColor(color, amount) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * amount);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255))
+                .toString(16).slice(1);
+        }
+
+        function loadThemeSettings() {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+
+            const color = localStorage.getItem('primaryColor');
+            const selectedColor = color || '#1B5E20';
+            const rgb = hexToRgb(selectedColor);
+
+            document.documentElement.style.setProperty('--primary-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+
+            if (color) {
+                const lightColor = adjustColor(color, 30);
+                document.documentElement.style.setProperty('--primary-color', color);
+                document.documentElement.style.setProperty('--primary-light', lightColor);
+
+                const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`;
+                const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
+                document.documentElement.style.setProperty('--shadow', shadowLight);
+                document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
+            }
+
+            const fontSize = localStorage.getItem('fontSize');
+            if (fontSize !== null) {
+                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
+                const baseSize = fontSizes[parseInt(fontSize, 10)] || 16;
+                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
+                document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
+                document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px');
+            }
+
+            const fontWeight = localStorage.getItem('fontWeight');
+            if (fontWeight !== null) {
+                const fontWeights = [300, 400, 500, 600, 700];
+                const selectedWeight = fontWeights[parseInt(fontWeight, 10)] || 400;
+                document.documentElement.style.setProperty('--font-weight', selectedWeight);
+            }
+        }
+
+        function updateFeatureStats() {
+            const sectionCount = document.querySelectorAll('.feature-section').length;
+            const featureCount = document.querySelectorAll('.feature-item').length;
+            const pageLinksCount = document.querySelectorAll('.quick-link-card').length;
+
+            document.getElementById('sectionsCount').textContent = sectionCount;
+            document.getElementById('featuresCount').textContent = featureCount;
+            document.getElementById('pagesCount').textContent = pageLinksCount;
+        }
+
+        function normalizeText(value) {
+            return String(value || '')
+                .toLowerCase()
+                .normalize('NFKD')
+                .replace(/[\u064b-\u065f\u0670\u06d6-\u06ed]/g, '')
+                .replace(/[إأآٱ]/g, 'ا')
+                .replace(/ى/g, 'ي')
+                .replace(/ؤ/g, 'و')
+                .replace(/ئ/g, 'ي')
+                .replace(/ة/g, 'ه')
+                .trim();
+        }
+
+        function filterFeatures() {
+            const query = normalizeText(document.getElementById('featureSearch').value);
+            const sections = Array.from(document.querySelectorAll('.feature-section'));
+            let visibleCount = 0;
+
+            sections.forEach(section => {
+                const text = normalizeText(section.textContent + ' ' + (section.getAttribute('data-keywords') || ''));
+                const matched = !query || text.includes(query);
+                section.classList.toggle('hidden-by-filter', !matched);
+                if (matched) visibleCount += 1;
+            });
+
+            const emptyState = document.getElementById('emptyFilterState');
+            const hint = document.getElementById('resultsHint');
+            if (emptyState) {
+                emptyState.classList.toggle('active', visibleCount === 0);
+            }
+            if (hint) {
+                hint.textContent = query
+                    ? `النتائج: ${visibleCount} قسم مطابق`
+                    : 'اكتب كلمة للفلترة داخل جميع الأقسام.';
+            }
+        }
+
+        loadThemeSettings();
+        updateFeatureStats();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</body>
+
+</html>

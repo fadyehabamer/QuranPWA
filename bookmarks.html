@@ -14,7 +14,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="styles.css">
-    <script src="common.js" defer></script>
+    <script src="common.js"></script>
     <style>
         .bookmarks-container {
             max-width: 900px;
@@ -50,6 +50,110 @@
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
+        }
+
+        .bookmarks-controls {
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .control-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary, #666);
+        }
+
+        .control-input,
+        .control-select {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .control-actions {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .folder-add-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            background: var(--primary-color);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .recent-bookmarks {
+            margin-bottom: 18px;
+        }
+
+        .recent-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .recent-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 10px;
+        }
+
+        .recent-item {
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            padding: 10px;
+        }
+
+        .recent-item-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 4px;
+        }
+
+        .recent-item-meta {
+            font-size: 12px;
+            color: var(--text-secondary, #666);
+            margin-bottom: 8px;
+        }
+
+        .recent-item-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 7px 10px;
+            background: rgba(var(--primary-rgb), 0.12);
+            color: var(--primary-color);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
         }
 
         .bookmark-card {
@@ -92,6 +196,25 @@
             margin-bottom: 8px;
         }
 
+        .bookmark-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .bookmark-folder-chip {
+            border-radius: 999px;
+            border: 1px solid rgba(var(--primary-rgb), 0.28);
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary-color);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            white-space: nowrap;
+        }
+
         .bookmark-details {
             display: flex;
             align-items: center;
@@ -115,9 +238,35 @@
             margin-bottom: 12px;
         }
 
+        .bookmark-tags-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .bookmark-tag-pill {
+            font-size: 11px;
+            border-radius: 999px;
+            background: rgba(var(--primary-rgb), 0.08);
+            border: 1px solid rgba(var(--primary-rgb), 0.22);
+            color: var(--primary-color);
+            padding: 3px 8px;
+            font-weight: 700;
+        }
+
+        .bookmark-note-preview {
+            font-size: 13px;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
         .bookmark-actions {
             display: flex;
             gap: 8px;
+            margin-bottom: 12px;
         }
 
         .bookmark-btn {
@@ -149,6 +298,29 @@
 
         .bookmark-btn-delete:hover {
             background: rgba(244, 67, 54, 0.2);
+        }
+
+        .bookmark-btn-secondary {
+            background: rgba(var(--primary-rgb), 0.12);
+            color: var(--primary-color);
+            width: 100%;
+        }
+
+        .bookmark-editor {
+            border-top: 1px dashed var(--border-color);
+            padding-top: 10px;
+        }
+
+        .bookmark-editor-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .bookmark-editor textarea {
+            min-height: 56px;
+            resize: vertical;
         }
 
         .empty-state {
@@ -202,6 +374,8 @@
             display: flex;
             justify-content: space-around;
             text-align: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .stat-item {
@@ -219,6 +393,27 @@
             font-size: 14px;
             color: var(--text-color);
             opacity: 0.7;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 12px;
+            color: var(--text-secondary, #666);
+            font-size: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .bookmarks-container {
+                padding: 16px;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .control-actions {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -255,6 +450,9 @@
             <a href="prayer-times.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">مواقيت الصلاة</div>
             </a>
+            <a href="features.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">كل الميزات</div>
+            </a>
             <a href="bio.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">عن المطور</div>
             </a>
@@ -280,7 +478,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="app-header">
+    <div class="app-header glass-card">
         <h1>المواضع المحفوظة</h1>
         <div class="header-left-buttons">
             <div class="visitor-badge">
@@ -311,11 +509,72 @@
                     <div class="stat-value" id="totalSurahs">0</div>
                     <div class="stat-label">سورة</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalFolders">0</div>
+                    <div class="stat-label">مجلد</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="recentVisits">0</div>
+                    <div class="stat-label">زيارة حديثة</div>
+                </div>
+            </div>
+
+            <div class="bookmarks-controls glass-card" id="bookmarksControls" style="display: none;">
+                <div class="controls-grid">
+                    <div class="control-field">
+                        <label class="control-label" for="bookmarkSearchInput">بحث</label>
+                        <input id="bookmarkSearchInput" class="control-input" type="search" placeholder="ابحث باسم السورة أو الملاحظة أو الوسوم" oninput="handleFiltersChange()">
+                    </div>
+                    <div class="control-field">
+                        <label class="control-label" for="folderFilter">المجلد</label>
+                        <select id="folderFilter" class="control-select" onchange="handleFiltersChange()"></select>
+                    </div>
+                    <div class="control-field">
+                        <label class="control-label" for="tagFilter">الوسوم</label>
+                        <select id="tagFilter" class="control-select" onchange="handleFiltersChange()"></select>
+                    </div>
+                </div>
+                <div class="control-actions">
+                    <input id="newFolderInput" class="control-input" type="text" placeholder="اسم مجلد جديد (مثال: حفظ ومراجعة)">
+                    <button class="folder-add-btn" type="button" onclick="createFolderFromInput()">إضافة مجلد</button>
+                </div>
+            </div>
+
+            <div class="recent-bookmarks" id="recentBookmarksSection" style="display:none;">
+                <div class="recent-title">آخر الزيارات</div>
+                <div class="recent-list" id="recentBookmarksList"></div>
             </div>
 
             <div id="bookmarksContent"></div>
         </div>
     </div>
+
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item">
+            <i class="bi bi-house-fill nav-icon"></i>
+            <span class="nav-label">الرئيسية</span>
+        </a>
+        <a href="quran.html" class="nav-item">
+            <i class="bi bi-book-fill nav-icon"></i>
+            <span class="nav-label">القرآن</span>
+        </a>
+        <a href="azkar.html" class="nav-item">
+            <i class="bi bi-moon-stars-fill nav-icon"></i>
+            <span class="nav-label">الأذكار</span>
+        </a>
+        <a href="masbaha.html" class="nav-item">
+            <i class="bi bi-circle-fill nav-icon"></i>
+            <span class="nav-label">المسبحة</span>
+        </a>
+        <a href="prayer-times.html" class="nav-item">
+            <i class="bi bi-clock-fill nav-icon"></i>
+            <span class="nav-label">الصلاة</span>
+        </a>
+        <a href="features.html" class="nav-item active">
+            <i class="bi bi-grid-fill nav-icon"></i>
+            <span class="nav-label">الميزات</span>
+        </a>
+    </nav>
 
     <script>
         const surahInfo = [
@@ -436,11 +695,12 @@
         ];
 
         function renderBookmarks() {
-            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+            const allBookmarks = getBookmarksLibrary().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             const content = document.getElementById('bookmarksContent');
             const stats = document.getElementById('bookmarksStats');
+            const controls = document.getElementById('bookmarksControls');
 
-            if (bookmarks.length === 0) {
+            if (allBookmarks.length === 0) {
                 content.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon"><i class="bi bi-bookmark" style="font-size: 80px;"></i></div>
@@ -449,44 +709,104 @@
                         <a href="quran.html" class="empty-state-btn"><i class="bi bi-book-fill"></i> ابدأ القراءة</a>
                     </div>
                 `;
-                stats.style.display = 'none';
+                if (stats) stats.style.display = 'none';
+                if (controls) controls.style.display = 'none';
+                renderRecentBookmarks([]);
                 return;
             }
 
-            // Show stats
-            stats.style.display = 'flex';
-            document.getElementById('totalBookmarks').textContent = bookmarks.length;
-            const uniqueSurahs = new Set(bookmarks.map(b => b.surah));
-            document.getElementById('totalSurahs').textContent = uniqueSurahs.size;
+            if (stats) stats.style.display = 'flex';
+            if (controls) controls.style.display = 'block';
 
-            // Render bookmarks
+            const uniqueSurahs = new Set(allBookmarks.map(bookmark => bookmark.surah));
+            const allFolders = getAllFolders(allBookmarks);
+            const recentVisitedCount = allBookmarks.filter(bookmark => (bookmark.lastVisited || 0) > 0).length;
+
+            document.getElementById('totalBookmarks').textContent = allBookmarks.length;
+            document.getElementById('totalSurahs').textContent = uniqueSurahs.size;
+            document.getElementById('totalFolders').textContent = allFolders.length;
+            document.getElementById('recentVisits').textContent = recentVisitedCount;
+
+            renderFilterOptions(allBookmarks);
+            renderRecentBookmarks();
+
+            const filteredBookmarks = filterBookmarks(allBookmarks);
+            if (filteredBookmarks.length === 0) {
+                content.innerHTML = '<div class="no-results">لا توجد نتائج مطابقة للفلاتر الحالية.</div>';
+                return;
+            }
+
+            const folders = getAllFolders(allBookmarks);
+
             const html = `
                 <div class="bookmarks-list">
-                    ${bookmarks.map((bookmark, index) => {
-                const surah = surahInfo[bookmark.surah - 1];
-                const date = new Date(bookmark.timestamp);
-                const timeAgo = formatTimeAgo(date);
+                    ${filteredBookmarks.map((bookmark) => {
+                const surah = surahInfo[bookmark.surah - 1] || { name: 'سورة', type: '' };
+                const createdText = formatTimeAgo(new Date(bookmark.timestamp || Date.now()));
+                const visitText = bookmark.lastVisited
+                    ? `آخر زيارة ${formatTimeAgo(new Date(bookmark.lastVisited))}`
+                    : 'لم تتم زيارته بعد';
+                const tags = Array.isArray(bookmark.tags) ? bookmark.tags : [];
+                const tagsHtml = tags.length
+                    ? `<div class="bookmark-tags-row">${tags.map(tag => `<span class="bookmark-tag-pill">${escapeHtml(tag)}</span>`).join('')}</div>`
+                    : '';
+                const noteHtml = bookmark.note
+                    ? `<div class="bookmark-note-preview">${escapeHtml(bookmark.note)}</div>`
+                    : '';
+                const encodedId = encodeBookmarkId(bookmark.id);
+                const controlId = toControlId(bookmark.id);
+                const folderOptionsHtml = folders.map(folder => `
+                    <option value="${escapeHtml(folder)}" ${folder === (bookmark.folder || 'عام') ? 'selected' : ''}>${escapeHtml(folder)}</option>
+                `).join('');
 
                 return `
                             <div class="bookmark-card">
-                                <div class="bookmark-surah-name">${surah.name}</div>
+                                <div class="bookmark-head">
+                                    <div class="bookmark-surah-name">${surah.name}</div>
+                                    <span class="bookmark-folder-chip">${escapeHtml(bookmark.folder || 'عام')}</span>
+                                </div>
+
                                 <div class="bookmark-details">
                                     <div class="bookmark-detail-item">
                                         <span>📄</span>
-                                        <span>صفحة ${bookmark.page + 1}</span>
+                                        <span>صفحة ${(bookmark.page || 0) + 1}</span>
                                     </div>
                                     <div class="bookmark-detail-item">
                                         <span>•</span>
-                                        <span>${surah.type}</span>
+                                        <span>${surah.type || ''}</span>
                                     </div>
                                 </div>
-                                <div class="bookmark-timestamp"> ${timeAgo}</div>
+
+                                <div class="bookmark-timestamp">${createdText} • ${visitText}</div>
+                                ${tagsHtml}
+                                ${noteHtml}
+
                                 <div class="bookmark-actions">
-                                    <button class="bookmark-btn bookmark-btn-primary" onclick="loadBookmark(${index})">
+                                    <button class="bookmark-btn bookmark-btn-primary" onclick="loadBookmark('${encodedId}')">
                                         <i class="bi bi-book-fill"></i> متابعة القراءة
                                     </button>
-                                    <button class="bookmark-btn bookmark-btn-delete" onclick="deleteBookmark(${index})">
+                                    <button class="bookmark-btn bookmark-btn-delete" onclick="deleteBookmark('${encodedId}')">
                                         <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+
+                                <div class="bookmark-editor">
+                                    <div class="bookmark-editor-grid">
+                                        <div class="control-field">
+                                            <label class="control-label" for="folder_${controlId}">المجلد</label>
+                                            <select id="folder_${controlId}" class="control-select">${folderOptionsHtml}</select>
+                                        </div>
+                                        <div class="control-field">
+                                            <label class="control-label" for="tags_${controlId}">الوسوم (مفصولة بفاصلة)</label>
+                                            <input id="tags_${controlId}" class="control-input" type="text" value="${escapeHtml(tags.join('، '))}">
+                                        </div>
+                                        <div class="control-field">
+                                            <label class="control-label" for="note_${controlId}">ملاحظة</label>
+                                            <textarea id="note_${controlId}" class="control-input">${escapeHtml(bookmark.note || '')}</textarea>
+                                        </div>
+                                    </div>
+                                    <button class="bookmark-btn bookmark-btn-secondary" onclick="saveBookmarkMeta('${encodedId}')">
+                                        <i class="bi bi-floppy-fill"></i> حفظ التعديلات
                                     </button>
                                 </div>
                             </div>
@@ -496,6 +816,151 @@
             `;
 
             content.innerHTML = html;
+        }
+
+        const bookmarkFilters = {
+            search: '',
+            folder: '',
+            tag: ''
+        };
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function encodeBookmarkId(id) {
+            return encodeURIComponent(String(id || ''));
+        }
+
+        function decodeBookmarkId(encodedId) {
+            return decodeURIComponent(String(encodedId || ''));
+        }
+
+        function toControlId(bookmarkId) {
+            return String(bookmarkId || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+        }
+
+        function getBookmarksLibrary() {
+            if (window.loadBookmarkLibrary) {
+                return window.loadBookmarkLibrary();
+            }
+
+            try {
+                const raw = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+                return Array.isArray(raw) ? raw : [];
+            } catch (_error) {
+                return [];
+            }
+        }
+
+        function saveBookmarksLibrary(bookmarks) {
+            if (window.saveBookmarkLibrary) {
+                return window.saveBookmarkLibrary(bookmarks);
+            }
+            localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+            return bookmarks;
+        }
+
+        function getAllFolders(bookmarks) {
+            if (window.getBookmarkFolders) {
+                return window.getBookmarkFolders();
+            }
+            return Array.from(new Set((bookmarks || []).map(bookmark => bookmark.folder || 'عام')));
+        }
+
+        function getAllTags(bookmarks) {
+            if (window.getBookmarkTags) {
+                return window.getBookmarkTags();
+            }
+
+            return Array.from(new Set((bookmarks || [])
+                .flatMap(bookmark => Array.isArray(bookmark.tags) ? bookmark.tags : [])));
+        }
+
+        function renderFilterOptions(bookmarks) {
+            const folderFilter = document.getElementById('folderFilter');
+            const tagFilter = document.getElementById('tagFilter');
+            if (!folderFilter || !tagFilter) return;
+
+            const folders = getAllFolders(bookmarks);
+            const tags = getAllTags(bookmarks);
+
+            const fillSelect = (selectEl, placeholder, values, selectedValue) => {
+                selectEl.innerHTML = '';
+
+                const placeholderOption = document.createElement('option');
+                placeholderOption.value = '';
+                placeholderOption.textContent = placeholder;
+                selectEl.appendChild(placeholderOption);
+
+                values.forEach(value => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    selectEl.appendChild(option);
+                });
+
+                selectEl.value = values.includes(selectedValue) ? selectedValue : '';
+            };
+
+            fillSelect(folderFilter, 'كل المجلدات', folders, bookmarkFilters.folder);
+            fillSelect(tagFilter, 'كل الوسوم', tags, bookmarkFilters.tag);
+        }
+
+        function filterBookmarks(bookmarks) {
+            const query = (bookmarkFilters.search || '').trim().toLowerCase();
+
+            return (bookmarks || []).filter(bookmark => {
+                const surahName = surahInfo[(bookmark.surah || 1) - 1]?.name || '';
+                const folder = bookmark.folder || 'عام';
+                const tags = Array.isArray(bookmark.tags) ? bookmark.tags.join(' ') : '';
+                const note = bookmark.note || '';
+                const searchableText = `${surahName} ${folder} ${tags} ${note} صفحة ${(bookmark.page || 0) + 1}`.toLowerCase();
+
+                const matchesSearch = !query || searchableText.includes(query);
+                const matchesFolder = !bookmarkFilters.folder || folder === bookmarkFilters.folder;
+                const matchesTag = !bookmarkFilters.tag || (Array.isArray(bookmark.tags) && bookmark.tags.includes(bookmarkFilters.tag));
+
+                return matchesSearch && matchesFolder && matchesTag;
+            });
+        }
+
+        function renderRecentBookmarks(providedRecent) {
+            const section = document.getElementById('recentBookmarksSection');
+            const list = document.getElementById('recentBookmarksList');
+            if (!section || !list) return;
+
+            const recent = Array.isArray(providedRecent)
+                ? providedRecent
+                : (window.getRecentBookmarks ? window.getRecentBookmarks(4) : getBookmarksLibrary()
+                    .filter(bookmark => (bookmark.lastVisited || 0) > 0)
+                    .sort((a, b) => (b.lastVisited || 0) - (a.lastVisited || 0))
+                    .slice(0, 4));
+
+            if (!recent.length) {
+                section.style.display = 'none';
+                list.innerHTML = '';
+                return;
+            }
+
+            section.style.display = 'block';
+            list.innerHTML = recent.map(bookmark => {
+                const surahName = surahInfo[(bookmark.surah || 1) - 1]?.name || 'سورة';
+                const encodedId = encodeBookmarkId(bookmark.id);
+                const visitTime = bookmark.lastVisited ? formatTimeAgo(new Date(bookmark.lastVisited)) : 'الآن';
+                return `
+                    <div class="recent-item">
+                        <div class="recent-item-title">${surahName} - صفحة ${(bookmark.page || 0) + 1}</div>
+                        <div class="recent-item-meta">${visitTime}</div>
+                        <button class="recent-item-btn" onclick="loadBookmark('${encodedId}')">فتح</button>
+                    </div>
+                `;
+            }).join('');
         }
 
         function formatTimeAgo(date) {
@@ -512,15 +977,78 @@
             return 'الآن';
         }
 
-        function loadBookmark(index) {
-            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
-            if (!bookmarks[index]) return;
-
-            const bookmark = bookmarks[index];
-            window.location.href = `quran.html?surah=${bookmark.surah}&page=${bookmark.page}`;
+        function handleFiltersChange() {
+            bookmarkFilters.search = document.getElementById('bookmarkSearchInput')?.value || '';
+            bookmarkFilters.folder = document.getElementById('folderFilter')?.value || '';
+            bookmarkFilters.tag = document.getElementById('tagFilter')?.value || '';
+            renderBookmarks();
         }
 
-        function deleteBookmark(index) {
+        function createFolderFromInput() {
+            const input = document.getElementById('newFolderInput');
+            const folderName = (input?.value || '').trim();
+            if (!folderName) return;
+
+            if (window.addBookmarkFolder) {
+                window.addBookmarkFolder(folderName);
+            } else {
+                const key = (window.APP_STORAGE_KEYS && window.APP_STORAGE_KEYS.bookmarkFolders) || 'quranBookmarkFoldersV1';
+                const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                const folders = Array.from(new Set([...(Array.isArray(existing) ? existing : []), folderName]));
+                localStorage.setItem(key, JSON.stringify(folders));
+            }
+
+            input.value = '';
+            bookmarkFilters.folder = folderName;
+            renderBookmarks();
+        }
+
+        function loadBookmark(encodedBookmarkId) {
+            const bookmarkId = decodeBookmarkId(encodedBookmarkId);
+            const bookmark = getBookmarksLibrary().find(item => item.id === bookmarkId);
+            if (!bookmark) return;
+
+            if (window.touchBookmarkVisitById) {
+                window.touchBookmarkVisitById(bookmarkId);
+            }
+
+            window.location.href = `quran.html?surah=${bookmark.surah}&page=${bookmark.page}&bookmark=${encodeURIComponent(bookmark.id)}`;
+        }
+
+        function saveBookmarkMeta(encodedBookmarkId) {
+            const bookmarkId = decodeBookmarkId(encodedBookmarkId);
+            const controlId = toControlId(bookmarkId);
+
+            const folder = (document.getElementById(`folder_${controlId}`)?.value || '').trim() || 'عام';
+            const tagsRaw = document.getElementById(`tags_${controlId}`)?.value || '';
+            const note = (document.getElementById(`note_${controlId}`)?.value || '').trim();
+            const tags = Array.from(new Set(tagsRaw
+                .split(/[,،]/)
+                .map(tag => tag.trim())
+                .filter(Boolean)
+            ));
+
+            if (window.updateBookmarkMetaById) {
+                window.updateBookmarkMetaById(bookmarkId, { folder, tags, note });
+            } else {
+                const bookmarks = getBookmarksLibrary();
+                const index = bookmarks.findIndex(bookmark => bookmark.id === bookmarkId);
+                if (index === -1) return;
+                bookmarks[index] = { ...bookmarks[index], folder, tags, note };
+                saveBookmarksLibrary(bookmarks);
+            }
+
+            renderBookmarks();
+            showModal({
+                type: 'success',
+                icon: '',
+                title: 'تم الحفظ',
+                message: 'تم تحديث المجلد والوسوم والملاحظة'
+            });
+        }
+
+        function deleteBookmark(encodedBookmarkId) {
+            const bookmarkId = decodeBookmarkId(encodedBookmarkId);
             showModal({
                 type: 'warning',
                 icon: '',
@@ -529,9 +1057,13 @@
                 confirmText: 'نعم، احذف',
                 cancelText: 'إلغاء',
                 onConfirm: () => {
-                    const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
-                    bookmarks.splice(index, 1);
-                    localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+                    if (window.deleteBookmarkById) {
+                        window.deleteBookmarkById(bookmarkId);
+                    } else {
+                        const bookmarks = getBookmarksLibrary();
+                        const filtered = bookmarks.filter(bookmark => bookmark.id !== bookmarkId);
+                        saveBookmarksLibrary(filtered);
+                    }
                     renderBookmarks();
                     showModal({
                         type: 'success',
@@ -645,8 +1177,10 @@
                 .toString(16).slice(1);
         }
 
-        loadThemeSettings();
-        renderBookmarks();
+        document.addEventListener('DOMContentLoaded', () => {
+            loadThemeSettings();
+            renderBookmarks();
+        });
 
         // Register service worker
         if ('serviceWorker' in navigator) {

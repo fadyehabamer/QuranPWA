@@ -1367,6 +1367,9 @@
             <a href="prayer-times.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">مواقيت الصلاة</div>
             </a>
+            <a href="features.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">كل الميزات</div>
+            </a>
             <a href="bio.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">عن المطور</div>
             </a>
@@ -1380,7 +1383,7 @@
     </aside>
 
     <!-- Header -->
-    <header class="app-header">
+    <header class="app-header glass-card">
         <button class="menu-toggle-btn" onclick="toggleSidebar()">
             <i class="bi bi-list"></i>
         </button>
@@ -2346,6 +2349,13 @@
 
             content.innerHTML = html;
 
+            if (window.recordHabitActivity) {
+                window.recordHabitActivity('quran');
+            }
+            if (window.touchBookmarkVisitByLocation && currentSurah) {
+                window.touchBookmarkVisitByLocation(currentSurah, currentPageIndex);
+            }
+
             const shareModal = document.getElementById('shareAyahModal');
             if (shareModal && shareModal.classList.contains('active')) {
                 populateShareAyahOptions();
@@ -2399,21 +2409,41 @@
             updateBookmarkButton();
         }
 
+        function getStoredBookmarks() {
+            if (window.loadBookmarkLibrary) {
+                return window.loadBookmarkLibrary();
+            }
+            return JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+        }
+
+        function saveStoredBookmarks(bookmarks) {
+            if (window.saveBookmarkLibrary) {
+                return window.saveBookmarkLibrary(bookmarks);
+            }
+            localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+            return bookmarks;
+        }
+
         function toggleBookmark() {
-            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
-            const newBookmark = {
-                surah: currentSurah,
-                page: currentPageIndex,
-                timestamp: Date.now()
-            };
+            const bookmarks = getStoredBookmarks();
 
             // Check if this exact bookmark already exists
-            const existingIndex = bookmarks.findIndex(b => b.surah === currentSurah && b.page === currentPageIndex);
+            const existingBookmarks = bookmarks.filter(b => b.surah === currentSurah && b.page === currentPageIndex);
 
-            if (existingIndex >= 0) {
+            if (existingBookmarks.length > 0) {
                 // Remove existing bookmark
-                bookmarks.splice(existingIndex, 1);
-                localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+                if (window.deleteBookmarkById) {
+                    existingBookmarks.forEach(bookmark => {
+                        if (bookmark && bookmark.id) {
+                            window.deleteBookmarkById(bookmark.id);
+                        }
+                    });
+                } else {
+                    const remaining = bookmarks.filter(bookmark =>
+                        !(bookmark.surah === currentSurah && bookmark.page === currentPageIndex)
+                    );
+                    saveStoredBookmarks(remaining);
+                }
                 showModal({
                     type: 'info',
                     icon: '<i class="bi bi-info-circle-fill"></i>',
@@ -2422,8 +2452,15 @@
                 });
             } else {
                 // Add new bookmark
+                const newBookmark = window.createBookmarkEntry
+                    ? window.createBookmarkEntry({ surah: currentSurah, page: currentPageIndex })
+                    : {
+                        surah: currentSurah,
+                        page: currentPageIndex,
+                        timestamp: Date.now()
+                    };
                 bookmarks.push(newBookmark);
-                localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+                saveStoredBookmarks(bookmarks);
                 showModal({
                     type: 'success',
                     icon: '<i class="bi bi-check-circle-fill"></i>',
@@ -2442,7 +2479,7 @@
         function updateBookmarkButton() {
             if (!currentSurah) return;
 
-            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+            const bookmarks = getStoredBookmarks();
             const btn = document.getElementById('headerBookmarkBtn');
 
             if (!btn) return; // Guard against null element
@@ -2470,7 +2507,7 @@
         }
 
         function renderBookmarks() {
-            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+            const bookmarks = getStoredBookmarks();
             const bookmarksSection = document.getElementById('bookmarksSection');
             const bookmarksList = document.getElementById('bookmarksList');
 
@@ -2497,10 +2534,13 @@
         }
 
         function loadBookmark(index) {
-            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+            const bookmarks = getStoredBookmarks();
             if (!bookmarks[index]) return;
 
             const bookmark = bookmarks[index];
+            if (window.touchBookmarkVisitById && bookmark.id) {
+                window.touchBookmarkVisitById(bookmark.id);
+            }
             selectSurah(bookmark.surah);
             setTimeout(() => {
                 currentPageIndex = bookmark.page;
@@ -2510,9 +2550,16 @@
         }
 
         function deleteBookmark(index) {
-            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
-            bookmarks.splice(index, 1);
-            localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+            const bookmarks = getStoredBookmarks();
+            const bookmark = bookmarks[index];
+            if (!bookmark) return;
+
+            if (window.deleteBookmarkById && bookmark.id) {
+                window.deleteBookmarkById(bookmark.id);
+            } else {
+                bookmarks.splice(index, 1);
+                saveStoredBookmarks(bookmarks);
+            }
             showModal({
                 type: 'success',
                 icon: '',
@@ -2522,7 +2569,7 @@
         }
 
         function loadBookmarkOnStart() {
-            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+            const bookmarks = getStoredBookmarks();
             if (bookmarks.length > 0) {
                 const lastBookmark = bookmarks[bookmarks.length - 1];
                 selectSurah(lastBookmark.surah);
@@ -2541,6 +2588,11 @@
         const surahParam = urlParams.get('surah');
         const pageParam = urlParams.get('page');
         const ayahParam = urlParams.get('ayah');
+        const bookmarkIdParam = urlParams.get('bookmark');
+
+        if (bookmarkIdParam && window.touchBookmarkVisitById) {
+            window.touchBookmarkVisitById(bookmarkIdParam);
+        }
 
         if (surahParam && ayahParam) {
             const surahNumber = parseInt(surahParam, 10);
@@ -3551,13 +3603,13 @@
             <i class="bi bi-circle-fill nav-icon"></i>
             <span class="nav-label">المسبحة</span>
         </a>
-        <a href="sunan.html" class="nav-item">
-            <i class="bi bi-sun-fill nav-icon"></i>
-            <span class="nav-label">السنن</span>
+        <a href="prayer-times.html" class="nav-item">
+            <i class="bi bi-clock-fill nav-icon"></i>
+            <span class="nav-label">الصلاة</span>
         </a>
-        <a href="settings.html" class="nav-item">
-            <i class="bi bi-gear-fill nav-icon"></i>
-            <span class="nav-label">الإعدادات</span>
+        <a href="features.html" class="nav-item">
+            <i class="bi bi-grid-fill nav-icon"></i>
+            <span class="nav-label">الميزات</span>
         </a>
     </nav>
 

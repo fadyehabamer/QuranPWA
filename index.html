@@ -61,6 +61,203 @@
             line-height: 1.8;
         }
 
+        .smart-dashboard-section,
+        .habit-dashboard-section {
+            margin-bottom: 28px;
+        }
+
+        .dashboard-header,
+        .habit-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .dashboard-title,
+        .habit-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dashboard-link {
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-color);
+            background: rgba(var(--primary-rgb), 0.1);
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
+            border-radius: 999px;
+            padding: 8px 12px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .dashboard-card {
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            background: var(--card-bg);
+            text-decoration: none;
+            color: inherit;
+            padding: 14px;
+            min-height: 124px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+            text-align: right;
+        }
+
+        button.dashboard-card {
+            width: 100%;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(var(--primary-rgb), 0.4);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .dashboard-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .dashboard-card-label {
+            font-size: 13px;
+            color: var(--text-secondary, #666);
+            font-weight: 600;
+        }
+
+        .dashboard-card-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(var(--primary-rgb), 0.12);
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .dashboard-card-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-color);
+            line-height: 1.45;
+        }
+
+        .dashboard-card-meta {
+            font-size: 12px;
+            color: var(--text-secondary, #666);
+        }
+
+        .habit-streak-card {
+            border-radius: 20px;
+            padding: 18px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .habit-streak-main {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .habit-streak-number {
+            font-size: 42px;
+            line-height: 1;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .habit-streak-label {
+            font-size: 14px;
+            color: var(--text-secondary, #666);
+            margin-bottom: 6px;
+        }
+
+        .habit-streak-meta {
+            text-align: left;
+            font-size: 13px;
+            color: var(--text-secondary, #666);
+            line-height: 1.7;
+        }
+
+        .habit-rings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .habit-ring-card {
+            border-radius: 16px;
+            padding: 14px 10px 12px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+        }
+
+        .habit-ring {
+            --ring-percent: 0;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary-color) calc(var(--ring-percent) * 1%), rgba(var(--primary-rgb), 0.16) 0%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .habit-ring::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .habit-ring span {
+            position: relative;
+            z-index: 1;
+            font-size: 13px;
+        }
+
+        .habit-ring-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .habit-ring-meta {
+            font-size: 12px;
+            color: var(--text-secondary, #666);
+        }
+
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -218,6 +415,18 @@
             }
 
             .stat-number {
+                font-size: 36px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .habit-rings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .habit-streak-number {
                 font-size: 36px;
             }
         }
@@ -718,6 +927,9 @@
             <a href="prayer-times.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">مواقيت الصلاة</div>
             </a>
+            <a href="features.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">كل الميزات</div>
+            </a>
             <a href="bio.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">عن المطور</div>
             </a>
@@ -756,6 +968,90 @@
                 <h1 class="hero-title">القرآن الكريم</h1>
                 <p class="hero-subtitle">تطبيق القرآن الكريم الشامل</p>
             </div>
+
+            <!-- Smart Home Dashboard -->
+            <section class="smart-dashboard-section animate-fade-up delay-1" id="smartDashboardSection">
+                <div class="dashboard-header">
+                    <div class="dashboard-title"><i class="bi bi-grid-1x2-fill"></i> لوحة اليوم</div>
+                    <a class="dashboard-link" href="bookmarks.html">إدارة المحفوظات</a>
+                </div>
+
+                <div class="dashboard-grid">
+                    <button class="dashboard-card" id="dashboardContinueCard" onclick="resumeReading()" style="display:none;">
+                        <div class="dashboard-card-head">
+                            <span class="dashboard-card-label">متابعة القراءة</span>
+                            <span class="dashboard-card-icon"><i class="bi bi-book-half"></i></span>
+                        </div>
+                        <div class="dashboard-card-value" id="dashboardContinueValue">آخر موضع قراءة</div>
+                        <div class="dashboard-card-meta">اضغط للمتابعة مباشرة</div>
+                    </button>
+
+                    <div class="dashboard-card" id="dashboardPrayerCard">
+                        <div class="dashboard-card-head">
+                            <span class="dashboard-card-label">الصلاة القادمة</span>
+                            <span class="dashboard-card-icon"><i class="bi bi-clock-history"></i></span>
+                        </div>
+                        <div class="dashboard-card-value" id="dashboardPrayerValue">جاري التحميل...</div>
+                        <div class="dashboard-card-meta" id="dashboardPrayerMeta">من ويدجت المواقيت</div>
+                    </div>
+
+                    <div class="dashboard-card" id="dashboardBookmarkCard">
+                        <div class="dashboard-card-head">
+                            <span class="dashboard-card-label">آخر سورة محفوظة</span>
+                            <span class="dashboard-card-icon"><i class="bi bi-journal-bookmark-fill"></i></span>
+                        </div>
+                        <div class="dashboard-card-value" id="dashboardLastBookmarkValue">لا يوجد موضع محفوظ</div>
+                        <div class="dashboard-card-meta" id="dashboardLastBookmarkMeta">ابدأ القراءة ثم احفظ الموضع</div>
+                    </div>
+
+                    <a class="dashboard-card" href="bookmarks.html" id="dashboardLibraryCard">
+                        <div class="dashboard-card-head">
+                            <span class="dashboard-card-label">مكتبة المحفوظات</span>
+                            <span class="dashboard-card-icon"><i class="bi bi-bookmarks-fill"></i></span>
+                        </div>
+                        <div class="dashboard-card-value" id="dashboardBookmarksCount">0 موضع محفوظ</div>
+                        <div class="dashboard-card-meta" id="dashboardBookmarksMeta">0 مجلد • 0 زيارة حديثة</div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Reading Streaks and Habit Rings -->
+            <section class="habit-dashboard-section animate-fade-up delay-2" id="habitDashboardSection">
+                <div class="habit-header">
+                    <div class="habit-title"><i class="bi bi-graph-up-arrow"></i> الاستمرارية</div>
+                </div>
+
+                <div class="habit-streak-card glass-card">
+                    <div class="habit-streak-main">
+                        <div class="habit-streak-number" id="quranStreakNumber">0</div>
+                        <div class="habit-streak-label">أيام متتالية في قراءة القرآن</div>
+                    </div>
+                    <div class="habit-streak-meta">
+                        <div id="quranBestStreakMeta">أفضل سلسلة: 0 يوم</div>
+                        <div id="azkarProgressMeta">تقدّم الأذكار: --%</div>
+                    </div>
+                </div>
+
+                <div class="habit-rings-grid">
+                    <div class="habit-ring-card glass-card">
+                        <div class="habit-ring" id="habitRingQuran"><span id="habitRingQuranPct">0%</span></div>
+                        <div class="habit-ring-name">القرآن</div>
+                        <div class="habit-ring-meta" id="habitRingQuranMeta">0 من 7 أيام</div>
+                    </div>
+
+                    <div class="habit-ring-card glass-card">
+                        <div class="habit-ring" id="habitRingAzkar"><span id="habitRingAzkarPct">0%</span></div>
+                        <div class="habit-ring-name">الأذكار</div>
+                        <div class="habit-ring-meta" id="habitRingAzkarMeta">0 من 7 أيام</div>
+                    </div>
+
+                    <div class="habit-ring-card glass-card">
+                        <div class="habit-ring" id="habitRingMasbaha"><span id="habitRingMasbahaPct">0%</span></div>
+                        <div class="habit-ring-name">المسبحة</div>
+                        <div class="habit-ring-meta" id="habitRingMasbahaMeta">0 من 7 أيام</div>
+                    </div>
+                </div>
+            </section>
 
             <!-- Prayer Times Widget -->
             <div class="prayer-widget glass-card animate-fade-up delay-1" id="homePrayerWidget">
@@ -925,6 +1221,12 @@
                     <h3 class="feature-title">الإعدادات</h3>
                     <p class="feature-description">خصص تجربتك مع الوضع الليلي والألوان وحجم الخط</p>
                 </a>
+
+                <a href="features.html" class="feature-card glass-card animate-fade-up delay-3">
+                    <div class="feature-icon">🧩</div>
+                    <h3 class="feature-title">كل الميزات</h3>
+                    <p class="feature-description">صفحة تجمع كل إمكانيات التطبيق مع روابط مباشرة لكل قسم</p>
+                </a>
             </div>
 
             <!-- Quick Tools -->
@@ -1000,9 +1302,9 @@
             <i class="bi bi-clock-fill nav-icon"></i>
             <span class="nav-label">الصلاة</span>
         </a>
-        <a href="settings.html" class="nav-item">
-            <i class="bi bi-gear-fill nav-icon"></i>
-            <span class="nav-label">الإعدادات</span>
+        <a href="features.html" class="nav-item">
+            <i class="bi bi-grid-fill nav-icon"></i>
+            <span class="nav-label">الميزات</span>
         </a>
     </nav>
 
@@ -1111,42 +1413,238 @@
         }
 
         // Resume Reading Logic
-        function checkResumeReading() {
-            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+        const HOME_SURAH_NAMES = [
+            'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال',
+            'التوبة', 'يونس', 'هود', 'يوسف', 'الرعد', 'ابراهيم', 'الحجر', 'النحل', 'الإسراء',
+            'الكهف', 'مريم', 'طه', 'الأنبياء', 'الحج', 'المؤمنون', 'النور', 'الفرقان', 'الشعراء',
+            'النمل', 'القصص', 'العنكبوت', 'الروم', 'لقمان', 'السجدة', 'الأحزاب', 'سبإ', 'فاطر',
+            'يس', 'الصافات', 'ص', 'الزمر', 'غافر', 'فصلت', 'الشورى', 'الزخرف', 'الدخان', 'الجاثية',
+            'الأحقاف', 'محمد', 'الفتح', 'الحجرات', 'ق', 'الذاريات', 'الطور', 'النجم', 'القمر',
+            'الرحمن', 'الواقعة', 'الحديد', 'المجادلة', 'الحشر', 'الممتحنة', 'الصف', 'الجمعة',
+            'المنافقون', 'التغابن', 'الطلاق', 'التحريم', 'الملك', 'القلم', 'الحاقة', 'المعارج',
+            'نوح', 'الجن', 'المزمل', 'المدثر', 'القيامة', 'الانسان', 'المرسلات', 'النبإ',
+            'النازعات', 'عبس', 'التكوير', 'الإنفطار', 'المطففين', 'الإنشقاق', 'البروج', 'الطارق',
+            'الأعلى', 'الغاشية', 'الفجر', 'البلد', 'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين',
+            'العلق', 'القدر', 'البينة', 'الزلزلة', 'العاديات', 'القارعة', 'التكاثر', 'العصر',
+            'الهمزة', 'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر', 'المسد',
+            'الإخلاص', 'الفلق', 'الناس'
+        ];
 
-            if (bookmarks.length > 0) {
-                const lastBookmark = bookmarks.sort((a, b) => b.timestamp - a.timestamp)[0];
-                const section = document.getElementById('resumeReadingSection');
-                const details = document.getElementById('resumeDetails');
-
-                const surahInfo = [
-                    'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال',
-                    'التوبة', 'يونس', 'هود', 'يوسف', 'الرعد', 'ابراهيم', 'الحجر', 'النحل', 'الإسراء',
-                    'الكهف', 'مريم', 'طه', 'الأنبياء', 'الحج', 'المؤمنون', 'النور', 'الفرقان', 'الشعراء',
-                    'النمل', 'القصص', 'العنكبوت', 'الروم', 'لقمان', 'السجدة', 'الأحزاب', 'سبإ', 'فاطر',
-                    'يس', 'الصافات', 'ص', 'الزمر', 'غافر', 'فصلت', 'الشورى', 'الزخرف', 'الدخان', 'الجاثية',
-                    'الأحقاف', 'محمد', 'الفتح', 'الحجرات', 'ق', 'الذاريات', 'الطور', 'النجم', 'القمر',
-                    'الرحمن', 'الواقعة', 'الحديد', 'المجادلة', 'الحشر', 'الممتحنة', 'الصف', 'الجمعة',
-                    'المنافقون', 'التغابن', 'الطلاق', 'التحريم', 'الملك', 'القلم', 'الحاقة', 'المعارج',
-                    'نوح', 'الجن', 'المزمل', 'المدثر', 'القيامة', 'الانسان', 'المرسلات', 'النبإ',
-                    'النازعات', 'عبس', 'التكوير', 'الإنفطار', 'المطففين', 'الإنشقاق', 'البروج', 'الطارق',
-                    'الأعلى', 'الغاشية', 'الفجر', 'البلد', 'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين',
-                    'العلق', 'القدر', 'البينة', 'الزلزلة', 'العاديات', 'القارعة', 'التكاثر', 'العصر',
-                    'الهمزة', 'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر', 'المسد',
-                    'الإخلاص', 'الفلق', 'الناس'
-                ];
-
-                const surahName = surahInfo[lastBookmark.surah - 1] || 'سورة';
-                details.textContent = `${surahName} - صفحة ${lastBookmark.page + 1}`;
-                section.style.display = 'block';
-
-                window.lastBookmark = lastBookmark;
+        function getHomeBookmarks() {
+            if (window.loadBookmarkLibrary) {
+                return window.loadBookmarkLibrary();
             }
+
+            try {
+                const raw = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+                return Array.isArray(raw) ? raw : [];
+            } catch (_error) {
+                return [];
+            }
+        }
+
+        function getSurahNameByNumber(surahNumber) {
+            return HOME_SURAH_NAMES[(parseInt(surahNumber, 10) || 1) - 1] || 'سورة';
+        }
+
+        function applyHabitRing(habitId, summary) {
+            const ringEl = document.getElementById(`habitRing${habitId}`);
+            const pctEl = document.getElementById(`habitRing${habitId}Pct`);
+            const metaEl = document.getElementById(`habitRing${habitId}Meta`);
+            if (!ringEl || !pctEl || !metaEl) return;
+
+            const percent = Math.max(0, Math.min(100, summary.percent || 0));
+            ringEl.style.setProperty('--ring-percent', percent);
+            pctEl.textContent = `${percent}%`;
+            metaEl.textContent = `${summary.activeDays || 0} من ${summary.windowDays || 7} أيام`;
+        }
+
+        function getAzkarTargetCountFromText(repeatText) {
+            const text = String(repeatText || '');
+            if (text.includes('ثلاث مرات')) return 3;
+            if (text.includes('ثلاث وثلاثون')) return 33;
+            if (text.includes('أربع وثلاثون')) return 34;
+            if (text.includes('سبع مرات')) return 7;
+            if (text.includes('أربع مرات')) return 4;
+            if (text.includes('مائة مرة')) return 100;
+            if (text.includes('عشر مرات')) return 10;
+
+            const match = text.match(/(\d+)\s*(مرة|مرات)/);
+            if (match) {
+                return parseInt(match[1], 10) || 1;
+            }
+            return 1;
+        }
+
+        async function calculateAzkarProgressPercent() {
+            const counts = JSON.parse(localStorage.getItem('zikrCounts') || '{}');
+            if (!counts || typeof counts !== 'object') return 0;
+
+            let totalTarget = 0;
+            let totalCurrent = 0;
+
+            try {
+                const response = await fetch('azkar.json');
+                const data = await response.json();
+
+                Object.entries(data || {}).forEach(([categoryKey, category]) => {
+                    if (!category || !Array.isArray(category.azkar)) return;
+
+                    category.azkar.forEach((zikr, index) => {
+                        const target = getAzkarTargetCountFromText(zikr.repeat);
+                        const current = parseInt(counts[`${categoryKey}_${index}`], 10) || 0;
+                        totalTarget += target;
+                        totalCurrent += Math.min(current, target);
+                    });
+                });
+            } catch (_error) {
+                // If azkar data is unavailable, gracefully fall back to a rough indicator.
+                const roughTotal = Object.values(counts).reduce((sum, value) => sum + (parseInt(value, 10) || 0), 0);
+                return Math.min(100, Math.round((roughTotal / 300) * 100));
+            }
+
+            if (totalTarget <= 0) return 0;
+            return Math.round((totalCurrent / totalTarget) * 100);
+        }
+
+        function syncPrayerDashboardCard() {
+            const prayerValue = document.getElementById('dashboardPrayerValue');
+            const prayerMeta = document.getElementById('dashboardPrayerMeta');
+            const nextPrayerText = (document.getElementById('pwNextPrayer')?.textContent || '').trim();
+            const locationText = (document.getElementById('pwLocation')?.textContent || '').trim();
+
+            if (!prayerValue || !prayerMeta) return;
+
+            if (nextPrayerText && nextPrayerText !== '--:--') {
+                prayerValue.textContent = nextPrayerText.replace('الصلاة القادمة:', '').trim();
+                prayerMeta.textContent = locationText || 'حسب موقعك';
+            } else {
+                prayerValue.textContent = 'جاري تحديد الصلاة القادمة...';
+                prayerMeta.textContent = 'يرجى السماح بالموقع';
+            }
+        }
+
+        function initPrayerDashboardSync() {
+            const nextPrayerEl = document.getElementById('pwNextPrayer');
+            const locationEl = document.getElementById('pwLocation');
+            if (!nextPrayerEl && !locationEl) return;
+
+            const observer = new MutationObserver(() => {
+                syncPrayerDashboardCard();
+            });
+
+            if (nextPrayerEl) {
+                observer.observe(nextPrayerEl, {
+                    childList: true,
+                    subtree: true,
+                    characterData: true
+                });
+            }
+
+            if (locationEl) {
+                observer.observe(locationEl, {
+                    childList: true,
+                    subtree: true,
+                    characterData: true
+                });
+            }
+        }
+
+        async function renderHabitDashboard() {
+            const quranStreak = window.getHabitStreak
+                ? window.getHabitStreak('quran')
+                : { current: 0, best: 0 };
+            const quranSummary = window.getHabitSummary
+                ? window.getHabitSummary('quran', 7)
+                : { percent: 0, activeDays: 0, windowDays: 7 };
+            const azkarSummary = window.getHabitSummary
+                ? window.getHabitSummary('azkar', 7)
+                : { percent: 0, activeDays: 0, windowDays: 7 };
+            const masbahaSummary = window.getHabitSummary
+                ? window.getHabitSummary('masbaha', 7)
+                : { percent: 0, activeDays: 0, windowDays: 7 };
+
+            const streakNumberEl = document.getElementById('quranStreakNumber');
+            const bestStreakEl = document.getElementById('quranBestStreakMeta');
+            if (streakNumberEl) streakNumberEl.textContent = quranStreak.current || 0;
+            if (bestStreakEl) bestStreakEl.textContent = `أفضل سلسلة: ${quranStreak.best || 0} يوم`;
+
+            applyHabitRing('Quran', quranSummary);
+            applyHabitRing('Azkar', azkarSummary);
+            applyHabitRing('Masbaha', masbahaSummary);
+
+            const azkarProgressEl = document.getElementById('azkarProgressMeta');
+            if (azkarProgressEl) {
+                const azkarProgress = await calculateAzkarProgressPercent();
+                azkarProgressEl.textContent = `تقدّم الأذكار: ${azkarProgress}%`;
+            }
+        }
+
+        function renderSmartDashboard() {
+            const bookmarks = getHomeBookmarks().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            const section = document.getElementById('resumeReadingSection');
+            const details = document.getElementById('resumeDetails');
+            const continueCard = document.getElementById('dashboardContinueCard');
+            const continueValue = document.getElementById('dashboardContinueValue');
+            const lastBookmarkValue = document.getElementById('dashboardLastBookmarkValue');
+            const lastBookmarkMeta = document.getElementById('dashboardLastBookmarkMeta');
+            const bookmarksCount = document.getElementById('dashboardBookmarksCount');
+            const bookmarksMeta = document.getElementById('dashboardBookmarksMeta');
+
+            const bookmarkFolders = window.getBookmarkFolders ? window.getBookmarkFolders() : [];
+            const recentBookmarks = window.getRecentBookmarks ? window.getRecentBookmarks(5) : [];
+
+            if (bookmarksCount) {
+                bookmarksCount.textContent = `${bookmarks.length} موضع محفوظ`;
+            }
+            if (bookmarksMeta) {
+                bookmarksMeta.textContent = `${bookmarkFolders.length} مجلد • ${recentBookmarks.length} زيارة حديثة`;
+            }
+
+            if (bookmarks.length === 0) {
+                if (section) section.style.display = 'none';
+                if (continueCard) continueCard.style.display = 'none';
+                if (lastBookmarkValue) lastBookmarkValue.textContent = 'لا يوجد موضع محفوظ';
+                if (lastBookmarkMeta) lastBookmarkMeta.textContent = 'ابدأ القراءة ثم احفظ الموضع';
+                window.lastBookmark = null;
+                return;
+            }
+
+            const lastBookmark = bookmarks[0];
+            const surahName = getSurahNameByNumber(lastBookmark.surah);
+            const pageLabel = `صفحة ${(lastBookmark.page || 0) + 1}`;
+            const locationLabel = `${surahName} - ${pageLabel}`;
+
+            if (details) details.textContent = locationLabel;
+            if (section) section.style.display = 'block';
+            if (continueCard) continueCard.style.display = 'flex';
+            if (continueValue) continueValue.textContent = locationLabel;
+
+            if (lastBookmarkValue) {
+                lastBookmarkValue.textContent = surahName;
+            }
+            if (lastBookmarkMeta) {
+                const tags = Array.isArray(lastBookmark.tags) && lastBookmark.tags.length > 0
+                    ? ` • ${lastBookmark.tags.slice(0, 2).join('، ')}`
+                    : '';
+                const folder = lastBookmark.folder || 'عام';
+                lastBookmarkMeta.textContent = `${pageLabel} • مجلد ${folder}${tags}`;
+            }
+
+            window.lastBookmark = lastBookmark;
+            syncPrayerDashboardCard();
+        }
+
+        function checkResumeReading() {
+            renderSmartDashboard();
         }
 
         function resumeReading() {
             if (window.lastBookmark) {
-                window.location.href = `quran.html?surah=${window.lastBookmark.surah}&page=${window.lastBookmark.page}`;
+                const bookmarkQuery = window.lastBookmark.id
+                    ? `&bookmark=${encodeURIComponent(window.lastBookmark.id)}`
+                    : '';
+                window.location.href = `quran.html?surah=${window.lastBookmark.surah}&page=${window.lastBookmark.page}${bookmarkQuery}`;
             }
         }
 
@@ -1759,7 +2257,17 @@
         // Initialize
         loadDailyVerse();
         checkResumeReading();
+        renderHabitDashboard();
         renderKhatmaPlanner();
+        syncPrayerDashboardCard();
+        initPrayerDashboardSync();
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) return;
+            checkResumeReading();
+            renderHabitDashboard();
+            syncPrayerDashboardCard();
+        });
     </script>
 </body>
 

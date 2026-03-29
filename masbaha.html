@@ -561,6 +561,9 @@
             <a href="prayer-times.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">مواقيت الصلاة</div>
             </a>
+            <a href="features.html" class="sidebar-nav-item">
+                <div class="sidebar-nav-label">كل الميزات</div>
+            </a>
             <a href="bio.html" class="sidebar-nav-item">
                 <div class="sidebar-nav-label">عن المطور</div>
             </a>
@@ -574,7 +577,7 @@
     </aside>
 
     <!-- Header -->
-    <header class="app-header">
+    <header class="app-header glass-card">
         <button class="menu-toggle-btn" onclick="toggleSidebar()">
             <i class="bi bi-list"></i>
         </button>
@@ -696,9 +699,9 @@
             <i class="bi bi-clock-fill nav-icon"></i>
             <span class="nav-label">الصلاة</span>
         </a>
-        <a href="settings.html" class="nav-item">
-            <i class="bi bi-gear-fill nav-icon"></i>
-            <span class="nav-label">الإعدادات</span>
+        <a href="features.html" class="nav-item">
+            <i class="bi bi-grid-fill nav-icon"></i>
+            <span class="nav-label">الميزات</span>
         </a>
     </nav>
 
@@ -827,6 +830,10 @@
 
             triggerVibration();
             saveLifetimeCount();
+
+            if (window.recordHabitActivity) {
+                window.recordHabitActivity('masbaha');
+            }
 
             if (target > 0 && count === target) {
                 playSuccessSound();

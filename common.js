@@ -1238,6 +1238,403 @@ function initTheme() {
 // Initialize on Every Page
 initTheme();
 
+// Shared Storage Helpers
+const APP_STORAGE_KEYS = {
+    bookmarks: 'quranBookmarks',
+    bookmarkFolders: 'quranBookmarkFoldersV1',
+    habitLogs: 'appHabitLogsV1'
+};
+
+const DEFAULT_BOOKMARK_FOLDER = 'عام';
+const SUPPORTED_HABITS = ['quran', 'azkar', 'masbaha'];
+
+function safeParseJSON(rawValue, fallbackValue) {
+    if (!rawValue) return fallbackValue;
+    try {
+        return JSON.parse(rawValue);
+    } catch (_error) {
+        return fallbackValue;
+    }
+}
+
+function toIsoDateOnly(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function isValidIsoDate(dateStr) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || ''));
+}
+
+function normalizeBookmarkTags(tags) {
+    const rawTags = Array.isArray(tags)
+        ? tags
+        : (typeof tags === 'string' ? tags.split(',') : []);
+
+    return Array.from(new Set(rawTags
+        .map(tag => String(tag || '').trim())
+        .filter(Boolean)
+    )).slice(0, 8);
+}
+
+function normalizeBookmarkEntry(bookmark, index = 0) {
+    const raw = bookmark && typeof bookmark === 'object' ? bookmark : {};
+    const createdAtRaw = Number(raw.createdAt || raw.timestamp || Date.now());
+    const createdAt = Number.isFinite(createdAtRaw) ? createdAtRaw : Date.now();
+    const timestampRaw = Number(raw.timestamp || raw.createdAt || createdAt);
+    const timestamp = Number.isFinite(timestampRaw) ? timestampRaw : createdAt;
+    const surah = Math.max(1, Math.min(114, parseInt(raw.surah, 10) || 1));
+    const page = Math.max(0, parseInt(raw.page, 10) || 0);
+
+    const folderRaw = typeof raw.folder === 'string' ? raw.folder.trim() : '';
+    const folder = folderRaw || DEFAULT_BOOKMARK_FOLDER;
+    const note = typeof raw.note === 'string' ? raw.note.trim() : '';
+    const tags = normalizeBookmarkTags(raw.tags);
+    const lastVisitedRaw = Number(raw.lastVisited || 0);
+    const visitCountRaw = Number(raw.visitCount || 0);
+    const lastVisited = Number.isFinite(lastVisitedRaw) ? Math.max(0, lastVisitedRaw) : 0;
+    const visitCount = Number.isFinite(visitCountRaw) ? Math.max(0, visitCountRaw) : 0;
+
+    let id = typeof raw.id === 'string' ? raw.id.trim() : '';
+    if (!id) {
+        id = `bm_${surah}_${page}_${createdAt}_${index}`;
+    }
+
+    return {
+        id,
+        surah,
+        page,
+        timestamp,
+        createdAt,
+        folder,
+        tags,
+        note,
+        lastVisited,
+        visitCount
+    };
+}
+
+function saveBookmarkFolders(folders) {
+    const cleaned = Array.from(new Set((folders || [])
+        .map(folder => String(folder || '').trim())
+        .filter(Boolean)
+    ));
+
+    localStorage.setItem(APP_STORAGE_KEYS.bookmarkFolders, JSON.stringify(cleaned));
+    return cleaned;
+}
+
+function loadBookmarkLibrary() {
+    const rawBookmarks = safeParseJSON(localStorage.getItem(APP_STORAGE_KEYS.bookmarks), []);
+    const bookmarks = Array.isArray(rawBookmarks)
+        ? rawBookmarks.map((bookmark, index) => normalizeBookmarkEntry(bookmark, index))
+        : [];
+
+    const ids = new Set();
+    const uniqueBookmarks = bookmarks.filter(bookmark => {
+        if (ids.has(bookmark.id)) return false;
+        ids.add(bookmark.id);
+        return true;
+    });
+
+    localStorage.setItem(APP_STORAGE_KEYS.bookmarks, JSON.stringify(uniqueBookmarks));
+
+    // Sync known folders from bookmarks.
+    const storedFolders = safeParseJSON(localStorage.getItem(APP_STORAGE_KEYS.bookmarkFolders), []);
+    const allFolders = Array.from(new Set([
+        ...storedFolders,
+        ...uniqueBookmarks.map(bookmark => bookmark.folder)
+    ]));
+    saveBookmarkFolders(allFolders);
+
+    return uniqueBookmarks;
+}
+
+function saveBookmarkLibrary(bookmarks) {
+    const normalized = (Array.isArray(bookmarks) ? bookmarks : [])
+        .map((bookmark, index) => normalizeBookmarkEntry(bookmark, index));
+
+    localStorage.setItem(APP_STORAGE_KEYS.bookmarks, JSON.stringify(normalized));
+
+    const folders = Array.from(new Set([
+        ...safeParseJSON(localStorage.getItem(APP_STORAGE_KEYS.bookmarkFolders), []),
+        ...normalized.map(bookmark => bookmark.folder)
+    ]));
+    saveBookmarkFolders(folders);
+
+    return normalized;
+}
+
+function createBookmarkEntry(data) {
+    const now = Date.now();
+    const base = {
+        id: `bm_${Math.random().toString(36).slice(2, 10)}_${now}`,
+        surah: data && data.surah,
+        page: data && data.page,
+        timestamp: now,
+        createdAt: now,
+        folder: (data && data.folder) || DEFAULT_BOOKMARK_FOLDER,
+        tags: (data && data.tags) || [],
+        note: (data && data.note) || '',
+        lastVisited: now,
+        visitCount: 1
+    };
+
+    return normalizeBookmarkEntry(base);
+}
+
+function addBookmarkFolder(folderName) {
+    const folder = String(folderName || '').trim();
+    if (!folder) return getBookmarkFolders();
+
+    const folders = getBookmarkFolders(false);
+    if (!folders.includes(folder)) {
+        folders.push(folder);
+    }
+    return saveBookmarkFolders(folders);
+}
+
+function getBookmarkFolders(includeDefault = true) {
+    const storedFolders = safeParseJSON(localStorage.getItem(APP_STORAGE_KEYS.bookmarkFolders), []);
+    const bookmarkFolders = loadBookmarkLibrary().map(bookmark => bookmark.folder);
+    const folders = Array.from(new Set([...storedFolders, ...bookmarkFolders]))
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'ar'));
+
+    if (!includeDefault) return folders;
+
+    if (!folders.includes(DEFAULT_BOOKMARK_FOLDER)) {
+        folders.unshift(DEFAULT_BOOKMARK_FOLDER);
+    }
+    return folders;
+}
+
+function getBookmarkTags() {
+    return Array.from(new Set(
+        loadBookmarkLibrary()
+            .flatMap(bookmark => normalizeBookmarkTags(bookmark.tags))
+    )).sort((a, b) => a.localeCompare(b, 'ar'));
+}
+
+function touchBookmarkVisitById(bookmarkId) {
+    const id = String(bookmarkId || '').trim();
+    if (!id) return null;
+
+    const bookmarks = loadBookmarkLibrary();
+    const index = bookmarks.findIndex(bookmark => bookmark.id === id);
+    if (index === -1) return null;
+
+    const now = Date.now();
+    bookmarks[index].lastVisited = now;
+    bookmarks[index].visitCount = (bookmarks[index].visitCount || 0) + 1;
+    saveBookmarkLibrary(bookmarks);
+    return bookmarks[index];
+}
+
+function touchBookmarkVisitByLocation(surah, page) {
+    const targetSurah = parseInt(surah, 10);
+    const targetPage = parseInt(page, 10);
+    if (!targetSurah || Number.isNaN(targetPage)) return null;
+
+    const bookmarks = loadBookmarkLibrary();
+    const candidates = bookmarks.filter(bookmark =>
+        bookmark.surah === targetSurah && bookmark.page === targetPage
+    );
+
+    if (candidates.length === 0) return null;
+
+    const now = Date.now();
+    let selectedId = candidates[0].id;
+    candidates.forEach(candidate => {
+        if ((candidate.timestamp || 0) > (bookmarks.find(item => item.id === selectedId)?.timestamp || 0)) {
+            selectedId = candidate.id;
+        }
+    });
+
+    bookmarks.forEach(bookmark => {
+        if (bookmark.surah === targetSurah && bookmark.page === targetPage) {
+            bookmark.lastVisited = now;
+            bookmark.visitCount = (bookmark.visitCount || 0) + 1;
+        }
+    });
+
+    saveBookmarkLibrary(bookmarks);
+    return bookmarks.find(bookmark => bookmark.id === selectedId) || null;
+}
+
+function updateBookmarkMetaById(bookmarkId, updates) {
+    const id = String(bookmarkId || '').trim();
+    if (!id) return null;
+
+    const bookmarks = loadBookmarkLibrary();
+    const index = bookmarks.findIndex(bookmark => bookmark.id === id);
+    if (index === -1) return null;
+
+    const nextBookmark = {
+        ...bookmarks[index],
+        ...(updates || {})
+    };
+    bookmarks[index] = normalizeBookmarkEntry(nextBookmark, index);
+    saveBookmarkLibrary(bookmarks);
+    return bookmarks[index];
+}
+
+function deleteBookmarkById(bookmarkId) {
+    const id = String(bookmarkId || '').trim();
+    if (!id) return 0;
+
+    const bookmarks = loadBookmarkLibrary();
+    const filtered = bookmarks.filter(bookmark => bookmark.id !== id);
+    saveBookmarkLibrary(filtered);
+    return bookmarks.length - filtered.length;
+}
+
+function getRecentBookmarks(limit = 5) {
+    return loadBookmarkLibrary()
+        .filter(bookmark => (bookmark.lastVisited || 0) > 0)
+        .sort((a, b) => (b.lastVisited || 0) - (a.lastVisited || 0))
+        .slice(0, Math.max(1, limit));
+}
+
+function loadHabitLogs() {
+    const raw = safeParseJSON(localStorage.getItem(APP_STORAGE_KEYS.habitLogs), {});
+    const logs = {};
+
+    SUPPORTED_HABITS.forEach(habit => {
+        const days = Array.isArray(raw[habit]) ? raw[habit] : [];
+        logs[habit] = Array.from(new Set(days.filter(isValidIsoDate))).sort();
+    });
+
+    localStorage.setItem(APP_STORAGE_KEYS.habitLogs, JSON.stringify(logs));
+    return logs;
+}
+
+function saveHabitLogs(logs) {
+    const nextLogs = {};
+
+    SUPPORTED_HABITS.forEach(habit => {
+        const days = Array.isArray(logs && logs[habit]) ? logs[habit] : [];
+        nextLogs[habit] = Array.from(new Set(days.filter(isValidIsoDate))).sort();
+    });
+
+    localStorage.setItem(APP_STORAGE_KEYS.habitLogs, JSON.stringify(nextLogs));
+    return nextLogs;
+}
+
+function recordHabitActivity(habit) {
+    if (!SUPPORTED_HABITS.includes(habit)) return null;
+
+    const logs = loadHabitLogs();
+    const today = toIsoDateOnly(new Date());
+    if (!logs[habit].includes(today)) {
+        logs[habit].push(today);
+
+        // Keep a reasonable history size per habit.
+        if (logs[habit].length > 180) {
+            logs[habit] = logs[habit].slice(-180);
+        }
+
+        saveHabitLogs(logs);
+    }
+
+    return logs[habit];
+}
+
+function getHabitStreak(habit) {
+    const logs = loadHabitLogs();
+    const days = logs[habit] || [];
+    if (days.length === 0) {
+        return { current: 0, best: 0, total: 0, days: [] };
+    }
+
+    let best = 0;
+    let running = 0;
+    let previousDate = null;
+
+    days.forEach(dayStr => {
+        const currentDate = new Date(`${dayStr}T00:00:00`);
+        if (!previousDate) {
+            running = 1;
+        } else {
+            const diffDays = Math.round((currentDate - previousDate) / 86400000);
+            running = diffDays === 1 ? running + 1 : 1;
+        }
+
+        best = Math.max(best, running);
+        previousDate = currentDate;
+    });
+
+    const daySet = new Set(days);
+    let current = 0;
+    const cursor = new Date();
+    cursor.setHours(0, 0, 0, 0);
+
+    while (daySet.has(toIsoDateOnly(cursor))) {
+        current += 1;
+        cursor.setDate(cursor.getDate() - 1);
+    }
+
+    return {
+        current,
+        best,
+        total: days.length,
+        days
+    };
+}
+
+function getHabitSummary(habit, windowDays = 7) {
+    const safeWindow = Math.max(1, parseInt(windowDays, 10) || 7);
+    const logs = loadHabitLogs();
+    const daySet = new Set(logs[habit] || []);
+    const timeline = [];
+    let activeDays = 0;
+
+    for (let offset = safeWindow - 1; offset >= 0; offset -= 1) {
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() - offset);
+
+        const dateStr = toIsoDateOnly(date);
+        const active = daySet.has(dateStr);
+        if (active) activeDays += 1;
+
+        timeline.push({
+            date: dateStr,
+            active
+        });
+    }
+
+    return {
+        habit,
+        windowDays: safeWindow,
+        activeDays,
+        percent: Math.round((activeDays / safeWindow) * 100),
+        timeline
+    };
+}
+
+window.APP_STORAGE_KEYS = APP_STORAGE_KEYS;
+window.DEFAULT_BOOKMARK_FOLDER = DEFAULT_BOOKMARK_FOLDER;
+window.loadBookmarkLibrary = loadBookmarkLibrary;
+window.saveBookmarkLibrary = saveBookmarkLibrary;
+window.createBookmarkEntry = createBookmarkEntry;
+window.getBookmarkFolders = getBookmarkFolders;
+window.getBookmarkTags = getBookmarkTags;
+window.addBookmarkFolder = addBookmarkFolder;
+window.touchBookmarkVisitById = touchBookmarkVisitById;
+window.touchBookmarkVisitByLocation = touchBookmarkVisitByLocation;
+window.updateBookmarkMetaById = updateBookmarkMetaById;
+window.deleteBookmarkById = deleteBookmarkById;
+window.getRecentBookmarks = getRecentBookmarks;
+window.loadHabitLogs = loadHabitLogs;
+window.recordHabitActivity = recordHabitActivity;
+window.getHabitStreak = getHabitStreak;
+window.getHabitSummary = getHabitSummary;
+
 // ===== New Landing Page Features =====
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Hadith of the Day
