@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأذكار</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1B5E20">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .category-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .category-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+            border-color: var(--primary-color);
+        }
+
+        .category-name {
+            font-size: 18px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .category-count {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .azkar-list {
+            display: none;
+        }
+
+        .azkar-list.active {
+            display: block;
+        }
+
+        .zikr-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .zikr-text {
+            font-size: var(--font-size-ayah);
+            line-height: 2;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .zikr-info {
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .zikr-desc {
+            font-size: var(--font-size-base);
+            color: var(--text-color);
+        }
+
+        .zikr-reference {
+            font-size: 14px;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .zikr-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .zikr-repeat {
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .zikr-counter-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .zikr-counter-btn.completed {
+            background: #2E7D32;
+            opacity: 0.8;
+        }
+
+        .favorite-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .favorite-btn.active {
+            color: #e91e63;
+        }
+
+        .progress-container {
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: var(--bg-color);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- App Header -->
+    <header class="app-header">
+        <button class="icon-btn menu-toggle-btn" onclick="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+        <h1 id="headerTitle">الأذكار</h1>
+        <button class="icon-btn" id="backBtn" onclick="showCategories()" style="display: none;">
+            <i class="bi bi-arrow-right"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="desktop-sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-moon-stars-fill"></i>
+            <span>القرآن الكريم</span>
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item">
+                <i class="bi bi-house-door"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="quran.html" class="nav-item">
+                <i class="bi bi-book"></i>
+                <span>القرآن الكريم</span>
+            </a>
+            <a href="azkar.html" class="nav-item active">
+                <i class="bi bi-moon-stars"></i>
+                <span>الأذكار</span>
+            </a>
+            <a href="masbaha.html" class="nav-item">
+                <i class="bi bi-circle"></i>
+                <span>المسبحة</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <i class="bi bi-gear"></i>
+                <span>الإعدادات</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progressContainer">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span>التقدم:</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+
+        <!-- Category List -->
+        <div class="category-list" id="categoryList"></div>
+
+        <!-- Azkar List -->
+        <div class="azkar-list" id="azkarList"></div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <i class="bi bi-house-door"></i>
+            <span class="nav-label">الرئيسية</span>
+        </a>
+        <a href="quran.html" class="nav-item">
+            <i class="bi bi-book"></i>
+            <span class="nav-label">القرآن</span>
+        </a>
+        <a href="azkar.html" class="nav-item active">
+            <i class="bi bi-moon-stars"></i>
+            <span class="nav-label">الأذكار</span>
+        </a>
+        <a href="masbaha.html" class="nav-item">
+            <i class="bi bi-circle"></i>
+            <span class="nav-label">المسبحة</span>
+        </a>
+        <a href="settings.html" class="nav-item">
+            <i class="bi bi-gear"></i>
+            <span class="nav-label">الإعدادات</span>
+        </a>
+    </nav>
+
+    <script src="common.js"></script>
+    <script>
+        const azkarData = {
+            morning: {
+                name: 'أذكار الصباح',
+                azkar: [
+                    {
+                        text: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+                        desc: "من قالها حين يصبح أجير من الجن حتى يمسي",
+                        reference: "مسلم",
+                        repeat: "مرة واحدة"
+                    },
+        {
+        text: "اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ",
+            reference: "الترمذي",
+            repeat: "مرة واحدة"
+        }
+
+        ,
+        {
+        text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
+            desc: "من قالها مائة مرة حطت خطاياه وإن كانت مثل زبد البحر",
+            reference: "متفق عليه",
+            repeat: "مائة مرة"
+        }
+
+        ,
+        {
+        text: "أَصْبَحْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ
+ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ، حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ",
+ reference: "أحمد",
+            repeat: "مرة واحدة"
+        }
+
+        ]
+        }
+
+        ,
+        evening: {
+
+            name: 'أذكار المساء',
+            azkar: [ {
+                text: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ
+ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+ desc: "من قالها حين يمسي أجير من الجن حتى يصبح",
+                    reference: "مسلم",
+                    repeat: "مرة واحدة"
+            }
+
+            ,
+            {
+            text: "اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ",
+                reference: "الترمذي",
+                repeat: "مرة واحدة"
+        }
+
+        ,
+        {
+        text: "أَمْسَيْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ
+ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ، حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ",
+ reference: "أحمد",
+            repeat: "مرة واحدة"
+        }
+
+        ]
+        }
+
+        ,
+        sleep: {
+
+            name: 'أذكار النوم',
+            azkar: [ {
+                text: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا",
+                    reference: "البخاري",
+                    repeat: "مرة واحدة"
+            }
+
+            ,
+            {
+            text: "اللَّهُمَّ قِنِي عَذَابَكَ يَوْمَ تَبْعَثُ عِبَادَكَ",
+                desc: "كان النبي يقولها إذا أوى إلى فراشه",
+                reference: "أبو داود",
+                repeat: "ثلاث مرات"
+        }
+
+        ,
+        {
+        text: "بِاسْمِكَ رَبِّي وَضَعْتُ جَنْبِي، وَبِكَ أَرْفَعُهُ، إِنْ أَمْسَكْتَ نَفْسِي فَارْحَمْهَا، وَإِنْ
+ أَرْسَلْتَهَا فَاحْفَظْهَا بِمَا تَحْفَظُ بِهِ عِبَادَكَ الصَّالِحِينَ",
+ reference: "متفق عليه",
+            repeat: "مرة واحدة"
+        }
+
+        ]
+        }
+
+        ,
+        wakeup: {
+
+            name: 'أذكار الاستيقاظ',
+            azkar: [ {
+                text: "الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ",
+                    reference: "البخاري",
+                    repeat: "مرة واحدة"
+            }
+
+            ,
+            {
+            text: "الْحَمْدُ لِلَّهِ الَّذِي عَافَانِي فِي جَسَدِي، وَرَدَّ عَلَيَّ رُوحِي، وَأَذِنَ لِي بِذِكْرِهِ",
+                reference: "الترمذي",
+                repeat: "مرة واحدة"
+        }
+
+        ]
+        }
+
+        ,
+        prayer: {
+
+            name: 'أذكار الصلاة',
+            azkar: [ {
+                text: "أَسْتَغْفِرُ اللَّهَ",
+                    repeat: "ثلاث مرات"
+            }
+
+            ,
+            {
+            text: "اللَّهُمَّ أَنْتَ السَّلَامُ، وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ",
+                reference: "مسلم",
+                repeat: "مرة واحدة"
+        }
+
+        ,
+        {
+        text: "سُبْحَانَ اللَّهِ، وَالْحَمْدُ لِلَّهِ، وَاللَّهُ أَكْبَرُ",
+            desc: "من سبح الله دبر كل صلاة ثلاثاً وثلاثين",
+            reference: "مسلم",
+            repeat: "ثلاث وثلاثون"
+        }
+
+        ]
+        }
+
+        ,
+        general: {
+
+            name: 'أذكار عامة',
+            azkar: [ {
+                text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ",
+                    desc: "كلمتان خفيفتان على اللسان، ثقيلتان في الميزان",
+                    reference: "متفق عليه",
+                    repeat: "مرة واحدة"
+            }
+
+            ,
+            {
+            text: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ",
+                desc: "كنز من كنوز الجنة",
+                reference: "متفق عليه",
+                repeat: "مرة واحدة"
+        }
+
+        ,
+        {
+        text: "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ",
+            desc: "من صلى علي واحدة صلى الله عليه عشراً",
+            reference: "مسلم",
+            repeat: "عشر مرات"
+        }
+
+        ]
+        }
+        }
+
+        ;
+
+        let currentCategory=null;
+
+        let zikrCounts= {}
+
+        ;
+        let favorites=[];
+
+        function loadUserData() {
+            const savedCounts=localStorage.getItem('zikrCounts');
+
+            if (savedCounts) {
+                zikrCounts=JSON.parse(savedCounts);
+            }
+
+            const savedFavorites=localStorage.getItem('azkarFavorites');
+
+            if (savedFavorites) {
+                favorites=JSON.parse(savedFavorites);
+            }
+        }
+
+        function saveUserData() {
+            localStorage.setItem('zikrCounts', JSON.stringify(zikrCounts));
+            localStorage.setItem('azkarFavorites', JSON.stringify(favorites));
+        }
+
+        function renderCategories() {
+            const list=document.getElementById('categoryList');
+            let html='';
+
+            // Add Favorites Category
+            html+=`<div class="category-item" onclick="showFavorites()"><div class="category-name">⭐ المفضلة</div><div class="category-count">$ {
+                favorites.length
+            }
+
+            </div></div>`;
+
+            for (const [key, category] of Object.entries(azkarData)) {
+                html+=`<div class="category-item" onclick="showCategory('${key}')"><div class="category-name">$ {
+                    category.name
+                }
+
+                </div><div class="category-count">$ {
+                    category.azkar.length
+                }
+
+                </div></div>`;
+            }
+
+            list.innerHTML=html;
+        }
+
+        function showCategory(categoryKey) {
+            currentCategory=categoryKey;
+            const category=azkarData[categoryKey];
+            const list=document.getElementById('azkarList');
+            let html='';
+
+            category.azkar.forEach((zikr, index)=> {
+                    const countKey=`$ {
+                        categoryKey
+                    }
+
+                    _$ {
+                        index
+                    }
+
+                    `;
+                    const currentCount=zikrCounts[countKey] || 0;
+                    const targetCount=getTargetCount(zikr.repeat);
+                    const isCompleted=currentCount >=targetCount;
+                    const isFav=favorites.some(f=> f.text===zikr.text);
+
+                    html +=`<div class="zikr-card" id="card_${index}" > <div class="zikr-text" >$ {
+                        zikr.text
+                    }
+
+                    </div> <div class="zikr-info" > $ {
+                        zikr.desc ? `<div class="zikr-desc" >$ {
+                            zikr.desc
+                        }
+
+                        </div>` : ''
+                    }
+
+                    $ {
+                        zikr.reference ? `<div class="zikr-reference" >المرجع: $ {
+                            zikr.reference
+                        }
+
+                        </div>` : ''
+                    }
+
+                    </div> <div class="zikr-actions" > <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${categoryKey}', ${index})" > <i class="bi bi-heart${isFav ? '-fill' : ''}" ></i> </button> <div class="zikr-repeat" >$ {
+                        zikr.repeat
+                    }
+
+                    </div> <button class="zikr-counter-btn ${isCompleted ? 'completed' : ''}"
+
+                    onclick="incrementZikr('${categoryKey}', ${index}, ${targetCount})" > $ {
+                        isCompleted ? '✓' : `$ {
+                            currentCount
+                        }
+
+                        /$ {
+                            targetCount
+                        }
+
+                        `
+                    }
+
+                    </button> </div> </div>`;
+                });
+
+            list.innerHTML=html;
+            document.getElementById('categoryList').style.display='none';
+            document.getElementById('azkarList').classList.add('active');
+            document.getElementById('headerTitle').textContent=category.name;
+            document.getElementById('backBtn').style.display='block';
+
+            // Show and update progress bar
+            document.getElementById('progressContainer').style.display='block';
+            updateProgressBar();
+        }
+
+        function showFavorites() {
+            currentCategory='favorites';
+            const list=document.getElementById('azkarList');
+
+            if (favorites.length===0) {
+                list.innerHTML='<div style="text-align: center; padding: 40px; color: var(--text-color);">لا توجد أذكار مفضلة
+ </div>';
+
+            }
+
+            else {
+                let html='';
+
+                favorites.forEach((zikr, index)=> {
+                        html +=`<div class="zikr-card" > <div class="zikr-text" >$ {
+                            zikr.text
+                        }
+
+                        </div> <div class="zikr-info" > $ {
+                            zikr.desc ? `<div class="zikr-desc" >$ {
+                                zikr.desc
+                            }
+
+                            </div>` : ''
+                        }
+
+                        </div> <div class="zikr-actions" > <button class="favorite-btn active" onclick="removeFromFavorites(${index})" > <i class="bi bi-heart-fill" ></i> </button> <div class="zikr-repeat" >$ {
+                            zikr.repeat
+                        }
+
+                        </div> </div> </div>`;
+                    });
+                list.innerHTML=html;
+            }
+
+            document.getElementById('categoryList').style.display='none';
+            document.getElementById('azkarList').classList.add('active');
+            document.getElementById('headerTitle').textContent='المفضلة';
+            document.getElementById('backBtn').style.display='block';
+            document.getElementById('progressContainer').style.display='none';
+        }
+
+        function showCategories() {
+            document.getElementById('categoryList').style.display='flex';
+            document.getElementById('azkarList').classList.remove('active');
+            document.getElementById('headerTitle').textContent='الأذكار';
+            document.getElementById('backBtn').style.display='none';
+            document.getElementById('progressContainer').style.display='none';
+            renderCategories(); // Re-render to update counts if needed
+        }
+
+        function getTargetCount(repeatText) {
+            if ( !repeatText) return 1;
+            if (repeatText.includes('ثلاث مرات')) return 3;
+            if (repeatText.includes('ثلاث وثلاثون')) return 33;
+            if (repeatText.includes('أربع وثلاثون')) return 34;
+            if (repeatText.includes('سبع مرات')) return 7;
+            if (repeatText.includes('أربع مرات')) return 4;
+            if (repeatText.includes('مائة مرة')) return 100;
+            if (repeatText.includes('عشر مرات')) return 10;
+            return 1; // Default
+        }
+
+        function incrementZikr(categoryKey, index, target) {
+            const countKey=`$ {
+                categoryKey
+            }
+
+            _$ {
+                index
+            }
+
+            `;
+            let current=zikrCounts[countKey] || 0;
+
+            if (current < target) {
+                current++;
+                zikrCounts[countKey]=current;
+                saveUserData(); // Update UI const
+
+                btn=document.querySelector(`#card_$ {
+                        index
+                    }
+
+                    .zikr-counter-btn`);
+
+                if (current>=target) {
+                    btn.textContent='✓';
+                    btn.classList.add('completed');
+                    if (navigator.vibrate) navigator.vibrate(50);
+                }
+
+                else {
+                    btn.textContent=`$ {
+                        current
+                    }
+
+                    /$ {
+                        target
+                    }
+
+                    `;
+                }
+
+                updateProgressBar();
+            }
+        }
+
+        function toggleFavorite(categoryKey, index) {
+            const zikr=azkarData[categoryKey].azkar[index];
+            const favIndex=favorites.findIndex(f=> f.text===zikr.text);
+
+            const btn=document.querySelector(`#card_$ {
+                    index
+                }
+
+                .favorite-btn`);
+            const icon=btn.querySelector('i');
+
+            if (favIndex===-1) {
+                favorites.push(zikr);
+                btn.classList.add('active');
+                icon.classList.remove('bi-heart');
+                icon.classList.add('bi-heart-fill');
+            }
+
+            else {
+                favorites.splice(favIndex, 1);
+                btn.classList.remove('active');
+                icon.classList.remove('bi-heart-fill');
+                icon.classList.add('bi-heart');
+            }
+
+            saveUserData();
+        }
+
+        function removeFromFavorites(index) {
+            favorites.splice(index, 1);
+            saveUserData();
+            showFavorites(); // Refresh list
+        }
+
+        function updateProgressBar() {
+            if ( !currentCategory || currentCategory==='favorites') return;
+
+            const category=azkarData[currentCategory];
+            let totalTarget=0;
+            let totalCurrent=0;
+
+            category.azkar.forEach((zikr, index)=> {
+                    const target=getTargetCount(zikr.repeat);
+
+                    const current=Math.min(zikrCounts[`$ {
+                            currentCategory
+                        }
+
+                        _$ {
+                            index
+                        }
+
+                        `] || 0, target);
+                    totalTarget +=target;
+                    totalCurrent +=current;
+                });
+
+            const percent=Math.round((totalCurrent / totalTarget) * 100) || 0;
+
+            document.getElementById('progressBar').style.width=`$ {
+                percent
+            }
+
+            %`;
+
+            document.getElementById('progressPercent').textContent=`$ {
+                percent
+            }
+
+            %`;
+        }
+
+        function hexToRgb(hex) {
+            const result=/^#?([a-f\d] {
+                    2
+
+                })([a-f\d] {
+                    2
+
+                })([a-f\d] {
+                    2
+                })$/i.exec(hex);
+
+            return result ? {
+                r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+            }
+
+            : {
+                r: 27, g: 94, b: 32
+            }
+
+            ;
+        }
+
+        // Initialize
+        loadUserData();
+        renderCategories();
+
+        // Load theme settings
+        (function () {
+                const darkMode=localStorage.getItem('darkMode')==='true';
+                if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
+
+                const color=localStorage.getItem('primaryColor');
+
+                if (color) {
+                    const num=parseInt(color.replace('#', ''), 16);
+                    const amt=Math.round(2.55 * 30);
+                    const R=(num >> 16) + amt;
+                    const G=(num >> 8 & 0x00FF) + amt;
+                    const B=(num & 0x0000FF) + amt;
+                    const lightColor='#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 + (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+                    document.documentElement.style.setProperty('--primary-color', color);
+                    document.documentElement.style.setProperty('--primary-light', lightColor); // Update shadow colors const
+
+                    rgb=hexToRgb(color); const shadowLight=`rgba($ {
+                            rgb.r
+                        }
+
+                        , $ {
+                            rgb.g
+                        }
+
+                        , $ {
+                            rgb.b
+                        }
+
+                        , $ {
+                            darkMode ? 0.25 : 0.15
+                        })`;
+
+                    const shadowHeavy=`rgba($ {
+                            rgb.r
+                        }
+
+                        , $ {
+                            rgb.g
+                        }
+
+                        , $ {
+                            rgb.b
+                        }
+
+                        , $ {
+                            darkMode ? 0.45 : 0.35
+                        })`;
+                    document.documentElement.style.setProperty('--shadow', shadowLight);
+                    document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
+                }
+
+                const fontSize=localStorage.getItem('fontSize'); if (fontSize !==null) {
+                    const fontSizes=[12, 14, 16, 18, 20, 24,
+                    28]; const baseSize=fontSizes[parseInt(fontSize)] || 16;
+                    document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
+                    document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
+                    document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px');
+                }
+            })();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        </script></body></html>

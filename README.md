@@ -84,16 +84,32 @@
 ## البنية
 ```
 QURAN/
-├── quran.html          # صفحة القرآن
-├── azkar.html          # صفحة الأذكار
-├── masbaha.html        # صفحة المسبحة
-├── settings.html       # صفحة الإعدادات
-├── styles.css          # الأنماط المشتركة
-├── common.js           # الدوال المشتركة (النوافذ المنبثقة)
-├── sw.js              # Service Worker
-├── manifest.json      # بيانات التطبيق
-├── icon-192.png       # أيقونة 192×192
-└── icon-512.png       # أيقونة 512×512
+├── index.html                # الصفحة الرئيسية
+├── quran.html                # صفحة القرآن
+├── azkar.html                # صفحة الأذكار
+├── masbaha.html              # صفحة المسبحة
+├── prayer-times.html         # مواقيت الصلاة والقبلة
+├── bookmarks.html            # المواضع المحفوظة
+├── sunan.html                # سنن النبي
+├── settings.html             # صفحة الإعدادات
+├── features.html             # كل الميزات
+├── home-more.html            # صفحة إضافية للرئيسية
+├── bio.html                  # عن المطور
+├── js/                        # ملفات JavaScript
+│   ├── common.js
+│   ├── theme-preload.js
+│   ├── sw.js
+│   └── page-scripts/          # سكربتات الصفحات (بدون inline)
+├── css/                       # ملفات الأنماط
+│   ├── styles.css
+│   └── page-styles/
+├── data/                      # ملفات البيانات JSON
+│   ├── manifest.json
+│   └── azkar.json
+├── assets/
+│   └── icons/                 # الأيقونات والصور الأساسية
+├── docs/                     # التوثيق (API, changelog, guides)
+└── archive/                  # ملفات احتياطية/قديمة
 ```
 
 ## المتصفحات المدعومة

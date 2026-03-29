@@ -3,16 +3,20 @@
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/sw.js",
+      "source": "/js/sw.js",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
         }
       ]
     },
     {
-      "source": "/manifest.json",
+      "source": "/data/manifest.json",
       "headers": [
         {
           "key": "Cache-Control",
