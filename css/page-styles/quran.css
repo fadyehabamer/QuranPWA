@@ -294,6 +294,51 @@
             color: white;
         }
 
+        .reader-progress-strip {
+            position: sticky;
+            top: 82px;
+            z-index: 95;
+            margin: -6px 0 14px;
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .reader-progress-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        #readerProgressPercent {
+            color: var(--primary-color);
+            font-weight: 800;
+        }
+
+        .reader-progress-track {
+            width: 100%;
+            height: 7px;
+            border-radius: 999px;
+            background: rgba(var(--primary-rgb), 0.15);
+            overflow: hidden;
+        }
+
+        .reader-progress-fill {
+            width: 0;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--primary-light), var(--primary-color));
+            transition: width 0.25s ease;
+        }
+
         .reader-info {
             flex: 1;
             min-width: 0;
@@ -422,6 +467,19 @@
             padding: 30px 20px;
             border: 1px solid var(--border-color);
             margin-bottom: 20px;
+            animation: pageReveal 0.22s ease;
+        }
+
+        @keyframes pageReveal {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 768px) {
@@ -469,7 +527,7 @@
 
         .ayah {
             display: inline;
-            font-size: var(--font-size-ayah);
+            font-size: var(--quran-reader-font-size, var(--font-size-ayah));
             color: var(--text-color);
             transition: background-color 0.3s ease;
             padding: 2px 4px;
@@ -529,7 +587,6 @@
         }
 
         .swipe-hint {
-            display: none;
             position: fixed;
             bottom: 180px;
             left: 50%;
@@ -540,12 +597,98 @@
             border-radius: 20px;
             font-size: 13px;
             z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .swipe-hint.visible {
+            opacity: 1;
             animation: fadeOut 4s forwards;
         }
 
         @media (max-width: 768px) {
+            .reader-progress-strip {
+                position: static;
+                margin: 0 0 10px;
+                padding: 7px 9px;
+                border-radius: 10px;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+
+            .reader-progress-meta {
+                font-size: 11px;
+                margin-bottom: 5px;
+            }
+
+            .reader-progress-track {
+                height: 5px;
+            }
+
+            .reader-header {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+
+            .reader-header-actions {
+                gap: 4px;
+                padding-top: 8px;
+            }
+
+            .reader-header .icon-btn {
+                min-height: 40px;
+                padding: 7px 4px;
+                border-radius: 10px;
+            }
+
+            .reader-header .icon-btn i {
+                font-size: 17px;
+            }
+
+            .reader-header .icon-btn span {
+                display: none;
+            }
+
+            .reader-info h2 {
+                font-size: 16px;
+            }
+
+            .reader-info p {
+                font-size: 10px;
+            }
+
             .swipe-hint {
                 display: block;
+                bottom: 150px;
+                max-width: calc(100vw - 24px);
+                text-align: center;
+                white-space: normal;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .swipe-hint {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body.quran-reader-active .bottom-nav {
+                display: none;
+            }
+
+            body.quran-reader-active .app-content {
+                padding-bottom: 120px;
+            }
+
+            body.quran-reader-active .radio-fab,
+            body.quran-reader-active .radio-panel {
+                display: none !important;
+            }
+
+            .ayah {
+                font-size: var(--quran-reader-font-size, clamp(20px, 6vw, 28px));
             }
         }
 
@@ -676,6 +819,48 @@
             cursor: not-allowed;
             background: var(--border-color);
             color: var(--text-color);
+        }
+
+        .scroll-top-btn {
+            position: fixed;
+            right: 18px;
+            bottom: 92px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid rgba(var(--primary-rgb), 0.28);
+            background: var(--card-bg);
+            color: var(--primary-color);
+            font-size: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .scroll-top-btn.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .scroll-top-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        @media (min-width: 769px) {
+            .scroll-top-btn {
+                right: 28px;
+                bottom: 28px;
+            }
         }
 
         .quran-content {

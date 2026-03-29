@@ -4,8 +4,20 @@ let totalPages = 0;
         let currentPageIndex = 0;
         let touchStartX = 0;
         let touchEndX = 0;
+    let touchStartY = 0;
+    let touchEndY = 0;
         const minSwipeDistance = 50;
+    const maxVerticalSwipeDistance = 70;
         const AYAHS_PER_PAGE = 10;
+    const SURAH_READING_POSITION_KEY = 'quranSurahReadingPositionV1';
+    const SWIPE_HINT_SEEN_KEY = 'quranSwipeHintSeenV1';
+        const READER_FONT_LEVEL_KEY = 'quranReaderFontLevelV1';
+        const READER_FONT_LEVELS = [
+            { key: 'sm', label: 'صغير', size: 22 },
+            { key: 'md', label: 'متوسط', size: 26 },
+            { key: 'lg', label: 'كبير', size: 30 }
+        ];
+        let currentReaderFontLevelIndex = 1;
 
         // Audio player state
         let currentAudio = null;
@@ -381,10 +393,10 @@ let totalPages = 0;
             });
         }
 
-        function selectSurah(number) {
+        function selectSurah(number, options = {}) {
             currentSurah = number;
             showSurahReader();
-            loadSurah(number);
+            loadSurah(number, options);
         }
 
         async function openSurahAtPage(surahNumber, pageIndex = null, ayahNumberInSurah = null) {
@@ -449,23 +461,144 @@ let totalPages = 0;
         function showSurahList() {
             document.getElementById('surahListView').classList.add('active');
             document.getElementById('surahReaderView').classList.remove('active');
+            document.body.classList.remove('quran-reader-active');
             document.getElementById('surahSearch').value = '';
             filterSurahs();
             clearInstantSearchResults();
             closeShareAyahModal();
+            updateScrollTopButtonVisibility();
         }
 
         function showSurahReader() {
             document.getElementById('surahListView').classList.remove('active');
             document.getElementById('surahReaderView').classList.add('active');
+            document.body.classList.add('quran-reader-active');
             // Don't auto-show player anymore, let user toggle it
+            showSwipeHintOnce();
+            updateScrollTopButtonVisibility();
         }
 
-        async function loadSurah(surahNumber) {
+        function setReaderFontLevel(levelIndex, persist = true) {
+            const safeIndex = Math.max(0, Math.min(levelIndex, READER_FONT_LEVELS.length - 1));
+            currentReaderFontLevelIndex = safeIndex;
+            const level = READER_FONT_LEVELS[safeIndex];
+
+            document.documentElement.style.setProperty('--quran-reader-font-size', `${level.size}px`);
+
+            const label = document.getElementById('readerFontLabel');
+            if (label) {
+                label.textContent = level.label;
+            }
+
+            const fontBtn = document.getElementById('readerFontBtn');
+            if (fontBtn) {
+                fontBtn.setAttribute('aria-label', `حجم الخط: ${level.label}`);
+            }
+
+            if (persist) {
+                localStorage.setItem(READER_FONT_LEVEL_KEY, level.key);
+            }
+        }
+
+        function initReaderFontLevel() {
+            const savedLevel = localStorage.getItem(READER_FONT_LEVEL_KEY);
+            const savedIndex = READER_FONT_LEVELS.findIndex(level => level.key === savedLevel);
+
+            let initialIndex = savedIndex;
+            if (initialIndex === -1) {
+                initialIndex = window.matchMedia('(max-width: 768px)').matches ? 0 : 1;
+            }
+
+            setReaderFontLevel(initialIndex, false);
+        }
+
+        function cycleReaderFontSize() {
+            const nextIndex = (currentReaderFontLevelIndex + 1) % READER_FONT_LEVELS.length;
+            setReaderFontLevel(nextIndex, true);
+            showTemporaryMessage(`حجم الخط: ${READER_FONT_LEVELS[nextIndex].label}`);
+        }
+
+        function isReaderViewActive() {
+            const readerView = document.getElementById('surahReaderView');
+            return Boolean(readerView && readerView.classList.contains('active'));
+        }
+
+        function getSurahReadingPositions() {
+            try {
+                return JSON.parse(localStorage.getItem(SURAH_READING_POSITION_KEY) || '{}');
+            } catch (_error) {
+                return {};
+            }
+        }
+
+        function getSavedPageForSurah(surahNumber) {
+            const positions = getSurahReadingPositions();
+            const entry = positions[String(surahNumber)];
+            if (!entry || typeof entry.page !== 'number') return null;
+            return entry.page;
+        }
+
+        function savePageForCurrentSurah() {
+            if (!currentSurah || totalPages <= 0) return;
+
+            const positions = getSurahReadingPositions();
+            positions[String(currentSurah)] = {
+                page: currentPageIndex,
+                updatedAt: Date.now()
+            };
+
+            localStorage.setItem(SURAH_READING_POSITION_KEY, JSON.stringify(positions));
+        }
+
+        function updateReaderProgressUI() {
+            const pageLabel = document.getElementById('readerPageLabel');
+            const progressPercent = document.getElementById('readerProgressPercent');
+            const progressFill = document.getElementById('readerProgressFill');
+
+            if (!pageLabel || !progressPercent || !progressFill || totalPages <= 0) {
+                return;
+            }
+
+            const pageNumber = Math.max(1, currentPageIndex + 1);
+            const percent = Math.round((pageNumber / totalPages) * 100);
+
+            pageLabel.textContent = `صفحة ${pageNumber} من ${totalPages}`;
+            progressPercent.textContent = `${percent}%`;
+            progressFill.style.width = `${percent}%`;
+        }
+
+        function showSwipeHintOnce() {
+            const hint = document.getElementById('swipeHint');
+            if (!hint) return;
+
+            if (localStorage.getItem(SWIPE_HINT_SEEN_KEY) === '1') {
+                return;
+            }
+
+            hint.classList.remove('visible');
+            void hint.offsetWidth;
+            hint.classList.add('visible');
+            localStorage.setItem(SWIPE_HINT_SEEN_KEY, '1');
+        }
+
+        function updateScrollTopButtonVisibility() {
+            const button = document.getElementById('scrollTopBtn');
+            if (!button) return;
+
+            const shouldShow = isReaderViewActive() && window.scrollY > 320;
+            button.classList.toggle('show', shouldShow);
+        }
+
+        function scrollReaderToTop(instant = false) {
+            window.scrollTo({ top: 0, behavior: instant ? 'auto' : 'smooth' });
+        }
+
+        async function loadSurah(surahNumber, options = {}) {
             if (!surahNumber) return;
 
             currentSurah = parseInt(surahNumber);
             currentPageIndex = 0; // Reset page index at the start
+            const shouldStartFromBeginning = Boolean(options.startFromBeginning);
 
             // Reset audio state
             if (currentAudio) {
@@ -497,6 +630,12 @@ let totalPages = 0;
                 if (surahDesc) surahDesc.textContent = `الجزء ${juz} • ${surah.type} • ${surah.verses} آيات`;
 
                 createPages(data.data);
+
+                const savedPageIndex = getSavedPageForSurah(currentSurah);
+                if (!shouldStartFromBeginning && Number.isInteger(savedPageIndex)) {
+                    currentPageIndex = Math.max(0, Math.min(savedPageIndex, totalPages - 1));
+                }
+
                 renderCurrentPage();
                 checkBookmark();
                 updateNavigation();
@@ -584,6 +723,9 @@ let totalPages = 0;
             html += '</div>';
 
             content.innerHTML = html;
+            savePageForCurrentSurah();
+            updateReaderProgressUI();
+            updateScrollTopButtonVisibility();
 
             if (window.recordHabitActivity) {
                 window.recordHabitActivity('quran');
@@ -604,7 +746,7 @@ let totalPages = 0;
                 currentPageIndex++;
                 renderCurrentPage();
                 updateNavigation();
-                window.scrollTo(0, 0);
+                scrollReaderToTop(true);
             } else if (currentSurah < 114) {
                 // Auto-load next surah
                 showModal({
@@ -615,7 +757,8 @@ let totalPages = 0;
                     confirmText: 'نعم',
                     cancelText: 'لا',
                     onConfirm: () => {
-                        selectSurah(currentSurah + 1);
+                        // Auto-next should start from the beginning of the next surah.
+                        selectSurah(currentSurah + 1, { startFromBeginning: true });
                     }
                 });
             } else {
@@ -633,7 +776,7 @@ let totalPages = 0;
                 currentPageIndex--;
                 renderCurrentPage();
                 updateNavigation();
-                window.scrollTo(0, 0);
+                scrollReaderToTop(true);
             }
         }
 
@@ -643,6 +786,7 @@ let totalPages = 0;
             if (prevBtn) prevBtn.disabled = currentPageIndex === 0;
             if (nextBtn) nextBtn.disabled = false;
             updateBookmarkButton();
+            updateReaderProgressUI();
         }
 
         function getStoredBookmarks() {
@@ -818,6 +962,7 @@ let totalPages = 0;
         }
 
         renderSurahList();
+        initReaderFontLevel();
 
         // Check if loading from bookmark with URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -933,33 +1078,68 @@ let totalPages = 0;
         if (contentArea) {
             contentArea.addEventListener('touchstart', (e) => {
                 touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
             }, { passive: true });
 
             contentArea.addEventListener('touchend', (e) => {
                 touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
                 handleSwipe();
             }, { passive: true });
         }
 
         function handleSwipe() {
-            const swipeDistance = touchEndX - touchStartX;
+            if (!isReaderViewActive()) return;
+            if (document.querySelector('.modal-overlay.active')) return;
 
-            if (Math.abs(swipeDistance) > minSwipeDistance) {
-                if (swipeDistance > 0) {
-                    // Swipe right - go to previous page (RTL: next ayahs)
-                    const nextBtn = document.getElementById('nextPageBtn');
-                    if (nextBtn && !nextBtn.disabled) {
-                        nextPage();
-                    }
-                } else {
-                    // Swipe left - go to next page (RTL: previous ayahs)
-                    const prevBtn = document.getElementById('prevPageBtn');
-                    if (prevBtn && !prevBtn.disabled) {
-                        previousPage();
-                    }
+            const swipeDistance = touchEndX - touchStartX;
+            const verticalDistance = touchEndY - touchStartY;
+            const absSwipeDistance = Math.abs(swipeDistance);
+            const absVerticalDistance = Math.abs(verticalDistance);
+
+            if (absSwipeDistance < minSwipeDistance) return;
+            if (absVerticalDistance > maxVerticalSwipeDistance || absVerticalDistance > absSwipeDistance * 0.75) {
+                return;
+            }
+
+            if (swipeDistance < 0) {
+                // Swipe left -> next page
+                const nextBtn = document.getElementById('nextPageBtn');
+                if (nextBtn && !nextBtn.disabled) {
+                    nextPage();
+                }
+            } else {
+                // Swipe right -> previous page
+                const prevBtn = document.getElementById('prevPageBtn');
+                if (prevBtn && !prevBtn.disabled) {
+                    previousPage();
                 }
             }
         }
+
+        document.addEventListener('keydown', (event) => {
+            if (!isReaderViewActive()) return;
+            if (document.querySelector('.modal-overlay.active')) return;
+
+            const targetTag = event.target?.tagName;
+            if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') {
+                return;
+            }
+
+            if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                nextPage();
+            } else if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                previousPage();
+            } else if (event.key === 'Home') {
+                event.preventDefault();
+                scrollReaderToTop();
+            }
+        });
+
+        window.addEventListener('scroll', updateScrollTopButtonVisibility, { passive: true });
+        updateScrollTopButtonVisibility();
 
         // Audio player functions
         function toggleAudio() {
@@ -1793,7 +1973,7 @@ let totalPages = 0;
                     html += `
                         <div class="ayah-tafsir">
                             <div class="tafsir-ayah-number">${item.ayahNumber}</div>
-                            <div class="ayah arabic-text" style="font-size: var(--font-size-ayah); margin-bottom: 12px; text-align: center; background: rgba(var(--primary-rgb, 27, 94, 32), 0.05); padding: 12px; border-radius: 8px;">${item.arabicText}</div>
+                            <div class="ayah arabic-text" style="font-size: var(--quran-reader-font-size, var(--font-size-ayah)); margin-bottom: 12px; text-align: center; background: rgba(var(--primary-rgb, 27, 94, 32), 0.05); padding: 12px; border-radius: 8px;">${item.arabicText}</div>
                             <div class="tafsir-text">${item.tafsirText}</div>
                         </div>
                     `;

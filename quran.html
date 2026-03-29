@@ -69,6 +69,10 @@
                     </div>
                 </div>
                 <div class="reader-header-actions">
+                    <button class="icon-btn" id="readerFontBtn" onclick="cycleReaderFontSize()" title="حجم الخط">
+                        <i class="bi bi-type"></i>
+                        <span id="readerFontLabel">متوسط</span>
+                    </button>
                     <button class="icon-btn" id="tafsirBtn" onclick="toggleTafsir()" title="التفسير">
                         <i class="bi bi-book-half"></i>
                         <span>التفسير</span>
@@ -92,6 +96,18 @@
                 </div>
             </div>
 
+            <div class="reader-progress-strip" id="readerProgressStrip" aria-live="polite">
+                <div class="reader-progress-meta">
+                    <span id="readerPageLabel">صفحة 1 من 1</span>
+                    <span id="readerProgressPercent">0%</span>
+                </div>
+                <div class="reader-progress-track">
+                    <div class="reader-progress-fill" id="readerProgressFill"></div>
+                </div>
+            </div>
+
+            <div class="swipe-hint" id="swipeHint">اسحب لليسار للصفحة التالية • ولليمين للصفحة السابقة</div>
+
             <div id="quranContent" class="quran-content"></div>
 
             <!-- Floating Navigation Buttons -->
@@ -100,6 +116,10 @@
             </button>
             <button class="floating-nav-btn floating-nav-left" id="nextPageBtn" onclick="nextPage()">
                 <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <button class="scroll-top-btn" id="scrollTopBtn" onclick="scrollReaderToTop()" aria-label="العودة للأعلى">
+                <i class="bi bi-arrow-up"></i>
             </button>
 
             <!-- Audio Player -->
