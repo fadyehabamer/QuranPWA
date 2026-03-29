@@ -1212,6 +1212,147 @@ function loadVisitorCount() {
         inject();
     }
 })();
+
+// Shared Navigation Components
+const APP_NAV_ITEMS = [
+    { key: 'home', href: '/', label: 'الرئيسية', bottomLabel: 'الرئيسية', bottomIcon: 'bi-house-fill' },
+    { key: 'quran', href: 'quran.html', label: 'القرآن الكريم', bottomLabel: 'القرآن', bottomIcon: 'bi-book-fill' },
+    { key: 'bookmarks', href: 'bookmarks.html', label: 'المواضع المحفوظة' },
+    { key: 'azkar', href: 'azkar.html', label: 'الأذكار', bottomLabel: 'الأذكار', bottomIcon: 'bi-moon-stars-fill' },
+    { key: 'masbaha', href: 'masbaha.html', label: 'المسبحة', bottomLabel: 'المسبحة', bottomIcon: 'bi-circle-fill' },
+    { key: 'sunan', href: 'sunan.html', label: 'سنن النبي' },
+    { key: 'prayer', href: 'prayer-times.html', label: 'مواقيت الصلاة', bottomLabel: 'الصلاة', bottomIcon: 'bi-clock-fill' },
+    { key: 'features', href: 'features.html', label: 'كل الميزات', bottomLabel: 'الميزات', bottomIcon: 'bi-grid-fill' },
+    { key: 'bio', href: 'bio.html', label: 'عن المطور' },
+    { key: 'settings', href: 'settings.html', label: 'الإعدادات' }
+];
+
+const APP_BOTTOM_NAV_KEYS = ['home', 'quran', 'azkar', 'masbaha', 'prayer', 'features'];
+
+function normalizeNavKey(value) {
+    const key = String(value || '').trim().toLowerCase();
+    if (!key) return '';
+    if (key === 'prayer-times') return 'prayer';
+    if (key === 'main' || key === 'index') return 'home';
+    return key;
+}
+
+function getNavKeyFromPath(pathname) {
+    const path = String(pathname || '')
+        .replace(/\\/g, '/')
+        .split('#')[0]
+        .split('?')[0]
+        .toLowerCase();
+
+    if (!path || path === '/' || path.endsWith('/index.html') || path.endsWith('/home-more.html')) {
+        return 'home';
+    }
+    if (path.endsWith('/quran.html')) return 'quran';
+    if (path.endsWith('/bookmarks.html')) return 'bookmarks';
+    if (path.endsWith('/azkar.html')) return 'azkar';
+    if (path.endsWith('/masbaha.html')) return 'masbaha';
+    if (path.endsWith('/sunan.html')) return 'sunan';
+    if (path.endsWith('/prayer-times.html')) return 'prayer';
+    if (path.endsWith('/features.html')) return 'features';
+    if (path.endsWith('/bio.html')) return 'bio';
+    if (path.endsWith('/settings.html')) return 'settings';
+    return 'home';
+}
+
+function resolveNavActiveKey(preferredKey) {
+    const normalized = normalizeNavKey(preferredKey);
+    return APP_NAV_ITEMS.some(item => item.key === normalized)
+        ? normalized
+        : getNavKeyFromPath(window.location.pathname);
+}
+
+function getBottomActiveKey(currentKey) {
+    return APP_BOTTOM_NAV_KEYS.includes(currentKey) ? currentKey : 'features';
+}
+
+function buildSidebarMarkup(currentKey) {
+    const linksMarkup = APP_NAV_ITEMS.map(item => {
+        const activeClass = item.key === currentKey ? ' active' : '';
+        return `
+            <a href="${item.href}" class="sidebar-nav-item${activeClass}" onclick="closeSidebar()">
+                <div class="sidebar-nav-label">${item.label}</div>
+            </a>`;
+    }).join('');
+
+    return `
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
+        <aside class="desktop-sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <button class="sidebar-close-btn" onclick="toggleSidebar(false)">×</button>
+                <div class="sidebar-logo-text">القرآن الكريم</div>
+            </div>
+            <nav class="sidebar-nav">${linksMarkup}
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-version">الإصدار 1.0.0</div>
+            </div>
+        </aside>
+    `;
+}
+
+function buildBottomNavMarkup(currentKey) {
+    const activeBottomKey = getBottomActiveKey(currentKey);
+    const linksMarkup = APP_NAV_ITEMS
+        .filter(item => APP_BOTTOM_NAV_KEYS.includes(item.key))
+        .map(item => {
+            const activeClass = item.key === activeBottomKey ? ' active' : '';
+            return `
+                <a href="${item.href}" class="nav-item${activeClass}">
+                    <i class="bi ${item.bottomIcon} nav-icon"></i>
+                    <span class="nav-label">${item.bottomLabel}</span>
+                </a>`;
+        }).join('');
+
+    return `<nav class="bottom-nav">${linksMarkup}
+    </nav>`;
+}
+
+function toggleSidebar(forceOpen) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (!sidebar || !overlay) return;
+
+    const shouldOpen = typeof forceOpen === 'boolean'
+        ? forceOpen
+        : !sidebar.classList.contains('active');
+
+    sidebar.classList.toggle('active', shouldOpen);
+    overlay.classList.toggle('active', shouldOpen);
+}
+
+function closeSidebar() {
+    toggleSidebar(false);
+}
+
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
+
+if (window.customElements && !customElements.get('app-sidebar')) {
+    class AppSidebar extends HTMLElement {
+        connectedCallback() {
+            const requestedKey = this.getAttribute('current');
+            const currentKey = resolveNavActiveKey(requestedKey);
+            this.innerHTML = buildSidebarMarkup(currentKey);
+        }
+    }
+
+    class AppBottomNav extends HTMLElement {
+        connectedCallback() {
+            const requestedKey = this.getAttribute('current');
+            const currentKey = resolveNavActiveKey(requestedKey);
+            this.innerHTML = buildBottomNavMarkup(currentKey);
+        }
+    }
+
+    customElements.define('app-sidebar', AppSidebar);
+    customElements.define('app-bottom-nav', AppBottomNav);
+}
+
 // Theme & Settings Management
 function toggleTheme() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';

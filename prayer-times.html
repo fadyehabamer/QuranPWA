@@ -21,6 +21,8 @@
 
 <body>
     <!-- App Header -->
+        <app-sidebar current="prayer"></app-sidebar>
+
     <header class="app-header glass-card">
         <button class="icon-btn menu-toggle-btn" onclick="toggleSidebar()">
             <i class="bi bi-list"></i>
@@ -33,51 +35,6 @@
             </div>
         </div>
     </header>
-
-    <!-- Sidebar -->
-    <aside class="desktop-sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
-            <div class="sidebar-logo-text">القرآن الكريم</div>
-        </div>
-        <nav class="sidebar-nav">
-            <a href="/" class="sidebar-nav-item">
-                <div class="sidebar-nav-label">الرئيسية</div>
-            </a>
-            <a href="quran.html" class="sidebar-nav-item">
-                <div class="sidebar-nav-label">القرآن الكريم</div>
-            </a>
-            <a href="bookmarks.html" class="sidebar-nav-item">
-                <div class="sidebar-nav-label">المواضع المحفوظة</div>
-            </a>
-            <a href="azkar.html" class="sidebar-nav-item">
-                <div class="sidebar-nav-label">الأذكار</div>
-            </a>
-            <a href="masbaha.html" class="sidebar-nav-item">
-                <div class="sidebar-nav-label">المسبحة</div>
-            </a>
-            <a href="sunan.html" class="sidebar-nav-item">
-                <div class="sidebar-nav-label">سنن النبي</div>
-            </a>
-            <a href="prayer-times.html" class="sidebar-nav-item active">
-                <div class="sidebar-nav-label">مواقيت الصلاة</div>
-            </a>
-            <a href="features.html" class="sidebar-nav-item">
-                <div class="sidebar-nav-label">كل الميزات</div>
-            </a>
-            <a href="bio.html" class="sidebar-nav-item">
-                <div class="sidebar-nav-label">عن المطور</div>
-            </a>
-            <a href="settings.html" class="sidebar-nav-item">
-                <div class="sidebar-nav-label">الإعدادات</div>
-            </a>
-        </nav>
-        <div class="sidebar-footer">
-            <div class="sidebar-version">الإصدار 1.0.0</div>
-        </div>
-    </aside>
-
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- Main Content -->
     <main class="app-content">
@@ -194,41 +151,11 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <a href="/" class="nav-item">
-            <i class="bi bi-house-fill nav-icon"></i>
-            <span class="nav-label">الرئيسية</span>
-        </a>
-        <a href="quran.html" class="nav-item">
-            <i class="bi bi-book-fill nav-icon"></i>
-            <span class="nav-label">القرآن</span>
-        </a>
-        <a href="azkar.html" class="nav-item">
-            <i class="bi bi-moon-stars-fill nav-icon"></i>
-            <span class="nav-label">الأذكار</span>
-        </a>
-        <a href="masbaha.html" class="nav-item">
-            <i class="bi bi-circle-fill nav-icon"></i>
-            <span class="nav-label">المسبحة</span>
-        </a>
-        <a href="prayer-times.html" class="nav-item active">
-            <i class="bi bi-clock-fill nav-icon"></i>
-            <span class="nav-label">الصلاة</span>
-        </a>
-        <a href="features.html" class="nav-item">
-            <i class="bi bi-grid-fill nav-icon"></i>
-            <span class="nav-label">الميزات</span>
-        </a>
-    </nav>
+        <app-bottom-nav current="prayer"></app-bottom-nav>
 
     <script src="common.js"></script>
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('sidebarOverlay').classList.toggle('active');
-        }
-
-        let userLocation = null;
+let userLocation = null;
         let prayerTimes = null;
         let updateInterval = null;
         let locationMethod = null; // 'automatic' or 'manual'
@@ -1255,4 +1182,5 @@
 </body>
 
 </html>
+
 
