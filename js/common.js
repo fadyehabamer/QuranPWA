@@ -1283,6 +1283,7 @@ function loadVisitorCount() {
 const APP_NAV_ITEMS = [
     { key: 'home', href: '/', label: 'الرئيسية', bottomLabel: 'الرئيسية', bottomIcon: 'bi-house-fill' },
     { key: 'quran', href: 'quran.html', label: 'القرآن الكريم', bottomLabel: 'القرآن', bottomIcon: 'bi-book-fill' },
+    { key: 'khatma', href: 'khatma.html', label: 'مركز الختمة' },
     { key: 'bookmarks', href: 'bookmarks.html', label: 'المواضع المحفوظة' },
     { key: 'azkar', href: 'azkar.html', label: 'الأذكار', bottomLabel: 'الأذكار', bottomIcon: 'bi-moon-stars-fill' },
     { key: 'masbaha', href: 'masbaha.html', label: 'المسبحة', bottomLabel: 'المسبحة', bottomIcon: 'bi-circle-fill' },
@@ -1314,6 +1315,7 @@ function getNavKeyFromPath(pathname) {
         return 'home';
     }
     if (path.endsWith('/quran.html')) return 'quran';
+    if (path.endsWith('/khatma.html') || path.endsWith('/khatma')) return 'khatma';
     if (path.endsWith('/bookmarks.html')) return 'bookmarks';
     if (path.endsWith('/azkar.html')) return 'azkar';
     if (path.endsWith('/masbaha.html')) return 'masbaha';

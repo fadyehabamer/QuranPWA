@@ -40,6 +40,10 @@
   ],
   "rewrites": [
     {
+      "source": "/khatma",
+      "destination": "/khatma.html"
+    },
+    {
       "source": "/quran",
       "destination": "/quran.html"
     },

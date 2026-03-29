@@ -233,6 +233,9 @@ function hexToRgb(hex) {
         }
 
         async function renderHabitDashboard() {
+            const hasHabitUi = document.getElementById('habitDashboardSection');
+            if (!hasHabitUi) return;
+
             const quranStreak = window.getHabitStreak
                 ? window.getHabitStreak('quran')
                 : { current: 0, best: 0 };
@@ -492,6 +495,10 @@ function hexToRgb(hex) {
             const summaryView = document.getElementById('khatmaSummaryView');
             const startInput = document.getElementById('khatmaStartDate');
             const endInput = document.getElementById('khatmaEndDate');
+
+            if (!setupView || !summaryView || !startInput || !endInput) {
+                return;
+            }
 
             const today = new Date();
             const defaultStart = toDateInputValue(today);

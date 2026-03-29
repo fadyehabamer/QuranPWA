@@ -113,53 +113,23 @@
                         </div>
                     </div>
 
-                    <a class="dashboard-card" href="bookmarks.html" id="dashboardLibraryCard">
-                        <div class="dashboard-card-head">
-                            <span class="dashboard-card-label">مكتبة المحفوظات</span>
-                            <span class="dashboard-card-icon"><i class="bi bi-bookmarks-fill"></i></span>
-                        </div>
-                        <div class="dashboard-card-value" id="dashboardBookmarksCount">0 موضع محفوظ</div>
-                        <div class="dashboard-card-meta" id="dashboardBookmarksMeta">0 مجلد • 0 زيارة حديثة</div>
-                    </a>
                 </div>
             </section>
 
-            <!-- Reading Streaks and Habit Rings -->
-            <section class="habit-dashboard-section animate-fade-up delay-2" id="habitDashboardSection">
-                <div class="habit-header">
-                    <div class="habit-title"><i class="bi bi-graph-up-arrow"></i> الاستمرارية</div>
+            <section class="khatma-core-feature glass-card animate-fade-up delay-2" id="khatmaCoreFeature">
+                <div class="khatma-core-feature-head">
+                    <div class="khatma-core-feature-title">
+                        <i class="bi bi-journal-check"></i>
+                        <span>مركز الختمة والاستمرارية</span>
+                    </div>
+                    <div class="khatma-core-feature-badge">ميزة أساسية</div>
                 </div>
-
-                <div class="habit-streak-card glass-card">
-                    <div class="habit-streak-main">
-                        <div class="habit-streak-number" id="quranStreakNumber">0</div>
-                        <div class="habit-streak-label">أيام متتالية في قراءة القرآن</div>
-                    </div>
-                    <div class="habit-streak-meta">
-                        <div id="quranBestStreakMeta">أفضل سلسلة: 0 يوم</div>
-                        <div id="azkarProgressMeta">تقدّم الأذكار: --%</div>
-                    </div>
-                </div>
-
-                <div class="habit-rings-grid">
-                    <div class="habit-ring-card glass-card">
-                        <div class="habit-ring" id="habitRingQuran"><span id="habitRingQuranPct">0%</span></div>
-                        <div class="habit-ring-name">القرآن</div>
-                        <div class="habit-ring-meta" id="habitRingQuranMeta">0 من 7 أيام</div>
-                    </div>
-
-                    <div class="habit-ring-card glass-card">
-                        <div class="habit-ring" id="habitRingAzkar"><span id="habitRingAzkarPct">0%</span></div>
-                        <div class="habit-ring-name">الأذكار</div>
-                        <div class="habit-ring-meta" id="habitRingAzkarMeta">0 من 7 أيام</div>
-                    </div>
-
-                    <div class="habit-ring-card glass-card">
-                        <div class="habit-ring" id="habitRingMasbaha"><span id="habitRingMasbahaPct">0%</span></div>
-                        <div class="habit-ring-name">المسبحة</div>
-                        <div class="habit-ring-meta" id="habitRingMasbahaMeta">0 من 7 أيام</div>
-                    </div>
-                </div>
+                <p class="khatma-core-feature-text">خطة ختمة يومية تلقائية، متابعة التقدم، وحلقات الاستمرارية في صفحة
+                    مستقلة تساعدك تركز على الهدف.</p>
+                <a href="khatma.html" class="khatma-core-feature-link">
+                    <span>فتح مركز الختمة</span>
+                    <i class="bi bi-arrow-left-short"></i>
+                </a>
             </section>
 
             <!-- Prayer Times Widget -->
@@ -192,60 +162,6 @@
                     </div>
                     <div class="resume-arrow">
                         <i class="bi bi-chevron-left"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Khatma Planner -->
-            <div class="khatma-section animate-fade-up delay-2" id="khatmaPlannerSection">
-                <div class="khatma-card glass-card">
-                    <div class="khatma-title"><i class="bi bi-journal-check"></i> خطة الختمة</div>
-                    <div class="khatma-subtitle">خطة يومية تلقائية مع تعويض تلقائي عند فوات يوم</div>
-
-                    <div id="khatmaSetupView">
-                        <div class="khatma-form">
-                            <input class="khatma-input" type="date" id="khatmaStartDate" aria-label="تاريخ البداية">
-                            <input class="khatma-input" type="date" id="khatmaEndDate" aria-label="تاريخ النهاية">
-                        </div>
-                        <button class="khatma-btn" onclick="createKhatmaPlan()">إنشاء خطة الختمة</button>
-                    </div>
-
-                    <div id="khatmaSummaryView" style="display:none;">
-                        <div class="khatma-progress">
-                            <div class="khatma-progress-bar" id="khatmaProgressBar"></div>
-                        </div>
-
-                        <div class="khatma-stats">
-                            <div class="khatma-stat">
-                                <div class="khatma-stat-value" id="khatmaCompletedPages">0</div>
-                                <div class="khatma-stat-label">صفحات مكتملة</div>
-                            </div>
-                            <div class="khatma-stat">
-                                <div class="khatma-stat-value" id="khatmaRemainingPages">0</div>
-                                <div class="khatma-stat-label">صفحات متبقية</div>
-                            </div>
-                            <div class="khatma-stat">
-                                <div class="khatma-stat-value" id="khatmaRemainingDays">0</div>
-                                <div class="khatma-stat-label">أيام متبقية</div>
-                            </div>
-                            <div class="khatma-stat">
-                                <div class="khatma-stat-value" id="khatmaTodayPages">0</div>
-                                <div class="khatma-stat-label">هدف اليوم</div>
-                            </div>
-                        </div>
-
-                        <div class="khatma-today-target" id="khatmaTodayTargetText"></div>
-
-                        <div class="khatma-read-row">
-                            <input class="khatma-input" type="number" id="khatmaPagesReadInput" min="1"
-                                placeholder="كم صفحة قرأت اليوم؟">
-                            <button class="khatma-btn" onclick="addKhatmaProgress()">تحديث</button>
-                        </div>
-
-                        <div class="khatma-actions">
-                            <button class="khatma-btn" onclick="markTodayKhatmaDone()">إنهاء هدف اليوم</button>
-                            <button class="khatma-btn secondary" onclick="resetKhatmaPlan()">إعادة تعيين</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -311,6 +227,10 @@
                 <p>نقلنا الأقسام الثانوية (روابط الأقسام، الأدوات السريعة، الإحصاءات، وأزرار البدء) إلى صفحة مستقلة حتى
                     تركز هنا على القراءة اليومية والمتابعة.</p>
                 <div class="action-buttons">
+                    <a href="khatma.html" class="action-btn">
+                        <i class="bi bi-journal-check"></i>
+                        <span>مركز الختمة والاستمرارية</span>
+                    </a>
                     <a href="home-more.html" class="action-btn">
                         <i class="bi bi-grid-1x2-fill"></i>
                         <span>فتح الأدوات الإضافية</span>
