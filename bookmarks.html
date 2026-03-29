@@ -77,24 +77,56 @@
             </div>
 
             <div class="bookmarks-controls glass-card" id="bookmarksControls" style="display: none;">
-                <div class="controls-grid">
-                    <div class="control-field">
-                        <label class="control-label" for="bookmarkSearchInput">بحث</label>
-                        <input id="bookmarkSearchInput" class="control-input" type="search" placeholder="ابحث باسم السورة أو الملاحظة أو الوسوم" oninput="handleFiltersChange()">
-                    </div>
-                    <div class="control-field">
-                        <label class="control-label" for="folderFilter">المجلد</label>
-                        <select id="folderFilter" class="control-select" onchange="handleFiltersChange()"></select>
-                    </div>
-                    <div class="control-field">
-                        <label class="control-label" for="tagFilter">الوسوم</label>
-                        <select id="tagFilter" class="control-select" onchange="handleFiltersChange()"></select>
-                    </div>
+                <div class="bookmarks-controls-head">
+                    <div class="bookmarks-controls-title">البحث والفلاتر</div>
+                    <button id="bookmarksControlsToggleBtn" class="bookmarks-controls-toggle" type="button" onclick="toggleFiltersPanelVisibility()" aria-pressed="true">
+                        <i class="bi bi-toggle-on" aria-hidden="true"></i>
+                        <span>إخفاء</span>
+                    </button>
                 </div>
-                <div class="control-actions">
-                    <input id="newFolderInput" class="control-input" type="text" placeholder="اسم مجلد جديد (مثال: حفظ ومراجعة)">
-                    <button class="folder-add-btn" type="button" onclick="createFolderFromInput()">إضافة مجلد</button>
+
+                <div id="bookmarksControlsBody" class="bookmarks-controls-body">
+                    <div class="controls-grid">
+                        <div class="control-field">
+                            <label class="control-label" for="bookmarkSearchInput">بحث</label>
+                            <input id="bookmarkSearchInput" class="control-input" type="search" placeholder="ابحث باسم السورة أو الملاحظة أو الوسوم" oninput="handleFiltersChange()">
+                        </div>
+                        <div class="control-field">
+                            <label class="control-label" for="bookmarkSortSelect">ترتيب</label>
+                            <select id="bookmarkSortSelect" class="control-select" onchange="handleFiltersChange()">
+                                <option value="recent">الأحدث أولاً</option>
+                                <option value="oldest">الأقدم أولاً</option>
+                                <option value="surah">حسب السورة</option>
+                                <option value="visited">الأكثر زيارة</option>
+                            </select>
+                        </div>
+                        <div class="control-field">
+                            <label class="control-label" for="folderFilter">المجلد</label>
+                            <select id="folderFilter" class="control-select" onchange="handleFiltersChange()"></select>
+                        </div>
+                        <div class="control-field">
+                            <label class="control-label" for="tagFilter">الوسوم</label>
+                            <select id="tagFilter" class="control-select" onchange="handleFiltersChange()"></select>
+                        </div>
+                    </div>
+                    <div class="control-actions">
+                        <input id="newFolderInput" class="control-input" type="text" placeholder="اسم مجلد جديد (مثال: حفظ ومراجعة)">
+                        <button class="folder-add-btn" type="button" onclick="createFolderFromInput()">إضافة مجلد</button>
+                        <button class="filters-clear-btn" type="button" onclick="clearBookmarkFilters()">مسح الفلاتر</button>
+                    </div>
+                    <div class="filters-result-meta" id="filtersResultMeta">0 نتيجة</div>
                 </div>
+            </div>
+
+            <div class="folders-overview" id="foldersOverview" style="display:none;">
+                <div class="folders-overview-head">
+                    <div class="folders-overview-title">المجلدات</div>
+                    <button id="foldersOverviewToggleBtn" class="folders-overview-toggle" type="button" onclick="toggleFoldersOverviewVisibility()" aria-pressed="true">
+                        <i class="bi bi-toggle-on" aria-hidden="true"></i>
+                        <span>إخفاء</span>
+                    </button>
+                </div>
+                <div class="folders-overview-list" id="foldersOverviewList"></div>
             </div>
 
             <div class="recent-bookmarks" id="recentBookmarksSection" style="display:none;">

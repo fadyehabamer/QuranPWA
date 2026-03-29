@@ -120,6 +120,8 @@ const surahInfo = [
             const content = document.getElementById('bookmarksContent');
             const stats = document.getElementById('bookmarksStats');
             const controls = document.getElementById('bookmarksControls');
+            const resultMeta = document.getElementById('filtersResultMeta');
+            const foldersOverview = document.getElementById('foldersOverview');
 
             if (allBookmarks.length === 0) {
                 content.innerHTML = `
@@ -132,12 +134,17 @@ const surahInfo = [
                 `;
                 if (stats) stats.style.display = 'none';
                 if (controls) controls.style.display = 'none';
+                if (resultMeta) resultMeta.textContent = '0 نتيجة';
+                if (foldersOverview) foldersOverview.style.display = 'none';
                 renderRecentBookmarks([]);
                 return;
             }
 
             if (stats) stats.style.display = 'flex';
-            if (controls) controls.style.display = 'block';
+            if (controls) {
+                controls.style.display = 'block';
+                setFiltersPanelVisibility(filtersPanelHidden, false);
+            }
 
             const uniqueSurahs = new Set(allBookmarks.map(bookmark => bookmark.surah));
             const allFolders = getAllFolders(allBookmarks);
@@ -149,9 +156,16 @@ const surahInfo = [
             document.getElementById('recentVisits').textContent = recentVisitedCount;
 
             renderFilterOptions(allBookmarks);
+            renderFoldersOverview(allBookmarks);
             renderRecentBookmarks();
 
             const filteredBookmarks = filterBookmarks(allBookmarks);
+            const sortedFilteredBookmarks = sortBookmarks(filteredBookmarks);
+
+            if (resultMeta) {
+                resultMeta.textContent = `${sortedFilteredBookmarks.length} نتيجة من ${allBookmarks.length}`;
+            }
+
             if (filteredBookmarks.length === 0) {
                 content.innerHTML = '<div class="no-results">لا توجد نتائج مطابقة للفلاتر الحالية.</div>';
                 return;
@@ -161,7 +175,7 @@ const surahInfo = [
 
             const html = `
                 <div class="bookmarks-list">
-                    ${filteredBookmarks.map((bookmark) => {
+                    ${sortedFilteredBookmarks.map((bookmark) => {
                 const surah = surahInfo[bookmark.surah - 1] || { name: 'سورة', type: '' };
                 const createdText = formatTimeAgo(new Date(bookmark.timestamp || Date.now()));
                 const visitText = bookmark.lastVisited
@@ -242,8 +256,121 @@ const surahInfo = [
         const bookmarkFilters = {
             search: '',
             folder: '',
-            tag: ''
+            tag: '',
+            sort: 'recent'
         };
+        const FILTERS_PANEL_HIDDEN_KEY = 'bookmarksFiltersPanelHiddenV1';
+        let filtersPanelHidden = false;
+        const FOLDERS_OVERVIEW_HIDDEN_KEY = 'bookmarksFoldersOverviewHiddenV1';
+        let foldersOverviewHidden = false;
+
+        function loadFiltersPanelVisibilityPreference() {
+            try {
+                filtersPanelHidden = localStorage.getItem(FILTERS_PANEL_HIDDEN_KEY) === '1';
+            } catch (_error) {
+                filtersPanelHidden = false;
+            }
+        }
+
+        function updateFiltersPanelToggleButton() {
+            const toggleBtn = document.getElementById('bookmarksControlsToggleBtn');
+            if (!toggleBtn) return;
+
+            const isShown = !filtersPanelHidden;
+            toggleBtn.setAttribute('aria-pressed', isShown ? 'true' : 'false');
+            toggleBtn.innerHTML = isShown
+                ? '<i class="bi bi-toggle-on" aria-hidden="true"></i><span>إخفاء</span>'
+                : '<i class="bi bi-toggle-off" aria-hidden="true"></i><span>إظهار</span>';
+        }
+
+        function setFiltersPanelVisibility(hidden, persist = true) {
+            filtersPanelHidden = Boolean(hidden);
+
+            const controls = document.getElementById('bookmarksControls');
+            if (controls) {
+                controls.classList.toggle('collapsed', filtersPanelHidden);
+            }
+
+            updateFiltersPanelToggleButton();
+
+            if (persist) {
+                try {
+                    localStorage.setItem(FILTERS_PANEL_HIDDEN_KEY, filtersPanelHidden ? '1' : '0');
+                } catch (_error) {
+                    // Ignore localStorage write issues.
+                }
+            }
+        }
+
+        function toggleFiltersPanelVisibility() {
+            setFiltersPanelVisibility(!filtersPanelHidden, true);
+        }
+
+        function loadFoldersOverviewVisibilityPreference() {
+            try {
+                foldersOverviewHidden = localStorage.getItem(FOLDERS_OVERVIEW_HIDDEN_KEY) === '1';
+            } catch (_error) {
+                foldersOverviewHidden = false;
+            }
+        }
+
+        function updateFoldersOverviewToggleButton() {
+            const toggleBtn = document.getElementById('foldersOverviewToggleBtn');
+            if (!toggleBtn) return;
+
+            const isShown = !foldersOverviewHidden;
+            toggleBtn.setAttribute('aria-pressed', isShown ? 'true' : 'false');
+            toggleBtn.innerHTML = isShown
+                ? '<i class="bi bi-toggle-on" aria-hidden="true"></i><span>إخفاء</span>'
+                : '<i class="bi bi-toggle-off" aria-hidden="true"></i><span>إظهار</span>';
+        }
+
+        function setFoldersOverviewVisibility(hidden, persist = true) {
+            foldersOverviewHidden = Boolean(hidden);
+
+            const section = document.getElementById('foldersOverview');
+            if (section) {
+                section.classList.toggle('collapsed', foldersOverviewHidden);
+            }
+
+            updateFoldersOverviewToggleButton();
+
+            if (persist) {
+                try {
+                    localStorage.setItem(FOLDERS_OVERVIEW_HIDDEN_KEY, foldersOverviewHidden ? '1' : '0');
+                } catch (_error) {
+                    // Ignore localStorage write issues.
+                }
+            }
+        }
+
+        function toggleFoldersOverviewVisibility() {
+            setFoldersOverviewVisibility(!foldersOverviewHidden, true);
+        }
+
+        function sortBookmarks(bookmarks) {
+            const list = Array.isArray(bookmarks) ? bookmarks.slice() : [];
+
+            switch (bookmarkFilters.sort) {
+                case 'oldest':
+                    return list.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                case 'surah':
+                    return list.sort((a, b) => {
+                        const surahDiff = (a.surah || 0) - (b.surah || 0);
+                        if (surahDiff !== 0) return surahDiff;
+                        return (a.page || 0) - (b.page || 0);
+                    });
+                case 'visited':
+                    return list.sort((a, b) => {
+                        const visitsDiff = (b.visitCount || 0) - (a.visitCount || 0);
+                        if (visitsDiff !== 0) return visitsDiff;
+                        return (b.lastVisited || 0) - (a.lastVisited || 0);
+                    });
+                case 'recent':
+                default:
+                    return list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            }
+        }
 
         function escapeHtml(value) {
             return String(value || '')
@@ -333,6 +460,88 @@ const surahInfo = [
             fillSelect(tagFilter, 'كل الوسوم', tags, bookmarkFilters.tag);
         }
 
+        function renderFoldersOverview(bookmarks) {
+            const section = document.getElementById('foldersOverview');
+            const list = document.getElementById('foldersOverviewList');
+            if (!section || !list) return;
+
+            const folderCounts = new Map();
+            (bookmarks || []).forEach(bookmark => {
+                const folder = String(bookmark.folder || 'عام').trim() || 'عام';
+                folderCounts.set(folder, (folderCounts.get(folder) || 0) + 1);
+            });
+
+            // Keep folder cards visible even when a folder currently has zero bookmarks.
+            const knownFolders = getAllFolders(bookmarks)
+                .map(folder => String(folder || '').trim())
+                .filter(Boolean);
+            if (!knownFolders.includes('عام')) {
+                knownFolders.unshift('عام');
+            }
+            knownFolders.forEach(folder => {
+                if (!folderCounts.has(folder)) {
+                    folderCounts.set(folder, 0);
+                }
+            });
+
+            const folders = Array.from(folderCounts.entries())
+                .sort((a, b) => {
+                    if (a[0] === 'عام') return -1;
+                    if (b[0] === 'عام') return 1;
+                    return a[0].localeCompare(b[0], 'ar');
+                });
+
+            if (!folders.length) {
+                section.style.display = 'none';
+                list.innerHTML = '';
+                return;
+            }
+
+            const allCount = (bookmarks || []).length;
+            const allActiveClass = bookmarkFilters.folder ? '' : 'active';
+
+            let html = `
+                <button class="folder-overview-card ${allActiveClass}" type="button" onclick="setFolderFilterByEncoded('')">
+                    <span class="folder-overview-card-top">
+                        <i class="bi bi-collection folder-overview-icon" aria-hidden="true"></i>
+                        <span class="folder-overview-count">${allCount}</span>
+                    </span>
+                    <span class="folder-overview-name">كل المجلدات</span>
+                    <span class="folder-overview-meta">عرض جميع المواضع</span>
+                </button>
+            `;
+
+            folders.forEach(([folder, count]) => {
+                const encodedFolder = encodeURIComponent(folder);
+                const activeClass = bookmarkFilters.folder === folder ? 'active' : '';
+                html += `
+                    <button class="folder-overview-card ${activeClass}" type="button" onclick="setFolderFilterByEncoded('${encodedFolder}')">
+                        <span class="folder-overview-card-top">
+                            <i class="bi ${activeClass ? 'bi-folder2-open' : 'bi-folder2'} folder-overview-icon" aria-hidden="true"></i>
+                            <span class="folder-overview-count">${count}</span>
+                        </span>
+                        <span class="folder-overview-name">${escapeHtml(folder)}</span>
+                        <span class="folder-overview-meta">${count === 1 ? 'موضع واحد' : `${count} مواضع`}</span>
+                    </button>
+                `;
+            });
+
+            list.innerHTML = html;
+            section.style.display = 'block';
+            setFoldersOverviewVisibility(foldersOverviewHidden, false);
+        }
+
+        function setFolderFilterByEncoded(encodedFolder) {
+            bookmarkFilters.folder = encodedFolder ? decodeURIComponent(encodedFolder) : '';
+
+            const folderFilter = document.getElementById('folderFilter');
+            if (folderFilter) {
+                folderFilter.value = bookmarkFilters.folder;
+            }
+
+            renderBookmarks();
+        }
+
         function filterBookmarks(bookmarks) {
             const query = (bookmarkFilters.search || '').trim().toLowerCase();
 
@@ -402,6 +611,26 @@ const surahInfo = [
             bookmarkFilters.search = document.getElementById('bookmarkSearchInput')?.value || '';
             bookmarkFilters.folder = document.getElementById('folderFilter')?.value || '';
             bookmarkFilters.tag = document.getElementById('tagFilter')?.value || '';
+            bookmarkFilters.sort = document.getElementById('bookmarkSortSelect')?.value || 'recent';
+            renderBookmarks();
+        }
+
+        function clearBookmarkFilters() {
+            bookmarkFilters.search = '';
+            bookmarkFilters.folder = '';
+            bookmarkFilters.tag = '';
+            bookmarkFilters.sort = 'recent';
+
+            const searchInput = document.getElementById('bookmarkSearchInput');
+            const folderFilter = document.getElementById('folderFilter');
+            const tagFilter = document.getElementById('tagFilter');
+            const sortSelect = document.getElementById('bookmarkSortSelect');
+
+            if (searchInput) searchInput.value = '';
+            if (folderFilter) folderFilter.value = '';
+            if (tagFilter) tagFilter.value = '';
+            if (sortSelect) sortSelect.value = 'recent';
+
             renderBookmarks();
         }
 
@@ -594,6 +823,8 @@ const surahInfo = [
 
         document.addEventListener('DOMContentLoaded', () => {
             loadThemeSettings();
+            loadFiltersPanelVisibilityPreference();
+            loadFoldersOverviewVisibilityPreference();
             renderBookmarks();
         });
 

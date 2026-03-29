@@ -89,7 +89,22 @@ let totalPages = 0;
             verse: '"Amiri", "Noto Naskh Arabic", "Scheherazade New", "Geeza Pro", "Times New Roman", serif'
         };
         const SHARE_CARD_FONT_LOAD_TIMEOUT_MS = 1800;
+        const MEMORIZATION_PROGRESS_KEY = 'quranMemorizedAyahsV1';
+        const LAST_BOOKMARK_FOLDER_KEY = 'quranLastBookmarkFolderV1';
         let currentShareCardStyle = 'classic';
+        let memorizationMode = false;
+        let memorizationAyahIndex = 0;
+        let memorizationReveal = true;
+        let memorizedAyahsByNumber = {};
+        let memorizationAudio = null;
+        let memorizationAudioAyahNumber = null;
+        let memorizationAudioLoading = false;
+        let memorizationAudioSource = '';
+        let memorizationRepeatEnabled = false;
+        let ayahQuickActionAyahNumber = null;
+        let ayahQuickActionTargetElement = null;
+        let ayahQuickActionHideTimer = null;
+        const ayahQuickTafsirCache = new Map();
         const MAX_SURAH_SEARCH_RESULTS = 6;
         const MAX_AYAH_SEARCH_RESULTS = 8;
 
@@ -100,6 +115,15 @@ let totalPages = 0;
             }
         } catch (error) {
             // Ignore localStorage read issues and keep default style.
+        }
+
+        try {
+            const savedMemorizedAyahs = JSON.parse(localStorage.getItem(MEMORIZATION_PROGRESS_KEY) || '{}');
+            if (savedMemorizedAyahs && typeof savedMemorizedAyahs === 'object') {
+                memorizedAyahsByNumber = savedMemorizedAyahs;
+            }
+        } catch (error) {
+            memorizedAyahsByNumber = {};
         }
 
         const surahNames = [
@@ -481,6 +505,7 @@ let totalPages = 0;
                 currentPageIndex = safePageIndex;
                 renderCurrentPage();
                 updateNavigation();
+                resetMemorizationCoachForPage();
             }
 
             if (ayahNumberInSurah) {
@@ -531,10 +556,14 @@ let totalPages = 0;
             document.getElementById('surahListView').classList.add('active');
             document.getElementById('surahReaderView').classList.remove('active');
             document.body.classList.remove('quran-reader-active');
+            stopMemorizationAyahAudio(true);
+            hideAyahQuickActions({ immediate: true });
+            memorizationMode = false;
             document.getElementById('surahSearch').value = '';
             filterSurahs();
             clearInstantSearchResults();
             closeShareAyahModal();
+            updateMemorizationCoachUI();
             updateScrollTopButtonVisibility();
         }
 
@@ -544,6 +573,7 @@ let totalPages = 0;
             document.body.classList.add('quran-reader-active');
             // Don't auto-show player anymore, let user toggle it
             showSwipeHintOnce();
+            updateMemorizationCoachUI();
             updateScrollTopButtonVisibility();
         }
 
@@ -674,6 +704,8 @@ let totalPages = 0;
                 currentAudio.pause();
                 currentAudio = null;
             }
+            stopMemorizationAyahAudio(true);
+            hideAyahQuickActions({ immediate: true });
             isPlaying = false;
             currentAyahIndex = 0;
             allAyahs = [];
@@ -709,6 +741,7 @@ let totalPages = 0;
                 checkBookmark();
                 updateNavigation();
                 loadPlaybackPosition();
+                resetMemorizationCoachForPage();
             } catch (error) {
                 console.error('Error:', error);
                 content.innerHTML = '<div class="loading" style="color: red;"><p>خطأ في التحميل</p></div>';
@@ -792,9 +825,11 @@ let totalPages = 0;
             html += '</div>';
 
             content.innerHTML = html;
+            hideAyahQuickActions({ immediate: true });
             savePageForCurrentSurah();
             updateReaderProgressUI();
             updateScrollTopButtonVisibility();
+            updateMemorizationCoachUI();
 
             if (window.recordHabitActivity) {
                 window.recordHabitActivity('quran');
@@ -815,6 +850,7 @@ let totalPages = 0;
                 currentPageIndex++;
                 renderCurrentPage();
                 updateNavigation();
+                resetMemorizationCoachForPage();
                 scrollReaderToTop(true);
             } else if (currentSurah < 114) {
                 // Auto-load next surah
@@ -845,6 +881,7 @@ let totalPages = 0;
                 currentPageIndex--;
                 renderCurrentPage();
                 updateNavigation();
+                resetMemorizationCoachForPage();
                 scrollReaderToTop(true);
             }
         }
@@ -873,6 +910,103 @@ let totalPages = 0;
             return bookmarks;
         }
 
+        function getAvailableBookmarkFolders(bookmarks = []) {
+            const fromLibrary = Array.isArray(bookmarks) ? bookmarks : getStoredBookmarks();
+            const fromBookmarks = fromLibrary
+                .map(bookmark => String(bookmark?.folder || '').trim())
+                .filter(Boolean);
+
+            const fromHelper = window.getBookmarkFolders
+                ? window.getBookmarkFolders()
+                : [];
+
+            return Array.from(new Set([
+                'عام',
+                ...fromHelper,
+                ...fromBookmarks
+            ].filter(Boolean)));
+        }
+
+        function getPreferredBookmarkFolder(folders) {
+            const options = Array.isArray(folders) ? folders : [];
+            const fallback = options.includes('عام') ? 'عام' : (options[0] || 'عام');
+
+            try {
+                const saved = String(localStorage.getItem(LAST_BOOKMARK_FOLDER_KEY) || '').trim();
+                if (saved && options.includes(saved)) {
+                    return saved;
+                }
+            } catch (_error) {
+                // Ignore localStorage read issues.
+            }
+
+            return fallback;
+        }
+
+        function setPreferredBookmarkFolder(folderName) {
+            const folder = String(folderName || '').trim() || 'عام';
+            try {
+                localStorage.setItem(LAST_BOOKMARK_FOLDER_KEY, folder);
+            } catch (_error) {
+                // Ignore localStorage write issues.
+            }
+        }
+
+        function addBookmarkFolderIfNeeded(folderName) {
+            const folder = String(folderName || '').trim();
+            if (!folder) return;
+
+            if (window.addBookmarkFolder) {
+                window.addBookmarkFolder(folder);
+                return;
+            }
+
+            try {
+                const key = (window.APP_STORAGE_KEYS && window.APP_STORAGE_KEYS.bookmarkFolders) || 'quranBookmarkFoldersV1';
+                const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                const next = Array.from(new Set([...(Array.isArray(existing) ? existing : []), folder]));
+                localStorage.setItem(key, JSON.stringify(next));
+            } catch (_error) {
+                // Ignore folder persistence issues.
+            }
+        }
+
+        function openBookmarkFolderPicker(onSave) {
+            const folders = getAvailableBookmarkFolders();
+            const preferredFolder = getPreferredBookmarkFolder(folders);
+            const optionsHtml = folders.map(folder => `
+                <option value="${escapeHtml(folder)}" ${folder === preferredFolder ? 'selected' : ''}>${escapeHtml(folder)}</option>
+            `).join('');
+
+            showModal({
+                type: 'info',
+                icon: '<i class="bi bi-folder-plus"></i>',
+                title: 'حفظ الموضع في مجلد',
+                message: `
+                    <div class="bookmark-save-modal">
+                        <label class="bookmark-save-label" for="bookmarkFolderSelect">اختر مجلداً</label>
+                        <select id="bookmarkFolderSelect" class="bookmark-save-select">${optionsHtml}</select>
+                        <label class="bookmark-save-label" for="bookmarkNewFolderInput">أو أنشئ مجلداً جديداً</label>
+                        <input id="bookmarkNewFolderInput" class="bookmark-save-input" type="text" placeholder="مثال: مراجعة اليوم">
+                    </div>
+                `,
+                confirmText: 'حفظ',
+                cancelText: 'إلغاء',
+                onConfirm: () => {
+                    const selectedFolder = String(document.getElementById('bookmarkFolderSelect')?.value || '').trim();
+                    const newFolder = String(document.getElementById('bookmarkNewFolderInput')?.value || '').trim();
+                    const finalFolder = newFolder || selectedFolder || 'عام';
+
+                    addBookmarkFolderIfNeeded(finalFolder);
+                    setPreferredBookmarkFolder(finalFolder);
+
+                    if (typeof onSave === 'function') {
+                        onSave(finalFolder);
+                    }
+                }
+            });
+        }
+
         function toggleBookmark() {
             const bookmarks = getStoredBookmarks();
 
@@ -899,26 +1033,45 @@ let totalPages = 0;
                     title: 'تم الإلغاء',
                     message: 'تم إلغاء حفظ الموضع'
                 });
+                updateBookmarkButton();
             } else {
-                // Add new bookmark
-                const newBookmark = window.createBookmarkEntry
-                    ? window.createBookmarkEntry({ surah: currentSurah, page: currentPageIndex })
-                    : {
-                        surah: currentSurah,
-                        page: currentPageIndex,
-                        timestamp: Date.now()
-                    };
-                bookmarks.push(newBookmark);
-                saveStoredBookmarks(bookmarks);
-                showModal({
-                    type: 'success',
-                    icon: '<i class="bi bi-check-circle-fill"></i>',
-                    title: 'تم الحفظ',
-                    message: 'تم حفظ موضع القراءة بنجاح'
+                openBookmarkFolderPicker((folderName) => {
+                    const latestBookmarks = getStoredBookmarks();
+                    const alreadySaved = latestBookmarks.some(bookmark =>
+                        bookmark.surah === currentSurah && bookmark.page === currentPageIndex
+                    );
+
+                    if (alreadySaved) {
+                        showModal({
+                            type: 'info',
+                            icon: '<i class="bi bi-info-circle-fill"></i>',
+                            title: 'الموضع محفوظ بالفعل',
+                            message: 'هذا الموضع محفوظ مسبقاً.'
+                        });
+                        updateBookmarkButton();
+                        return;
+                    }
+
+                    const newBookmark = window.createBookmarkEntry
+                        ? window.createBookmarkEntry({ surah: currentSurah, page: currentPageIndex, folder: folderName })
+                        : {
+                            surah: currentSurah,
+                            page: currentPageIndex,
+                            folder: folderName,
+                            timestamp: Date.now()
+                        };
+
+                    latestBookmarks.push(newBookmark);
+                    saveStoredBookmarks(latestBookmarks);
+                    showModal({
+                        type: 'success',
+                        icon: '<i class="bi bi-check-circle-fill"></i>',
+                        title: 'تم الحفظ',
+                        message: `تم حفظ موضع القراءة في مجلد ${escapeHtml(folderName)}.`
+                    });
+                    updateBookmarkButton();
                 });
             }
-
-            updateBookmarkButton();
         }
 
         function checkBookmark() {
@@ -1032,6 +1185,8 @@ let totalPages = 0;
 
         renderSurahList();
         initReaderFontLevel();
+        updateMemorizationCoachUI();
+        initAyahQuickActions();
 
         // Check if loading from bookmark with URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -1224,6 +1379,7 @@ let totalPages = 0;
 
         function playAudio() {
             if (!currentSurah) return;
+            stopMemorizationAyahAudio();
 
             // Initialize ayahs array if empty
             if (allAyahs.length === 0) {
@@ -1469,6 +1625,526 @@ let totalPages = 0;
         function getCurrentPageAyahs() {
             if (!pages.length || currentPageIndex >= pages.length) return [];
             return pages[currentPageIndex].ayahs || [];
+        }
+
+        function getAyahByGlobalNumberOnCurrentPage(globalAyahNumber) {
+            const targetNumber = parseInt(globalAyahNumber, 10);
+            if (Number.isNaN(targetNumber)) return null;
+            return getCurrentPageAyahs().find(ayah => ayah.number === targetNumber) || null;
+        }
+
+        function stopMemorizationAyahAudio(skipUiUpdate = false) {
+            if (memorizationAudio) {
+                memorizationAudio.pause();
+                memorizationAudio.currentTime = 0;
+                memorizationAudio.src = '';
+                memorizationAudio = null;
+            }
+
+            memorizationAudioAyahNumber = null;
+            memorizationAudioLoading = false;
+            memorizationAudioSource = '';
+
+            if (!isPlaying) {
+                removeAyahHighlight();
+            }
+
+            if (!skipUiUpdate) {
+                updateMemorizationCoachUI();
+                updateAyahQuickActionsUI();
+            }
+        }
+
+        function playAyahWithCurrentReciter(ayah, source = 'memorization') {
+            if (!ayah || !ayah.number) return;
+
+            const isSameAyahBusy = memorizationAudioAyahNumber === ayah.number &&
+                (memorizationAudioLoading || (memorizationAudio && !memorizationAudio.paused));
+            if (isSameAyahBusy) {
+                stopMemorizationAyahAudio();
+                return;
+            }
+
+            if (isPlaying) {
+                pauseAudio();
+            }
+
+            stopMemorizationAyahAudio(true);
+
+            memorizationAudioAyahNumber = ayah.number;
+            memorizationAudioLoading = true;
+            memorizationAudioSource = source;
+            updateMemorizationCoachUI();
+            updateAyahQuickActionsUI();
+
+            const audio = new Audio(`https://cdn.alquran.cloud/media/audio/ayah/${currentReciter}/${ayah.number}`);
+            memorizationAudio = audio;
+
+            audio.addEventListener('ended', () => {
+                if (memorizationAudio !== audio) return;
+
+                if (
+                    memorizationAudioSource === 'memorization' &&
+                    memorizationRepeatEnabled &&
+                    memorizationMode
+                ) {
+                    audio.currentTime = 0;
+                    audio.play().catch(() => {
+                        stopMemorizationAyahAudio();
+                    });
+                    return;
+                }
+
+                stopMemorizationAyahAudio();
+            });
+
+            audio.addEventListener('error', () => {
+                if (memorizationAudio !== audio) return;
+                stopMemorizationAyahAudio();
+                showTemporaryMessage('تعذر تشغيل التلاوة الآن');
+            });
+
+            audio.play()
+                .then(() => {
+                    if (memorizationAudio !== audio) return;
+                    memorizationAudioLoading = false;
+                    highlightAyah(ayah.number);
+                    updateMemorizationCoachUI();
+                    updateAyahQuickActionsUI();
+                })
+                .catch(() => {
+                    if (memorizationAudio !== audio) return;
+                    stopMemorizationAyahAudio();
+                    showTemporaryMessage('تعذر تشغيل التلاوة الآن');
+                });
+        }
+
+        function updateAyahQuickActionsUI() {
+            const listenBtn = document.getElementById('ayahQuickListenBtn');
+            if (!listenBtn) return;
+
+            const targetAyah = getAyahByGlobalNumberOnCurrentPage(ayahQuickActionAyahNumber);
+            const isTargetPlaying = Boolean(
+                targetAyah && memorizationAudio && !memorizationAudio.paused && memorizationAudioAyahNumber === targetAyah.number
+            );
+            const isTargetLoading = Boolean(
+                targetAyah && memorizationAudioLoading && memorizationAudioAyahNumber === targetAyah.number
+            );
+
+            listenBtn.disabled = !targetAyah;
+            listenBtn.classList.toggle('active', isTargetPlaying || isTargetLoading);
+
+            if (isTargetLoading) {
+                listenBtn.innerHTML = '<i class="bi bi-hourglass-split"></i><span>جار التحميل</span>';
+            } else if (isTargetPlaying) {
+                listenBtn.innerHTML = '<i class="bi bi-stop-fill"></i><span>إيقاف</span>';
+            } else {
+                listenBtn.innerHTML = '<i class="bi bi-volume-up"></i><span>استماع</span>';
+            }
+        }
+
+        function toggleMemorizationAyahAudio() {
+            if (!memorizationMode) return;
+            const ayah = getCurrentMemorizationAyah();
+            if (!ayah) return;
+
+            playAyahWithCurrentReciter(ayah, 'memorization');
+        }
+
+        function toggleMemorizationRepeat() {
+            if (!memorizationMode) return;
+            memorizationRepeatEnabled = !memorizationRepeatEnabled;
+            updateMemorizationCoachUI();
+            showTemporaryMessage(memorizationRepeatEnabled ? 'تم تفعيل تكرار الآية' : 'تم إيقاف تكرار الآية');
+        }
+
+        function positionAyahQuickActions(targetElement = ayahQuickActionTargetElement) {
+            const quickActions = document.getElementById('ayahQuickActions');
+            if (!quickActions || !targetElement) return;
+
+            const ayahRect = targetElement.getBoundingClientRect();
+            const menuRect = quickActions.getBoundingClientRect();
+
+            const menuWidth = menuRect.width || 190;
+            const menuHeight = menuRect.height || 46;
+            const edgePadding = 12;
+            const halfWidth = menuWidth / 2;
+
+            let left = ayahRect.left + (ayahRect.width / 2);
+            left = Math.max(edgePadding + halfWidth, Math.min(window.innerWidth - edgePadding - halfWidth, left));
+
+            let top = ayahRect.top - menuHeight - 10;
+            if (top < 70) {
+                top = ayahRect.bottom + 10;
+            }
+            top = Math.max(70, Math.min(window.innerHeight - menuHeight - 10, top));
+
+            quickActions.style.left = `${left}px`;
+            quickActions.style.top = `${top}px`;
+        }
+
+        function showAyahQuickActionsForElement(ayahElement) {
+            if (!ayahElement || tafsirMode || !isReaderViewActive()) return;
+
+            const ayahNumber = parseInt(ayahElement.getAttribute('data-ayah-number'), 10);
+            if (Number.isNaN(ayahNumber)) return;
+
+            clearTimeout(ayahQuickActionHideTimer);
+
+            if (ayahQuickActionTargetElement && ayahQuickActionTargetElement !== ayahElement) {
+                ayahQuickActionTargetElement.classList.remove('quick-actions-target');
+            }
+
+            ayahQuickActionTargetElement = ayahElement;
+            ayahQuickActionTargetElement.classList.add('quick-actions-target');
+            ayahQuickActionAyahNumber = ayahNumber;
+
+            const quickActions = document.getElementById('ayahQuickActions');
+            if (!quickActions) return;
+
+            quickActions.classList.add('active');
+            quickActions.setAttribute('aria-hidden', 'false');
+
+            updateAyahQuickActionsUI();
+            requestAnimationFrame(() => {
+                positionAyahQuickActions(ayahElement);
+            });
+        }
+
+        function hideAyahQuickActions(options = {}) {
+            const quickActions = document.getElementById('ayahQuickActions');
+            const immediate = Boolean(options.immediate);
+            if (!quickActions) return;
+
+            clearTimeout(ayahQuickActionHideTimer);
+
+            const hideNow = () => {
+                quickActions.classList.remove('active');
+                quickActions.setAttribute('aria-hidden', 'true');
+
+                if (ayahQuickActionTargetElement) {
+                    ayahQuickActionTargetElement.classList.remove('quick-actions-target');
+                }
+
+                ayahQuickActionTargetElement = null;
+                ayahQuickActionAyahNumber = null;
+                updateAyahQuickActionsUI();
+            };
+
+            if (immediate) {
+                hideNow();
+                return;
+            }
+
+            ayahQuickActionHideTimer = setTimeout(hideNow, 220);
+        }
+
+        function scheduleHideAyahQuickActions() {
+            hideAyahQuickActions({ immediate: false });
+        }
+
+        function listenHoveredAyah() {
+            const ayah = getAyahByGlobalNumberOnCurrentPage(ayahQuickActionAyahNumber);
+            if (!ayah) return;
+            playAyahWithCurrentReciter(ayah, 'quick');
+        }
+
+        async function openHoveredAyahTafsir() {
+            const ayah = getAyahByGlobalNumberOnCurrentPage(ayahQuickActionAyahNumber);
+            if (!ayah || !currentSurah) return;
+
+            hideAyahQuickActions({ immediate: true });
+
+            const surahName = surahInfo[currentSurah - 1]?.name || '';
+            showModal({
+                type: 'info',
+                icon: '',
+                title: `سورة ${surahName} • آية ${ayah.numberInSurah}`,
+                message: 'جار تحميل التفسير...'
+            });
+
+            try {
+                let tafsirText = ayahQuickTafsirCache.get(ayah.number);
+
+                if (!tafsirText) {
+                    const response = await fetch(`https://api.alquran.cloud/v1/ayah/${ayah.number}/ar.muyassar`);
+                    if (!response.ok) {
+                        throw new Error('تعذر تحميل التفسير');
+                    }
+
+                    const data = await response.json();
+                    if (data.code !== 200 || !data.data?.text) {
+                        throw new Error('تعذر قراءة نص التفسير');
+                    }
+
+                    tafsirText = data.data.text;
+                    ayahQuickTafsirCache.set(ayah.number, tafsirText);
+                }
+
+                const safeAyahText = escapeHtml(ayah.text);
+                const safeTafsirText = escapeHtml(tafsirText).replace(/\n/g, '<br>');
+
+                showModal({
+                    type: 'info',
+                    icon: '',
+                    title: `سورة ${surahName} • آية ${ayah.numberInSurah}`,
+                    message: `<div class="quick-tafsir-ayah">${safeAyahText}</div><div class="quick-tafsir-text">${safeTafsirText}</div>`
+                });
+            } catch (_error) {
+                showModal({
+                    type: 'error',
+                    icon: '',
+                    title: 'تعذر تحميل التفسير',
+                    message: 'حدث خطأ أثناء تحميل التفسير. حاول مرة أخرى بعد قليل.'
+                });
+            }
+        }
+
+        function initAyahQuickActions() {
+            const content = document.getElementById('quranContent');
+            const quickActions = document.getElementById('ayahQuickActions');
+            if (!content || !quickActions || content.dataset.quickActionsReady === '1') return;
+
+            content.dataset.quickActionsReady = '1';
+
+            content.addEventListener('mouseover', (event) => {
+                if (tafsirMode || !isReaderViewActive()) return;
+
+                const ayahElement = event.target.closest('.ayah[data-ayah-number]');
+                if (!ayahElement || !content.contains(ayahElement)) return;
+
+                showAyahQuickActionsForElement(ayahElement);
+            });
+
+            content.addEventListener('mouseout', (event) => {
+                const ayahElement = event.target.closest('.ayah[data-ayah-number]');
+                if (!ayahElement) return;
+
+                const related = event.relatedTarget;
+                if (related && (ayahElement.contains(related) || quickActions.contains(related))) {
+                    return;
+                }
+
+                scheduleHideAyahQuickActions();
+            });
+
+            content.addEventListener('click', (event) => {
+                if (tafsirMode || !isReaderViewActive()) return;
+
+                const ayahElement = event.target.closest('.ayah[data-ayah-number]');
+                if (!ayahElement || !content.contains(ayahElement)) return;
+
+                showAyahQuickActionsForElement(ayahElement);
+            });
+
+            quickActions.addEventListener('mouseenter', () => {
+                clearTimeout(ayahQuickActionHideTimer);
+            });
+
+            quickActions.addEventListener('mouseleave', () => {
+                scheduleHideAyahQuickActions();
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!quickActions.classList.contains('active')) return;
+                if (quickActions.contains(event.target)) return;
+                if (event.target.closest('.ayah[data-ayah-number]')) return;
+                hideAyahQuickActions({ immediate: true });
+            });
+
+            window.addEventListener('resize', () => {
+                if (!quickActions.classList.contains('active')) return;
+                positionAyahQuickActions();
+            });
+
+            window.addEventListener('scroll', () => {
+                if (!quickActions.classList.contains('active')) return;
+                positionAyahQuickActions();
+            }, { passive: true });
+
+            updateAyahQuickActionsUI();
+        }
+
+        function saveMemorizationProgressMap() {
+            localStorage.setItem(MEMORIZATION_PROGRESS_KEY, JSON.stringify(memorizedAyahsByNumber));
+        }
+
+        function getCurrentMemorizationAyah() {
+            const pageAyahs = getCurrentPageAyahs();
+            if (!pageAyahs.length) return null;
+
+            const safeIndex = Math.max(0, Math.min(memorizationAyahIndex, pageAyahs.length - 1));
+            memorizationAyahIndex = safeIndex;
+            return pageAyahs[safeIndex];
+        }
+
+        function getMemorizationAyahRangeLabel(ayah) {
+            const surahName = surahInfo[currentSurah - 1]?.name || '';
+            return `سورة ${surahName} • آية ${ayah.numberInSurah}`;
+        }
+
+        function updateMemorizationCoachUI() {
+            const coach = document.getElementById('memorizationCoach');
+            const coachBtn = document.getElementById('memorizationBtn');
+            const ayahCard = document.getElementById('memorizationAyahCard');
+            const ayahText = document.getElementById('memorizationAyahText');
+            const ayahRef = document.getElementById('memorizationAyahRef');
+            const progressText = document.getElementById('memorizationProgressText');
+            const progressFill = document.getElementById('memorizationProgressFill');
+            const playBtn = document.getElementById('memorizationPlayBtn');
+            const repeatBtn = document.getElementById('memorizationRepeatBtn');
+            const revealBtn = document.getElementById('memorizationRevealBtn');
+            const doneBtn = document.getElementById('memorizationDoneBtn');
+
+            if (!coach || !coachBtn || !ayahCard || !ayahText || !ayahRef || !progressText || !progressFill || !playBtn || !repeatBtn || !revealBtn || !doneBtn) {
+                return;
+            }
+
+            coach.style.display = memorizationMode ? 'block' : 'none';
+            coachBtn.classList.toggle('active', memorizationMode);
+            document.body.classList.toggle('memorization-coach-active', memorizationMode);
+
+            if (!memorizationMode) {
+                playBtn.disabled = true;
+                repeatBtn.disabled = true;
+                playBtn.classList.remove('active');
+                repeatBtn.classList.remove('active');
+                playBtn.innerHTML = '<i class="bi bi-volume-up"></i><span>استماع</span>';
+                repeatBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>تكرار</span>';
+                return;
+            }
+
+            const pageAyahs = getCurrentPageAyahs();
+            if (!pageAyahs.length || !currentSurah) {
+                ayahText.textContent = 'افتح أي سورة ثم فعّل مدرب الحفظ';
+                ayahRef.textContent = '';
+                progressText.textContent = '0 / 0';
+                progressFill.style.width = '0%';
+                ayahCard.classList.remove('hidden');
+                playBtn.disabled = true;
+                repeatBtn.disabled = true;
+                playBtn.classList.remove('active');
+                repeatBtn.classList.remove('active');
+                playBtn.innerHTML = '<i class="bi bi-volume-up"></i><span>استماع</span>';
+                repeatBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>تكرار</span>';
+                return;
+            }
+
+            const ayah = getCurrentMemorizationAyah();
+            if (!ayah) return;
+
+            ayahText.textContent = ayah.text;
+            ayahRef.textContent = getMemorizationAyahRangeLabel(ayah);
+
+            const currentStep = memorizationAyahIndex + 1;
+            const totalSteps = pageAyahs.length;
+            progressText.textContent = `${currentStep} / ${totalSteps}`;
+            progressFill.style.width = `${Math.round((currentStep / totalSteps) * 100)}%`;
+
+            ayahCard.classList.toggle('hidden', !memorizationReveal);
+            revealBtn.innerHTML = memorizationReveal
+                ? '<i class="bi bi-eye-slash"></i><span>إخفاء</span>'
+                : '<i class="bi bi-eye"></i><span>إظهار</span>';
+
+            const ayahKey = String(ayah.number);
+            const isMemorized = Boolean(memorizedAyahsByNumber[ayahKey]);
+            doneBtn.classList.toggle('done', isMemorized);
+            doneBtn.innerHTML = isMemorized
+                ? '<i class="bi bi-patch-check-fill"></i><span>محفوظة</span>'
+                : '<i class="bi bi-check2-circle"></i><span>تم الحفظ</span>';
+
+            const isPlayingCurrentAyah = Boolean(
+                memorizationAudio && !memorizationAudio.paused && memorizationAudioAyahNumber === ayah.number
+            );
+            const isLoadingCurrentAyah = Boolean(
+                memorizationAudioLoading && memorizationAudioAyahNumber === ayah.number
+            );
+
+            playBtn.disabled = false;
+            repeatBtn.disabled = false;
+
+            playBtn.classList.toggle('active', isPlayingCurrentAyah || isLoadingCurrentAyah);
+            repeatBtn.classList.toggle('active', memorizationRepeatEnabled);
+
+            if (isLoadingCurrentAyah) {
+                playBtn.innerHTML = '<i class="bi bi-hourglass-split"></i><span>جار التحميل</span>';
+            } else if (isPlayingCurrentAyah) {
+                playBtn.innerHTML = '<i class="bi bi-stop-fill"></i><span>إيقاف</span>';
+            } else {
+                playBtn.innerHTML = '<i class="bi bi-volume-up"></i><span>استماع</span>';
+            }
+
+            repeatBtn.innerHTML = memorizationRepeatEnabled
+                ? '<i class="bi bi-arrow-repeat"></i><span>تكرار شغال</span>'
+                : '<i class="bi bi-arrow-repeat"></i><span>تكرار</span>';
+
+            updateAyahQuickActionsUI();
+        }
+
+        function toggleMemorizationCoach() {
+            memorizationMode = !memorizationMode;
+            if (memorizationMode) {
+                memorizationReveal = true;
+                memorizationAyahIndex = 0;
+            } else {
+                stopMemorizationAyahAudio(true);
+            }
+            updateMemorizationCoachUI();
+        }
+
+        function toggleMemorizationReveal() {
+            if (!memorizationMode) return;
+            memorizationReveal = !memorizationReveal;
+            updateMemorizationCoachUI();
+        }
+
+        function nextMemorizationAyah() {
+            if (!memorizationMode) return;
+            const pageAyahs = getCurrentPageAyahs();
+            if (!pageAyahs.length) return;
+
+            stopMemorizationAyahAudio(true);
+            memorizationAyahIndex = Math.min(pageAyahs.length - 1, memorizationAyahIndex + 1);
+            memorizationReveal = true;
+            updateMemorizationCoachUI();
+        }
+
+        function previousMemorizationAyah() {
+            if (!memorizationMode) return;
+            stopMemorizationAyahAudio(true);
+            memorizationAyahIndex = Math.max(0, memorizationAyahIndex - 1);
+            memorizationReveal = true;
+            updateMemorizationCoachUI();
+        }
+
+        function toggleCurrentAyahMemorized() {
+            if (!memorizationMode) return;
+
+            const ayah = getCurrentMemorizationAyah();
+            if (!ayah) return;
+
+            const ayahKey = String(ayah.number);
+            if (memorizedAyahsByNumber[ayahKey]) {
+                delete memorizedAyahsByNumber[ayahKey];
+                showTemporaryMessage(`تم إلغاء حفظ الآية ${ayah.numberInSurah}`);
+            } else {
+                memorizedAyahsByNumber[ayahKey] = {
+                    surah: currentSurah,
+                    ayahInSurah: ayah.numberInSurah,
+                    updatedAt: Date.now()
+                };
+                showTemporaryMessage(`أحسنت! تم حفظ الآية ${ayah.numberInSurah}`);
+            }
+
+            saveMemorizationProgressMap();
+            updateMemorizationCoachUI();
+        }
+
+        function resetMemorizationCoachForPage() {
+            stopMemorizationAyahAudio(true);
+            memorizationAyahIndex = 0;
+            memorizationReveal = true;
+            updateMemorizationCoachUI();
         }
 
         function getSelectedShareAyah() {
@@ -2020,8 +2696,11 @@ let totalPages = 0;
             isPlaying = false;
             currentAyahIndex = 0;
             removeAyahHighlight();
+            stopMemorizationAyahAudio(true);
             updatePlayButton();
             updateCurrentAyahDisplay();
+            updateMemorizationCoachUI();
+            updateAyahQuickActionsUI();
 
             // Close modal
             closeReciterModal();
@@ -2068,6 +2747,8 @@ let totalPages = 0;
             tafsirMode = !tafsirMode;
             const content = document.getElementById('quranContent');
             const tafsirBtn = document.getElementById('tafsirBtn');
+
+            hideAyahQuickActions({ immediate: true });
 
             if (tafsirMode) {
                 content.classList.add('tafsir-mode');

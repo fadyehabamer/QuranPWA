@@ -41,9 +41,51 @@
             margin-bottom: 16px;
         }
 
+        .bookmarks-controls-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .bookmarks-controls-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-secondary, #666);
+        }
+
+        .bookmarks-controls-toggle {
+            border: 1px solid rgba(var(--primary-rgb), 0.28);
+            border-radius: 999px;
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary-color);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .bookmarks-controls-toggle:hover {
+            border-color: rgba(var(--primary-rgb), 0.46);
+            background: rgba(var(--primary-rgb), 0.16);
+        }
+
+        .bookmarks-controls.collapsed .bookmarks-controls-head {
+            margin-bottom: 0;
+        }
+
+        .bookmarks-controls.collapsed .bookmarks-controls-body {
+            display: none;
+        }
+
         .controls-grid {
             display: grid;
-            grid-template-columns: 1.3fr 1fr 1fr;
+            grid-template-columns: 1.3fr 1fr 1fr 1fr;
             gap: 10px;
             margin-bottom: 10px;
         }
@@ -74,9 +116,10 @@
 
         .control-actions {
             display: grid;
-            grid-template-columns: 1fr auto;
+            grid-template-columns: 1fr auto auto;
             gap: 10px;
             align-items: center;
+            margin-bottom: 8px;
         }
 
         .folder-add-btn {
@@ -88,6 +131,162 @@
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
+        }
+
+        .filters-clear-btn {
+            border: 1px solid rgba(var(--primary-rgb), 0.26);
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: rgba(var(--primary-rgb), 0.08);
+            color: var(--text-color);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .filters-result-meta {
+            font-size: 12px;
+            color: var(--text-secondary, #666);
+            font-weight: 700;
+        }
+
+        .folders-overview {
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: var(--card-bg);
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        .folders-overview-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .folders-overview-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-secondary, #666);
+            margin-bottom: 0;
+        }
+
+        .folders-overview-toggle {
+            border: 1px solid rgba(var(--primary-rgb), 0.28);
+            border-radius: 999px;
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary-color);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .folders-overview-toggle:hover {
+            border-color: rgba(var(--primary-rgb), 0.46);
+            background: rgba(var(--primary-rgb), 0.16);
+        }
+
+        .folders-overview.collapsed .folders-overview-head {
+            margin-bottom: 0;
+        }
+
+        .folders-overview.collapsed .folders-overview-list {
+            display: none;
+        }
+
+        .folders-overview-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+            gap: 10px;
+        }
+
+        .folder-overview-card {
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
+            border-radius: 14px;
+            background: linear-gradient(160deg, rgba(var(--primary-rgb), 0.08), rgba(var(--primary-rgb), 0.03));
+            color: var(--text-color);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+            text-align: right;
+            transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .folder-overview-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(var(--primary-rgb), 0.38);
+            box-shadow: 0 6px 18px rgba(var(--primary-rgb), 0.15);
+        }
+
+        .folder-overview-card-top {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .folder-overview-icon {
+            font-size: 20px;
+            color: var(--primary-color);
+            opacity: 0.9;
+        }
+
+        .folder-overview-count {
+            min-width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            border: 1px solid rgba(var(--primary-rgb), 0.26);
+            background: rgba(var(--primary-rgb), 0.09);
+            color: var(--text-color);
+        }
+
+        .folder-overview-name {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-color);
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .folder-overview-meta {
+            font-size: 11px;
+            color: var(--text-secondary, #666);
+            font-weight: 700;
+        }
+
+        .folder-overview-card.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .folder-overview-card.active .folder-overview-icon,
+        .folder-overview-card.active .folder-overview-name,
+        .folder-overview-card.active .folder-overview-meta,
+        .folder-overview-card.active .folder-overview-count {
+            color: #fff;
+        }
+
+        .folder-overview-card.active .folder-overview-count {
+            border-color: rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.18);
         }
 
         .recent-bookmarks {
@@ -278,6 +477,13 @@
             padding: 10px 16px;
         }
 
+        .bookmark-btn-edit {
+            background: rgba(var(--primary-rgb), 0.12);
+            color: var(--primary-color);
+            flex: 0 0 auto;
+            padding: 10px 14px;
+        }
+
         .bookmark-btn-delete:hover {
             background: rgba(244, 67, 54, 0.2);
         }
@@ -291,6 +497,11 @@
         .bookmark-editor {
             border-top: 1px dashed var(--border-color);
             padding-top: 10px;
+            display: none;
+        }
+
+        .bookmark-editor.open {
+            display: block;
         }
 
         .bookmark-editor-grid {
@@ -395,6 +606,50 @@
 
             .control-actions {
                 grid-template-columns: 1fr;
+            }
+
+            .bookmarks-controls-head {
+                margin-bottom: 8px;
+            }
+
+            .bookmarks-controls-toggle {
+                padding: 5px 9px;
+                font-size: 11px;
+            }
+
+            .bookmark-actions {
+                flex-wrap: wrap;
+            }
+
+            .bookmark-btn-delete,
+            .bookmark-btn-edit {
+                flex: 1;
+            }
+
+            .folders-overview {
+                padding: 10px;
+            }
+
+            .folders-overview-head {
+                margin-bottom: 8px;
+            }
+
+            .folders-overview-toggle {
+                padding: 5px 9px;
+                font-size: 11px;
+            }
+
+            .folders-overview-list {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .folder-overview-card {
+                min-height: 96px;
+                padding: 9px;
+            }
+
+            .folder-overview-name {
+                font-size: 13px;
             }
         }
     
