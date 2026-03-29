@@ -48,6 +48,8 @@
         .hero-badge {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
             gap: 8px;
             border-radius: 999px;
             border: 1px solid rgba(255, 255, 255, 0.35);
@@ -59,6 +61,16 @@
             backdrop-filter: blur(8px);
             position: relative;
             z-index: 1;
+            max-width: 100%;
+            width: fit-content;
+            line-height: 1.5;
+            text-align: center;
+            white-space: normal;
+            box-sizing: border-box;
+        }
+
+        .hero-badge i {
+            flex: 0 0 auto;
         }
 
         .hero-icon-shell {
@@ -662,6 +674,13 @@
         }
 
         @media (max-width: 520px) {
+            .hero-badge {
+                font-size: 12px;
+                padding: 7px 10px;
+                gap: 6px;
+                max-width: calc(100% - 4px);
+            }
+
             .hero-cta {
                 width: 100%;
             }
