@@ -46,7 +46,7 @@ function hexToRgb(hex) {
         })();
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/js/sw.js', { scope: '/' });
+            navigator.serviceWorker.register('/sw.js', { scope: '/' });
         }
         // Daily Verse Logic
         async function loadDailyVerse() {

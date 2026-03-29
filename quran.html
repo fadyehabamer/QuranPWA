@@ -260,8 +260,11 @@
         <!-- Ayah Share Modal -->
         <div class="modal-overlay" id="shareAyahModal" onclick="closeShareAyahModal()">
             <div class="share-modal-content" onclick="event.stopPropagation()">
-                <div class="modal-header">
-                    <h3>مشاركة بطاقة آية</h3>
+                <div class="modal-header share-modal-header">
+                    <div class="share-title-wrap">
+                        <h3>مشاركة بطاقة آية</h3>
+                        <p class="share-modal-subtitle">خصص شكل البطاقة قبل التحميل أو المشاركة</p>
+                    </div>
                     <button class="modal-close-btn" onclick="closeShareAyahModal()">
                         <i class="bi bi-x-lg"></i>
                     </button>
@@ -272,18 +275,35 @@
                         <select id="shareAyahSelect" onchange="onShareAyahSelectionChange()"></select>
                     </div>
 
-                    <div class="share-toggle">
+                    <div class="share-style-picker">
+                        <span class="share-style-label">نمط البطاقة</span>
+                        <div class="share-style-options">
+                            <button type="button" class="share-style-btn" data-style="classic"
+                                onclick="selectShareCardStyle('classic')">كلاسيكي</button>
+                            <button type="button" class="share-style-btn" data-style="warm"
+                                onclick="selectShareCardStyle('warm')">دافئ</button>
+                            <button type="button" class="share-style-btn" data-style="night"
+                                onclick="selectShareCardStyle('night')">ليلي</button>
+                        </div>
+                    </div>
+
+                    <label class="share-toggle" for="shareIncludeTafsir">
                         <span>إضافة مقطع تفسير مختصر</span>
                         <input type="checkbox" id="shareIncludeTafsir" onchange="onShareTafsirToggle()" checked>
-                    </div>
+                    </label>
 
                     <div class="share-field" id="shareTafsirField">
                         <label for="shareTafsirSnippet">النص المرافق (يمكن تعديله قبل الإنشاء)</label>
                         <textarea id="shareTafsirSnippet"
                             placeholder="سيتم تحميل التفسير المختصر تلقائياً..."></textarea>
+                        <div class="share-field-meta" id="shareTafsirMeta">0 حرف</div>
                     </div>
 
-                    <div class="share-preview" id="shareCardPreview">
+                    <div class="share-preview style-classic" id="shareCardPreview">
+                        <div class="share-preview-header">
+                            <span class="share-preview-badge" id="sharePreviewStyleName">نمط كلاسيكي</span>
+                            <span class="share-preview-live">معاينة مباشرة</span>
+                        </div>
                         <div class="share-preview-ayah" id="sharePreviewAyah">اختر آية للمعاينة</div>
                         <div class="share-preview-tafsir" id="sharePreviewTafsir"></div>
                         <div class="share-preview-reference" id="sharePreviewReference"></div>
@@ -291,9 +311,9 @@
 
                     <div class="share-actions">
                         <button class="share-action-btn secondary" id="downloadShareCardBtn"
-                            onclick="downloadAyahCardImage()">تحميل الصورة</button>
+                            onclick="downloadAyahCardImage()"><i class="bi bi-download"></i><span>تحميل الصورة</span></button>
                         <button class="share-action-btn primary" id="shareShareCardBtn"
-                            onclick="shareAyahCardImage()">مشاركة الآن</button>
+                            onclick="shareAyahCardImage()"><i class="bi bi-share-fill"></i><span>مشاركة الآن</span></button>
                     </div>
                 </div>
             </div>

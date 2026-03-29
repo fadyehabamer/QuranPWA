@@ -96,9 +96,9 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Never intercept the service worker script itself.
+  // Never intercept service worker scripts themselves.
   // This guarantees fresh SW checks and reliable update-banner detection.
-  if (url.pathname === '/js/sw.js') {
+  if (url.pathname === '/js/sw.js' || url.pathname === '/sw.js') {
     return;
   }
 

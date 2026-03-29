@@ -59,7 +59,7 @@
 
         // Register service worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/js/sw.js', { scope: '/' })
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
                 .then(reg => console.log('SW registered'))
                 .catch(err => console.log('SW registration failed'));
         }

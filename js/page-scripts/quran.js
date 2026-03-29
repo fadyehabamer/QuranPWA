@@ -30,8 +30,72 @@ let totalPages = 0;
         let latestSearchToken = 0;
         const ayahSearchCache = new Map();
         const tafsirSnippetCache = new Map();
+        const SHARE_CARD_STYLE_KEY = 'quranAyahCardStyleV1';
+        const SHARE_CARD_STYLES = {
+            classic: {
+                label: 'نمط كلاسيكي',
+                palette: {
+                    backgroundStart: '#f7fbf7',
+                    backgroundEnd: '#e8f4ea',
+                    orbOne: 'rgba(27, 94, 32, 0.08)',
+                    orbTwo: 'rgba(27, 94, 32, 0.08)',
+                    cardFill: '#ffffff',
+                    cardStroke: 'rgba(27, 94, 32, 0.16)',
+                    heading: '#1b5e20',
+                    divider: 'rgba(27, 94, 32, 0.2)',
+                    ayah: '#243125',
+                    tafsirDivider: 'rgba(27, 94, 32, 0.16)',
+                    tafsir: '#2f4a31',
+                    footer: '#1b5e20'
+                }
+            },
+            warm: {
+                label: 'نمط دافئ',
+                palette: {
+                    backgroundStart: '#fff7e7',
+                    backgroundEnd: '#fde8c7',
+                    orbOne: 'rgba(191, 129, 39, 0.14)',
+                    orbTwo: 'rgba(138, 90, 30, 0.12)',
+                    cardFill: '#fffdf8',
+                    cardStroke: 'rgba(165, 111, 37, 0.28)',
+                    heading: '#8a5a1e',
+                    divider: 'rgba(138, 90, 30, 0.35)',
+                    ayah: '#5a3d17',
+                    tafsirDivider: 'rgba(138, 90, 30, 0.24)',
+                    tafsir: '#714a1c',
+                    footer: '#8a5a1e'
+                }
+            },
+            night: {
+                label: 'نمط ليلي',
+                palette: {
+                    backgroundStart: '#0e2136',
+                    backgroundEnd: '#06121f',
+                    orbOne: 'rgba(83, 139, 211, 0.28)',
+                    orbTwo: 'rgba(52, 95, 148, 0.24)',
+                    cardFill: 'rgba(12, 28, 48, 0.92)',
+                    cardStroke: 'rgba(140, 186, 241, 0.32)',
+                    heading: '#9ec7ff',
+                    divider: 'rgba(158, 199, 255, 0.35)',
+                    ayah: '#f3f8ff',
+                    tafsirDivider: 'rgba(158, 199, 255, 0.28)',
+                    tafsir: '#d8e9ff',
+                    footer: '#9ec7ff'
+                }
+            }
+        };
+        let currentShareCardStyle = 'classic';
         const MAX_SURAH_SEARCH_RESULTS = 6;
         const MAX_AYAH_SEARCH_RESULTS = 8;
+
+        try {
+            const savedShareCardStyle = localStorage.getItem(SHARE_CARD_STYLE_KEY);
+            if (savedShareCardStyle && SHARE_CARD_STYLES[savedShareCardStyle]) {
+                currentShareCardStyle = savedShareCardStyle;
+            }
+        } catch (error) {
+            // Ignore localStorage read issues and keep default style.
+        }
 
         const surahNames = [
             'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال',
@@ -1069,9 +1133,9 @@ let totalPages = 0;
 
         // Register service worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/js/sw.js', { scope: '/' })
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
                 .then(reg => console.log('SW registered'))
-                .catch(err => console.log('SW registration failed'));
+                .catch(err => console.error('SW registration failed', err));
         }
 
         const contentArea = document.getElementById('quranContent');
@@ -1412,16 +1476,67 @@ let totalPages = 0;
             return pageAyahs.find(ayah => ayah.number === selectedAyahNumber) || null;
         }
 
+        function getCurrentShareCardStyle() {
+            return SHARE_CARD_STYLES[currentShareCardStyle] || SHARE_CARD_STYLES.classic;
+        }
+
+        function updateShareStyleControlsUI() {
+            const previewCard = document.getElementById('shareCardPreview');
+            if (previewCard) {
+                previewCard.classList.remove('style-classic', 'style-warm', 'style-night');
+                previewCard.classList.add(`style-${currentShareCardStyle}`);
+            }
+
+            const previewStyleName = document.getElementById('sharePreviewStyleName');
+            if (previewStyleName) {
+                previewStyleName.textContent = getCurrentShareCardStyle().label;
+            }
+
+            document.querySelectorAll('.share-style-btn').forEach(button => {
+                const isActive = button.dataset.style === currentShareCardStyle;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+        }
+
+        function updateShareTafsirMeta() {
+            const tafsirInput = document.getElementById('shareTafsirSnippet');
+            const meta = document.getElementById('shareTafsirMeta');
+            if (!meta) return;
+
+            const length = (tafsirInput?.value || '').trim().length;
+            meta.textContent = `${length} حرف`;
+            meta.classList.toggle('warn', length > 280);
+        }
+
+        function selectShareCardStyle(styleKey) {
+            if (!SHARE_CARD_STYLES[styleKey]) return;
+
+            currentShareCardStyle = styleKey;
+            try {
+                localStorage.setItem(SHARE_CARD_STYLE_KEY, styleKey);
+            } catch (error) {
+                // Ignore localStorage write issues.
+            }
+
+            updateShareStyleControlsUI();
+            updateShareCardPreview();
+        }
+
         function updateShareCardPreview() {
             const selectedAyah = getSelectedShareAyah();
             const includeTafsir = document.getElementById('shareIncludeTafsir')?.checked;
             const tafsirInput = document.getElementById('shareTafsirSnippet');
 
+            const previewCard = document.getElementById('shareCardPreview');
             const previewAyah = document.getElementById('sharePreviewAyah');
             const previewTafsir = document.getElementById('sharePreviewTafsir');
             const previewReference = document.getElementById('sharePreviewReference');
 
-            if (!previewAyah || !previewTafsir || !previewReference) return;
+            if (!previewCard || !previewAyah || !previewTafsir || !previewReference) return;
+
+            updateShareStyleControlsUI();
+            updateShareTafsirMeta();
 
             if (!selectedAyah || !currentSurah) {
                 previewAyah.textContent = 'اختر آية للمعاينة';
@@ -1475,6 +1590,7 @@ let totalPages = 0;
             }
 
             tafsirInput.value = 'جار تحميل التفسير...';
+            updateShareCardPreview();
             try {
                 const snippet = await fetchTafsirSnippetForAyah(selectedAyah.number);
                 tafsirInput.value = snippet || '';
@@ -1491,6 +1607,7 @@ let totalPages = 0;
             if (tafsirField) {
                 tafsirField.style.display = includeTafsir ? 'flex' : 'none';
             }
+            updateShareTafsirMeta();
             if (includeTafsir) {
                 onShareAyahSelectionChange();
             } else {
@@ -1527,6 +1644,7 @@ let totalPages = 0;
             }
 
             populateShareAyahOptions();
+            updateShareStyleControlsUI();
             onShareTafsirToggle();
             const modal = document.getElementById('shareAyahModal');
             if (modal) {
@@ -1604,7 +1722,8 @@ let totalPages = 0;
                 ayahText: selectedAyah.text,
                 tafsirText: includeTafsir ? tafsirText : '',
                 reference: `سورة ${surahName} • آية ${selectedAyah.numberInSurah}`,
-                shareText: `${surahName} - آية ${selectedAyah.numberInSurah}`
+                shareText: `${surahName} - آية ${selectedAyah.numberInSurah}`,
+                styleKey: currentShareCardStyle
             };
         }
 
@@ -1613,6 +1732,8 @@ let totalPages = 0;
             if (!cardData) {
                 throw new Error('لم يتم اختيار آية للمشاركة');
             }
+
+            const palette = SHARE_CARD_STYLES[cardData.styleKey]?.palette || SHARE_CARD_STYLES.classic.palette;
 
             const measureCanvas = document.createElement('canvas');
             const measureCtx = measureCanvas.getContext('2d');
@@ -1658,22 +1779,23 @@ let totalPages = 0;
             }
 
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#f7fbf7');
-            gradient.addColorStop(1, '#e8f4ea');
+            gradient.addColorStop(0, palette.backgroundStart);
+            gradient.addColorStop(1, palette.backgroundEnd);
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = 'rgba(27, 94, 32, 0.08)';
+            ctx.fillStyle = palette.orbOne;
             ctx.beginPath();
             ctx.arc(940, 170, 220, 0, Math.PI * 2);
             ctx.fill();
 
+            ctx.fillStyle = palette.orbTwo;
             ctx.beginPath();
             ctx.arc(120, canvas.height - 170, 180, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = '#ffffff';
-            ctx.strokeStyle = 'rgba(27, 94, 32, 0.16)';
+            ctx.fillStyle = palette.cardFill;
+            ctx.strokeStyle = palette.cardStroke;
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.roundRect(cardX, cardY, cardW, cardH, 28);
@@ -1684,12 +1806,12 @@ let totalPages = 0;
             ctx.direction = 'rtl';
             let cursorY = cardY + 100;
 
-            ctx.fillStyle = '#1b5e20';
+            ctx.fillStyle = palette.heading;
             ctx.font = '700 42px Cairo';
             ctx.fillText('القرآن الكريم', cardX + cardW - 54, cursorY);
             cursorY += 64;
 
-            ctx.strokeStyle = 'rgba(27, 94, 32, 0.2)';
+            ctx.strokeStyle = palette.divider;
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(cardX + 54, cursorY);
@@ -1697,13 +1819,13 @@ let totalPages = 0;
             ctx.stroke();
             cursorY += 72;
 
-            ctx.fillStyle = '#243125';
+            ctx.fillStyle = palette.ayah;
             ctx.font = '700 54px Amiri';
             cursorY = wrapCanvasRtlText(ctx, cardData.ayahText, cardX + cardW - 58, cursorY, cardW - 120, 86, 6);
 
             if (cardData.tafsirText) {
                 cursorY += 22;
-                ctx.strokeStyle = 'rgba(27, 94, 32, 0.16)';
+                ctx.strokeStyle = palette.tafsirDivider;
                 ctx.setLineDash([8, 8]);
                 ctx.beginPath();
                 ctx.moveTo(cardX + 60, cursorY);
@@ -1712,13 +1834,13 @@ let totalPages = 0;
                 ctx.setLineDash([]);
                 cursorY += 48;
 
-                ctx.fillStyle = '#2f4a31';
+                ctx.fillStyle = palette.tafsir;
                 ctx.font = '600 32px Cairo';
                 cursorY = wrapCanvasRtlText(ctx, cardData.tafsirText, cardX + cardW - 58, cursorY, cardW - 120, 56, 6);
             }
 
             const footerY = cardY + cardH - 90;
-            ctx.fillStyle = '#1b5e20';
+            ctx.fillStyle = palette.footer;
             ctx.font = '700 30px Cairo';
             ctx.fillText(cardData.reference, cardX + cardW - 54, footerY);
 
@@ -1730,18 +1852,23 @@ let totalPages = 0;
             return { blob, cardData };
         }
 
+        function setShareActionButtonContent(button, iconClass, label) {
+            if (!button) return;
+            button.innerHTML = `<i class="bi ${iconClass}" aria-hidden="true"></i><span>${label}</span>`;
+        }
+
         function setShareCardButtonsLoading(isLoading) {
             const shareBtn = document.getElementById('shareShareCardBtn');
             const downloadBtn = document.getElementById('downloadShareCardBtn');
 
             if (shareBtn) {
                 shareBtn.disabled = isLoading;
-                shareBtn.textContent = isLoading ? 'جار الإنشاء...' : 'مشاركة الآن';
+                setShareActionButtonContent(shareBtn, isLoading ? 'bi-hourglass-split' : 'bi-share-fill', isLoading ? 'جار الإنشاء...' : 'مشاركة الآن');
             }
 
             if (downloadBtn) {
                 downloadBtn.disabled = isLoading;
-                downloadBtn.textContent = isLoading ? 'جار الإنشاء...' : 'تحميل الصورة';
+                setShareActionButtonContent(downloadBtn, isLoading ? 'bi-hourglass-split' : 'bi-download', isLoading ? 'جار الإنشاء...' : 'تحميل الصورة');
             }
         }
 
@@ -1998,4 +2125,11 @@ let totalPages = 0;
             }
         }
 
-        document.getElementById('shareTafsirSnippet')?.addEventListener('input', updateShareCardPreview);
+        document.getElementById('shareTafsirSnippet')?.addEventListener('input', () => {
+            updateShareTafsirMeta();
+            updateShareCardPreview();
+        });
+
+        updateShareStyleControlsUI();
+        updateShareTafsirMeta();
+        setShareCardButtonsLoading(false);

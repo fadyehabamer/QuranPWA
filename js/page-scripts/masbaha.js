@@ -487,4 +487,4 @@ let count = 0;
                     document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px');
                 }
         })(); if
-            ('serviceWorker' in navigator) { navigator.serviceWorker.register('/js/sw.js', { scope: '/' }); }
+            ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js', { scope: '/' }); }

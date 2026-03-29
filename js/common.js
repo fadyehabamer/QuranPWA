@@ -310,7 +310,7 @@ function hideModal() {
     }
 
     function fetchServiceWorkerSignature() {
-        return fetch(`/js/sw.js?swv=${Date.now()}`, { cache: 'no-store' })
+        return fetch(`/sw.js?swv=${Date.now()}`, { cache: 'no-store' })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('SW signature fetch failed');
@@ -438,7 +438,7 @@ function hideModal() {
     });
 
     navigator.serviceWorker.getRegistration()
-        .then(reg => reg || navigator.serviceWorker.register('/js/sw.js', { scope: '/' }))
+        .then(reg => reg || navigator.serviceWorker.register('/sw.js', { scope: '/' }))
         .then(registration => {
             watchRegistration(registration);
             checkForWaitingUpdate().then(() => checkDeploymentSignature(registration));

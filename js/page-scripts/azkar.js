@@ -353,5 +353,5 @@ let azkarData = {};
         })();
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/js/sw.js', { scope: '/' });
+            navigator.serviceWorker.register('/sw.js', { scope: '/' });
         }
