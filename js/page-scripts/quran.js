@@ -84,6 +84,11 @@ let totalPages = 0;
                 }
             }
         };
+        const SHARE_CARD_CANVAS_FONT_STACKS = {
+            ui: '"Cairo", "Noto Sans Arabic", "Tajawal", "Segoe UI", Tahoma, Arial, sans-serif',
+            verse: '"Amiri", "Noto Naskh Arabic", "Scheherazade New", "Geeza Pro", "Times New Roman", serif'
+        };
+        const SHARE_CARD_FONT_LOAD_TIMEOUT_MS = 1800;
         let currentShareCardStyle = 'classic';
         const MAX_SURAH_SEARCH_RESULTS = 6;
         const MAX_AYAH_SEARCH_RESULTS = 8;
@@ -1708,6 +1713,33 @@ let totalPages = 0;
             return Math.max(1, Math.min(lines.length || 1, maxLines));
         }
 
+        function buildShareCanvasFont(weight, size, stackKey) {
+            const family = SHARE_CARD_CANVAS_FONT_STACKS[stackKey] || SHARE_CARD_CANVAS_FONT_STACKS.ui;
+            return `${weight} ${size}px ${family}`;
+        }
+
+        async function ensureShareCardCanvasFontsReady() {
+            if (!document.fonts || typeof document.fonts.load !== 'function') {
+                return;
+            }
+
+            const fontLoadTasks = [
+                document.fonts.load(buildShareCanvasFont(700, 42, 'ui'), 'القرآن الكريم'),
+                document.fonts.load(buildShareCanvasFont(700, 30, 'ui'), 'سورة الفاتحة'),
+                document.fonts.load(buildShareCanvasFont(600, 32, 'ui'), 'تفسير الآية'),
+                document.fonts.load(buildShareCanvasFont(700, 54, 'verse'), 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ')
+            ];
+
+            if (document.fonts.ready) {
+                fontLoadTasks.push(document.fonts.ready);
+            }
+
+            await Promise.race([
+                Promise.allSettled(fontLoadTasks),
+                new Promise(resolve => setTimeout(resolve, SHARE_CARD_FONT_LOAD_TIMEOUT_MS))
+            ]);
+        }
+
         function buildAyahCardCanvasData() {
             const selectedAyah = getSelectedShareAyah();
             if (!selectedAyah || !currentSurah) {
@@ -1733,6 +1765,8 @@ let totalPages = 0;
                 throw new Error('لم يتم اختيار آية للمشاركة');
             }
 
+            await ensureShareCardCanvasFontsReady();
+
             const palette = SHARE_CARD_STYLES[cardData.styleKey]?.palette || SHARE_CARD_STYLES.classic.palette;
 
             const measureCanvas = document.createElement('canvas');
@@ -1747,7 +1781,7 @@ let totalPages = 0;
             const cardW = canvasWidth - 180;
             const contentMaxWidth = cardW - 120;
 
-            measureCtx.font = '700 54px Amiri';
+            measureCtx.font = buildShareCanvasFont(700, 54, 'verse');
             const ayahLines = countWrappedRtlLines(measureCtx, cardData.ayahText, contentMaxWidth, 6);
 
             let contentHeightEstimate = 0;
@@ -1757,7 +1791,7 @@ let totalPages = 0;
             contentHeightEstimate += ayahLines * 86; // Ayah block height
 
             if (cardData.tafsirText) {
-                measureCtx.font = '600 32px Cairo';
+                measureCtx.font = buildShareCanvasFont(600, 32, 'ui');
                 const tafsirLines = countWrappedRtlLines(measureCtx, cardData.tafsirText, contentMaxWidth, 6);
                 contentHeightEstimate += 22; // Gap before tafsir divider
                 contentHeightEstimate += 48; // Divider + spacing
@@ -1807,7 +1841,7 @@ let totalPages = 0;
             let cursorY = cardY + 100;
 
             ctx.fillStyle = palette.heading;
-            ctx.font = '700 42px Cairo';
+            ctx.font = buildShareCanvasFont(700, 42, 'ui');
             ctx.fillText('القرآن الكريم', cardX + cardW - 54, cursorY);
             cursorY += 64;
 
@@ -1820,7 +1854,7 @@ let totalPages = 0;
             cursorY += 72;
 
             ctx.fillStyle = palette.ayah;
-            ctx.font = '700 54px Amiri';
+            ctx.font = buildShareCanvasFont(700, 54, 'verse');
             cursorY = wrapCanvasRtlText(ctx, cardData.ayahText, cardX + cardW - 58, cursorY, cardW - 120, 86, 6);
 
             if (cardData.tafsirText) {
@@ -1835,13 +1869,13 @@ let totalPages = 0;
                 cursorY += 48;
 
                 ctx.fillStyle = palette.tafsir;
-                ctx.font = '600 32px Cairo';
+                ctx.font = buildShareCanvasFont(600, 32, 'ui');
                 cursorY = wrapCanvasRtlText(ctx, cardData.tafsirText, cardX + cardW - 58, cursorY, cardW - 120, 56, 6);
             }
 
             const footerY = cardY + cardH - 90;
             ctx.fillStyle = palette.footer;
-            ctx.font = '700 30px Cairo';
+            ctx.font = buildShareCanvasFont(700, 30, 'ui');
             ctx.fillText(cardData.reference, cardX + cardW - 54, footerY);
 
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.95));
