@@ -970,11 +970,21 @@ function loadVisitorCount() {
     if (el) el.style.display = 'none';
 }
 
-// ===== Quran Radio Player =====
-(function initRadioPlayer() {
-    // Inject styles
-    const style = document.createElement('style');
-    style.textContent = `
+// ===== Quran Radio Player (Web Component) =====
+(function registerRadioPlayerComponent() {
+    const RADIO_STYLE_ID = 'appRadioPlayerStyles';
+    const STATIONS = [
+        { name: 'إذاعة القرآن الكريم - القاهرة', url: 'https://n02.radiojar.com/8s5u5tpdtwzuv' },
+        { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://qurango.net/radio/mix' },
+        { name: 'إذاعة نور القرآن', url: 'https://qurango.net/radio/noor' },
+    ];
+
+    function ensureRadioStyles() {
+        if (document.getElementById(RADIO_STYLE_ID)) return;
+
+        const style = document.createElement('style');
+        style.id = RADIO_STYLE_ID;
+        style.textContent = `
         .radio-fab {
             position: fixed;
             bottom: 135px;
@@ -1014,7 +1024,7 @@ function loadVisitorCount() {
             background: rgba(24, 24, 24, 0.96);
             border-color: var(--border-color, #333);
         }
-.radio-panel.open { display: flex; }
+        .radio-panel.open { display: flex; }
         .radio-panel-header {
             background: linear-gradient(135deg, var(--primary-color, #1B5E20), var(--primary-light, #2E7D32));
             color: #fff;
@@ -1075,141 +1085,197 @@ function loadVisitorCount() {
         @keyframes radio-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .radio-fab.loading i { display: inline-block; animation: radio-spin 2s linear infinite; }
         .radio-play-btn.loading i { display: inline-block; animation: radio-spin 1s linear infinite; opacity: 0.7; }
-
-
-    `;
-    document.head.appendChild(style);
-
-    const STATIONS = [
-        { name: 'إذاعة القرآن الكريم - القاهرة', url: 'https://n02.radiojar.com/8s5u5tpdtwzuv' },
-        { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://qurango.net/radio/mix' },
-        { name: 'إذاعة نور القرآن', url: 'https://qurango.net/radio/noor' },
-    ];
-
-    let _audio = null;
-    let _activeIdx = -1;
-    let _playing = false;
-    let _panelOpen = false;
-
-    function inject() {
-        const fab = document.createElement('button');
-        fab.className = 'radio-fab';
-        fab.id = 'radioFab';
-        fab.title = 'راديو القرآن الكريم';
-        fab.innerHTML = '<i class="bi bi-broadcast"></i>';
-        fab.onclick = togglePanel;
-
-        const panel = document.createElement('div');
-        panel.className = 'radio-panel';
-        panel.id = 'radioPanel';
-        panel.innerHTML = `
-            <div class="radio-panel-header"><i class="bi bi-broadcast-pin"></i> راديو القرآن الكريم</div>
-            <div class="radio-now" id="radioNowPlaying">اختر محطة للبدء</div>
-            <div class="radio-controls">
-                <button class="radio-play-btn" id="radioPlayBtn">
-                    <i class="bi bi-play-fill" id="radioPlayIcon"></i>
-                </button>
-                <input type="range" class="radio-volume" id="radioVolume" min="0" max="1" step="0.05" value="0.8">
-                <i class="bi bi-volume-up-fill" style="color:var(--text-secondary,#666);font-size:16px"></i>
-            </div>
-            <ul class="radio-stations" id="radioStationList"></ul>
         `;
-
-        _audio = document.createElement('audio');
-        _audio.id = 'quranRadioAudio';
-        _audio.setAttribute('playsinline', '');
-        _audio.setAttribute('webkit-playsinline', '');
-        _audio.preload = 'auto';
-
-        document.body.appendChild(fab);
-        document.body.appendChild(panel);
-        document.body.appendChild(_audio);
-
-        _audio.onwaiting = () => {
-            fab.classList.add('loading');
-            document.getElementById('radioPlayBtn')?.classList.add('loading');
-        };
-        _audio.onplaying = () => {
-            fab.classList.remove('loading');
-            document.getElementById('radioPlayBtn')?.classList.remove('loading');
-        };
-        _audio.onerror = () => {
-            fab.classList.remove('loading');
-            document.getElementById('radioPlayBtn')?.classList.remove('loading');
-            const nowEl = document.getElementById('radioNowPlaying');
-            if (nowEl) nowEl.innerHTML = '<span style="color:#f44336">خطأ في الاتصال بالمحطة</span>';
-        };
-
-        document.getElementById('radioPlayBtn').onclick = togglePlay;
-        document.getElementById('radioVolume').oninput = function () { if (_audio) _audio.volume = parseFloat(this.value); };
-
-        renderStations();
+        document.head.appendChild(style);
     }
 
-    function renderStations() {
-        const list = document.getElementById('radioStationList');
-        if (!list) return;
-        list.innerHTML = STATIONS.map((s, i) => `
-            <li onclick="window._radioSelectStation(${i})" class="${i === _activeIdx ? 'active' : ''}">
-                <span class="rdot"></span>${s.name}
-            </li>`).join('');
-    }
+    class AppRadioPlayer extends HTMLElement {
+        constructor() {
+            super();
+            this._audio = null;
+            this._activeIdx = -1;
+            this._playing = false;
+            this._panelOpen = false;
+            this._initialized = false;
+        }
 
-    window._radioSelectStation = function (idx) {
-        _activeIdx = idx;
-        const s = STATIONS[idx];
-        const nowEl = document.getElementById('radioNowPlaying');
-        if (nowEl) nowEl.innerHTML = `<strong>${s.name}</strong>`;
+        connectedCallback() {
+            if (this._initialized) return;
 
-        if (_audio) {
-            _audio.pause();
-            _audio.src = s.url;
-            _audio.load(); // Explicitly load on src change
-            _audio.volume = parseFloat(document.getElementById('radioVolume')?.value || 0.8);
+            this._initialized = true;
+            ensureRadioStyles();
+            this.render();
+            this.cacheElements();
+            this.bindEvents();
+            this.renderStations();
+        }
 
-            const playPromise = _audio.play();
+        disconnectedCallback() {
+            if (this._audio) {
+                this._audio.pause();
+            }
+        }
+
+        render() {
+            this.innerHTML = `
+                <button class="radio-fab" title="راديو القرآن الكريم" aria-label="راديو القرآن الكريم">
+                    <i class="bi bi-broadcast"></i>
+                </button>
+                <div class="radio-panel" aria-live="polite">
+                    <div class="radio-panel-header"><i class="bi bi-broadcast-pin"></i> راديو القرآن الكريم</div>
+                    <div class="radio-now">اختر محطة للبدء</div>
+                    <div class="radio-controls">
+                        <button class="radio-play-btn" aria-label="تشغيل أو إيقاف">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                        <input type="range" class="radio-volume" min="0" max="1" step="0.05" value="0.8" aria-label="مستوى الصوت">
+                        <i class="bi bi-volume-up-fill" style="color:var(--text-secondary,#666);font-size:16px"></i>
+                    </div>
+                    <ul class="radio-stations"></ul>
+                </div>
+                <audio class="quran-radio-audio" playsinline webkit-playsinline preload="auto"></audio>
+            `;
+        }
+
+        cacheElements() {
+            this.fab = this.querySelector('.radio-fab');
+            this.panel = this.querySelector('.radio-panel');
+            this.nowEl = this.querySelector('.radio-now');
+            this.playBtn = this.querySelector('.radio-play-btn');
+            this.playIcon = this.playBtn ? this.playBtn.querySelector('i') : null;
+            this.volumeInput = this.querySelector('.radio-volume');
+            this.stationList = this.querySelector('.radio-stations');
+            this._audio = this.querySelector('.quran-radio-audio');
+        }
+
+        bindEvents() {
+            if (!this.fab || !this.panel || !this.playBtn || !this.volumeInput || !this.stationList || !this._audio) {
+                return;
+            }
+
+            this.fab.addEventListener('click', () => this.togglePanel());
+            this.playBtn.addEventListener('click', () => this.togglePlay());
+            this.volumeInput.addEventListener('input', () => {
+                this._audio.volume = parseFloat(this.volumeInput.value || '0.8');
+            });
+
+            this.stationList.addEventListener('click', (event) => {
+                const item = event.target.closest('li[data-index]');
+                if (!item) return;
+
+                const idx = parseInt(item.dataset.index, 10);
+                if (!Number.isNaN(idx)) {
+                    this.selectStation(idx);
+                }
+            });
+
+            this._audio.addEventListener('waiting', () => {
+                this.fab.classList.add('loading');
+                this.playBtn.classList.add('loading');
+            });
+
+            this._audio.addEventListener('playing', () => {
+                this.fab.classList.remove('loading');
+                this.playBtn.classList.remove('loading');
+            });
+
+            this._audio.addEventListener('error', () => {
+                this.fab.classList.remove('loading');
+                this.playBtn.classList.remove('loading');
+                if (this.nowEl) {
+                    this.nowEl.innerHTML = '<span style="color:#f44336">خطأ في الاتصال بالمحطة</span>';
+                }
+            });
+        }
+
+        renderStations() {
+            if (!this.stationList) return;
+
+            this.stationList.innerHTML = STATIONS.map((station, index) => `
+                <li data-index="${index}" class="${index === this._activeIdx ? 'active' : ''}">
+                    <span class="rdot"></span>${station.name}
+                </li>
+            `).join('');
+        }
+
+        selectStation(index) {
+            if (index < 0 || index >= STATIONS.length || !this._audio) return;
+
+            const station = STATIONS[index];
+            this._activeIdx = index;
+
+            if (this.nowEl) {
+                this.nowEl.innerHTML = `<strong>${station.name}</strong>`;
+            }
+
+            this._audio.pause();
+            this._audio.src = station.url;
+            this._audio.load();
+            this._audio.volume = parseFloat(this.volumeInput?.value || '0.8');
+
+            const playPromise = this._audio.play();
             if (playPromise !== undefined) {
-                playPromise.catch(error => {
+                playPromise.catch((error) => {
                     console.error('Playback failed:', error);
-                    // Stream might need retry or user gesture was lost
                     setTimeout(() => {
-                        _audio.play().catch(() => { });
+                        this._audio.play().catch(() => { });
                     }, 500);
                 });
             }
-        }
-        _playing = true;
-        const icon = document.getElementById('radioPlayIcon');
-        if (icon) icon.className = 'bi bi-pause-fill';
-        renderStations();
-    };
 
-    function togglePlay() {
-        if (_activeIdx === -1) { window._radioSelectStation(0); return; }
-        if (!_audio) return;
-        if (_audio.paused) {
-            _audio.play().catch(() => { });
-            _playing = true;
-            const icon = document.getElementById('radioPlayIcon');
-            if (icon) icon.className = 'bi bi-pause-fill';
-        } else {
-            _audio.pause();
-            _playing = false;
-            const icon = document.getElementById('radioPlayIcon');
-            if (icon) icon.className = 'bi bi-play-fill';
+            this._playing = true;
+            if (this.playIcon) {
+                this.playIcon.className = 'bi bi-pause-fill';
+            }
+
+            this.renderStations();
+        }
+
+        togglePlay() {
+            if (!this._audio) return;
+
+            if (this._activeIdx === -1) {
+                this.selectStation(0);
+                return;
+            }
+
+            if (this._audio.paused) {
+                this._audio.play().catch(() => { });
+                this._playing = true;
+                if (this.playIcon) {
+                    this.playIcon.className = 'bi bi-pause-fill';
+                }
+            } else {
+                this._audio.pause();
+                this._playing = false;
+                if (this.playIcon) {
+                    this.playIcon.className = 'bi bi-play-fill';
+                }
+            }
+        }
+
+        togglePanel() {
+            this._panelOpen = !this._panelOpen;
+            if (this.panel) {
+                this.panel.classList.toggle('open', this._panelOpen);
+            }
         }
     }
 
-    function togglePanel() {
-        _panelOpen = !_panelOpen;
-        const panel = document.getElementById('radioPanel');
-        if (panel) panel.classList.toggle('open', _panelOpen);
+    if (window.customElements && !customElements.get('app-radio-player')) {
+        customElements.define('app-radio-player', AppRadioPlayer);
+    }
+
+    function mountDefaultRadioPlayer() {
+        if (document.querySelector('app-radio-player')) return;
+        const component = document.createElement('app-radio-player');
+        document.body.appendChild(component);
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', inject);
+        document.addEventListener('DOMContentLoaded', mountDefaultRadioPlayer);
     } else {
-        inject();
+        mountDefaultRadioPlayer();
     }
 })();
 

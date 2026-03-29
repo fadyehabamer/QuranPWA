@@ -1102,14 +1102,14 @@ let totalPages = 0;
                 return;
             }
 
-            if (swipeDistance < 0) {
-                // Swipe left -> next page
+            if (swipeDistance > 0) {
+                // RTL behavior: swipe right advances to the next page.
                 const nextBtn = document.getElementById('nextPageBtn');
                 if (nextBtn && !nextBtn.disabled) {
                     nextPage();
                 }
             } else {
-                // Swipe right -> previous page
+                // RTL behavior: swipe left returns to the previous page.
                 const prevBtn = document.getElementById('prevPageBtn');
                 if (prevBtn && !prevBtn.disabled) {
                     previousPage();
