@@ -1,5 +1,8 @@
 let totalPages = 0;
         let pages = [];
+    let textPages = [];
+    let mushafPages = [];
+    let currentSurahAyahs = [];
         let currentSurah = null;
         let currentPageIndex = 0;
         let touchStartX = 0;
@@ -12,12 +15,20 @@ let totalPages = 0;
     const SURAH_READING_POSITION_KEY = 'quranSurahReadingPositionV1';
     const SWIPE_HINT_SEEN_KEY = 'quranSwipeHintSeenV1';
         const READER_FONT_LEVEL_KEY = 'quranReaderFontLevelV1';
+        const READER_DISPLAY_MODE_KEY = 'quranReaderDisplayModeV1';
+        const READER_DISPLAY_TEXT = 'text';
+        const READER_DISPLAY_MUSHAF = 'mushaf';
+        const MUSHAF_IMAGE_LOCAL_BASE_PATH = 'assets/mushaf-pages';
+        const MUSHAF_IMAGE_REMOTE_BASE_URL = 'https://quran.ksu.edu.sa/png_big';
+        const MUSHAF_MIN_PAGE_NUMBER = 1;
+        const MUSHAF_MAX_PAGE_NUMBER = 604;
         const READER_FONT_LEVELS = [
             { key: 'sm', label: 'صغير', size: 22 },
             { key: 'md', label: 'متوسط', size: 26 },
             { key: 'lg', label: 'كبير', size: 30 }
         ];
         let currentReaderFontLevelIndex = 1;
+        let readerDisplayMode = READER_DISPLAY_TEXT;
 
         // Audio player state
         let currentAudio = null;
@@ -458,10 +469,6 @@ let totalPages = 0;
                                 <div class="surah-item-details">الجزء ` + juz + ` • ` + surah.type + ` • ` + surah.verses + ` آيات</div>
                             </div>
                         </div>
-                        <div class="surah-item-left">
-                            <div class="surah-item-arabic">` + surahNames[index] + `</div>
-                            <div class="surah-item-verses">` + surah.verses + ` آية</div>
-                        </div>
                     </div>
                 `;
             });
@@ -501,8 +508,7 @@ let totalPages = 0;
             }
 
             if (Number.isInteger(pageIndex)) {
-                const safePageIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
-                currentPageIndex = safePageIndex;
+                currentPageIndex = resolveReaderPageIndexFromTextIndex(pageIndex, ayahNumberInSurah);
                 renderCurrentPage();
                 updateNavigation();
                 resetMemorizationCoachForPage();
@@ -527,7 +533,12 @@ let totalPages = 0;
                 }
             });
 
-            if (!target) return;
+            if (!target) {
+                if (readerDisplayMode === READER_DISPLAY_MUSHAF) {
+                    showTemporaryMessage('تم فتح الصفحة في نمط المصحف');
+                }
+                return;
+            }
 
             target.classList.add('ayah-search-highlight');
             target.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -556,6 +567,7 @@ let totalPages = 0;
             document.getElementById('surahListView').classList.add('active');
             document.getElementById('surahReaderView').classList.remove('active');
             document.body.classList.remove('quran-reader-active');
+            updateMushafFocusMode({ exitFullscreen: true });
             stopMemorizationAyahAudio(true);
             hideAyahQuickActions({ immediate: true });
             memorizationMode = false;
@@ -571,6 +583,7 @@ let totalPages = 0;
             document.getElementById('surahListView').classList.remove('active');
             document.getElementById('surahReaderView').classList.add('active');
             document.body.classList.add('quran-reader-active');
+            updateMushafFocusMode({ requestFullscreen: readerDisplayMode === READER_DISPLAY_MUSHAF });
             // Don't auto-show player anymore, let user toggle it
             showSwipeHintOnce();
             updateMemorizationCoachUI();
@@ -617,6 +630,261 @@ let totalPages = 0;
             showTemporaryMessage(`حجم الخط: ${READER_FONT_LEVELS[nextIndex].label}`);
         }
 
+        function normalizeReaderDisplayMode(mode) {
+            return mode === READER_DISPLAY_MUSHAF ? READER_DISPLAY_MUSHAF : READER_DISPLAY_TEXT;
+        }
+
+        function loadReaderDisplayModePreference() {
+            try {
+                return normalizeReaderDisplayMode(localStorage.getItem(READER_DISPLAY_MODE_KEY));
+            } catch (_error) {
+                return READER_DISPLAY_TEXT;
+            }
+        }
+
+        function saveReaderDisplayModePreference(mode) {
+            try {
+                localStorage.setItem(READER_DISPLAY_MODE_KEY, normalizeReaderDisplayMode(mode));
+            } catch (_error) {
+                // Ignore localStorage write issues.
+            }
+        }
+
+        function requestMushafNativeFullscreen() {
+            const target = document.documentElement;
+            if (!target || document.fullscreenElement || !target.requestFullscreen) {
+                return;
+            }
+
+            target.requestFullscreen().catch(() => {
+                // Ignore fullscreen request rejections.
+            });
+        }
+
+        function exitNativeFullscreenIfAny() {
+            if (!document.fullscreenElement || !document.exitFullscreen) {
+                return;
+            }
+
+            document.exitFullscreen().catch(() => {
+                // Ignore fullscreen exit rejections.
+            });
+        }
+
+        function updateMushafFocusMode(options = {}) {
+            const shouldBeActive = readerDisplayMode === READER_DISPLAY_MUSHAF && isReaderViewActive();
+            document.body.classList.toggle('mushaf-focus-mode', shouldBeActive);
+
+            if (shouldBeActive) {
+                hideAyahQuickActions({ immediate: true });
+                closeShareAyahModal();
+
+                if (options.requestFullscreen) {
+                    requestMushafNativeFullscreen();
+                }
+            } else if (options.exitFullscreen) {
+                exitNativeFullscreenIfAny();
+            }
+
+            updateScrollTopButtonVisibility();
+        }
+
+        function exitMushafFocusMode() {
+            if (readerDisplayMode !== READER_DISPLAY_MUSHAF) {
+                updateMushafFocusMode({ exitFullscreen: true });
+                return;
+            }
+
+            setReaderDisplayMode(READER_DISPLAY_TEXT, {
+                persist: true,
+                render: true,
+                exitFullscreen: true
+            });
+            showTemporaryMessage('تم الخروج من عرض المصحف');
+        }
+
+        function getPageIndexByAyahNumber(pageCollection, globalAyahNumber) {
+            if (!Array.isArray(pageCollection) || !Number.isInteger(globalAyahNumber)) {
+                return -1;
+            }
+
+            return pageCollection.findIndex(page =>
+                Array.isArray(page?.ayahs) && page.ayahs.some(ayah => ayah.number === globalAyahNumber)
+            );
+        }
+
+        function getGlobalAyahNumberFromSurahAyah(ayahNumberInSurah) {
+            const safeAyahNumber = parseInt(ayahNumberInSurah, 10);
+            if (!Number.isInteger(safeAyahNumber) || safeAyahNumber < 1 || safeAyahNumber > currentSurahAyahs.length) {
+                return null;
+            }
+
+            return currentSurahAyahs[safeAyahNumber - 1]?.number || null;
+        }
+
+        function getGlobalAyahNumberFromTextPageIndex(textPageIndex) {
+            if (!textPages.length) return null;
+
+            const parsed = parseInt(textPageIndex, 10);
+            const safeIndex = Math.max(0, Math.min(Number.isInteger(parsed) ? parsed : 0, textPages.length - 1));
+            return textPages[safeIndex]?.ayahs?.[0]?.number || null;
+        }
+
+        function resolveReaderPageIndexFromTextIndex(textPageIndex, ayahNumberInSurah = null) {
+            const parsedTextPageIndex = parseInt(textPageIndex, 10);
+            const safeTextPageIndex = Number.isInteger(parsedTextPageIndex) ? parsedTextPageIndex : 0;
+
+            if (readerDisplayMode !== READER_DISPLAY_MUSHAF) {
+                return Math.max(0, Math.min(safeTextPageIndex, Math.max(totalPages - 1, 0)));
+            }
+
+            const ayahGlobalNumber =
+                getGlobalAyahNumberFromSurahAyah(ayahNumberInSurah) ||
+                getGlobalAyahNumberFromTextPageIndex(safeTextPageIndex);
+            const mushafIndex = getPageIndexByAyahNumber(mushafPages, ayahGlobalNumber);
+
+            if (mushafIndex !== -1) {
+                return mushafIndex;
+            }
+
+            return Math.max(0, Math.min(safeTextPageIndex, Math.max(mushafPages.length - 1, 0)));
+        }
+
+        function resolveBookmarkPageIndex() {
+            if (!pages.length || currentPageIndex < 0) return 0;
+
+            if (readerDisplayMode === READER_DISPLAY_TEXT) {
+                return Math.max(0, Math.min(currentPageIndex, Math.max(textPages.length - 1, 0)));
+            }
+
+            const firstAyah = pages[currentPageIndex]?.ayahs?.[0];
+            if (!firstAyah || !Number.isInteger(firstAyah.numberInSurah)) {
+                return 0;
+            }
+
+            return Math.max(
+                0,
+                Math.min(
+                    Math.floor((firstAyah.numberInSurah - 1) / AYAHS_PER_PAGE),
+                    Math.max(textPages.length - 1, 0)
+                )
+            );
+        }
+
+        function applyReaderDisplayModeClass() {
+            const content = document.getElementById('quranContent');
+            if (content) {
+                content.classList.toggle('mushaf-mode', readerDisplayMode === READER_DISPLAY_MUSHAF);
+            }
+        }
+
+        function updateReaderDisplayModeButton() {
+            const modeBtn = document.getElementById('displayModeBtn');
+            if (!modeBtn) return;
+
+            const icon = modeBtn.querySelector('i');
+            const label = modeBtn.querySelector('span');
+            const isMushafMode = readerDisplayMode === READER_DISPLAY_MUSHAF;
+
+            modeBtn.classList.toggle('active', isMushafMode);
+
+            if (icon) {
+                icon.className = isMushafMode ? 'bi bi-journal-richtext' : 'bi bi-file-earmark-image';
+            }
+
+            if (label) {
+                label.textContent = isMushafMode ? 'النص' : 'المصحف';
+            }
+
+            const title = isMushafMode ? 'عرض النص' : 'عرض المصحف';
+            modeBtn.title = title;
+            modeBtn.setAttribute('aria-label', title);
+        }
+
+        function setReaderDisplayMode(nextMode, options = {}) {
+            const mode = normalizeReaderDisplayMode(nextMode);
+            const persist = options.persist !== false;
+            const render = options.render !== false;
+            const requestFullscreen = options.requestFullscreen === true;
+            const exitFullscreen = options.exitFullscreen !== false;
+            const fallbackIndex = Number.isInteger(options.fallbackIndex) ? options.fallbackIndex : currentPageIndex;
+            const anchorAyahNumber = Number.isInteger(options.anchorAyahNumber)
+                ? options.anchorAyahNumber
+                : (pages[currentPageIndex]?.ayahs?.[0]?.number || null);
+
+            readerDisplayMode = mode;
+
+            const targetPages = mode === READER_DISPLAY_MUSHAF ? mushafPages : textPages;
+            pages = targetPages;
+            totalPages = targetPages.length;
+
+            if (totalPages > 0) {
+                const mappedIndex = getPageIndexByAyahNumber(targetPages, anchorAyahNumber);
+                if (mappedIndex !== -1) {
+                    currentPageIndex = mappedIndex;
+                } else {
+                    currentPageIndex = Math.max(0, Math.min(fallbackIndex, totalPages - 1));
+                }
+            } else {
+                currentPageIndex = 0;
+            }
+
+            applyReaderDisplayModeClass();
+            updateReaderDisplayModeButton();
+
+            if (persist) {
+                saveReaderDisplayModePreference(mode);
+            }
+
+            updateMushafFocusMode({
+                requestFullscreen: requestFullscreen && mode === READER_DISPLAY_MUSHAF,
+                exitFullscreen: exitFullscreen && mode !== READER_DISPLAY_MUSHAF
+            });
+
+            if (!render || totalPages <= 0) {
+                return;
+            }
+
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            isPlaying = false;
+            allAyahs = [];
+            currentAyahIndex = 0;
+            removeAyahHighlight();
+            updatePlayButton();
+            updateCurrentAyahDisplay();
+
+            stopMemorizationAyahAudio(true);
+            hideAyahQuickActions({ immediate: true });
+
+            renderCurrentPage();
+            updateNavigation();
+            scrollReaderToTop(true);
+        }
+
+        function initReaderDisplayMode() {
+            readerDisplayMode = loadReaderDisplayModePreference();
+            applyReaderDisplayModeClass();
+            updateReaderDisplayModeButton();
+            updateMushafFocusMode({ requestFullscreen: false, exitFullscreen: false });
+        }
+
+        function toggleReaderDisplayMode() {
+            const nextMode = readerDisplayMode === READER_DISPLAY_MUSHAF
+                ? READER_DISPLAY_TEXT
+                : READER_DISPLAY_MUSHAF;
+
+            setReaderDisplayMode(nextMode, {
+                persist: true,
+                render: true,
+                requestFullscreen: nextMode === READER_DISPLAY_MUSHAF,
+                exitFullscreen: nextMode !== READER_DISPLAY_MUSHAF
+            });
+            showTemporaryMessage(nextMode === READER_DISPLAY_MUSHAF ? 'تم تفعيل عرض المصحف' : 'تم تفعيل عرض النص');
+        }
+
         function isReaderViewActive() {
             const readerView = document.getElementById('surahReaderView');
             return Boolean(readerView && readerView.classList.contains('active'));
@@ -640,9 +908,12 @@ let totalPages = 0;
         function savePageForCurrentSurah() {
             if (!currentSurah || totalPages <= 0) return;
 
+            const bookmarkPageIndex = resolveBookmarkPageIndex();
+
             const positions = getSurahReadingPositions();
             positions[String(currentSurah)] = {
-                page: currentPageIndex,
+                page: bookmarkPageIndex,
+                mode: readerDisplayMode,
                 updatedAt: Date.now()
             };
 
@@ -733,9 +1004,21 @@ let totalPages = 0;
                 createPages(data.data);
 
                 const savedPageIndex = getSavedPageForSurah(currentSurah);
+                let initialTextPageIndex = 0;
                 if (!shouldStartFromBeginning && Number.isInteger(savedPageIndex)) {
-                    currentPageIndex = Math.max(0, Math.min(savedPageIndex, totalPages - 1));
+                    initialTextPageIndex = Math.max(0, Math.min(savedPageIndex, Math.max(textPages.length - 1, 0)));
                 }
+
+                const anchorAyahNumber = getGlobalAyahNumberFromTextPageIndex(initialTextPageIndex)
+                    || currentSurahAyahs[0]?.number
+                    || null;
+
+                setReaderDisplayMode(readerDisplayMode, {
+                    persist: false,
+                    render: false,
+                    fallbackIndex: initialTextPageIndex,
+                    anchorAyahNumber
+                });
 
                 renderCurrentPage();
                 checkBookmark();
@@ -750,37 +1033,95 @@ let totalPages = 0;
 
 
         function createPages(surahData) {
-            const ayahs = surahData.ayahs;
-            pages = [];
+            const ayahs = Array.isArray(surahData?.ayahs) ? surahData.ayahs : [];
+            currentSurahAyahs = ayahs.slice();
+            textPages = [];
+            mushafPages = [];
 
             for (let i = 0; i < ayahs.length; i += AYAHS_PER_PAGE) {
                 const pageAyahs = ayahs.slice(i, i + AYAHS_PER_PAGE);
-                pages.push({
+                textPages.push({
                     surahName: surahData.name,
                     surahEnglish: surahData.englishName,
                     surahNumber: surahData.number,
                     revelationType: surahData.revelationType === 'Meccan' ? 'مكية' : 'مدنية',
                     numberOfAyahs: surahData.numberOfAyahs,
                     ayahs: pageAyahs,
-                    pageNum: Math.floor(i / AYAHS_PER_PAGE) + 1
+                    pageNum: Math.floor(i / AYAHS_PER_PAGE) + 1,
+                    displayMode: READER_DISPLAY_TEXT
                 });
             }
 
+            const mushafPageMap = new Map();
+            ayahs.forEach(ayah => {
+                const rawMushafPage = parseInt(ayah?.page, 10);
+                const mushafPageNumber = Number.isInteger(rawMushafPage)
+                    ? Math.max(MUSHAF_MIN_PAGE_NUMBER, Math.min(rawMushafPage, MUSHAF_MAX_PAGE_NUMBER))
+                    : null;
+                const mapKey = Number.isInteger(mushafPageNumber) ? mushafPageNumber : `fallback-${ayah.number}`;
+
+                if (!mushafPageMap.has(mapKey)) {
+                    mushafPageMap.set(mapKey, {
+                        surahName: surahData.name,
+                        surahEnglish: surahData.englishName,
+                        surahNumber: surahData.number,
+                        revelationType: surahData.revelationType === 'Meccan' ? 'مكية' : 'مدنية',
+                        numberOfAyahs: surahData.numberOfAyahs,
+                        ayahs: [],
+                        pageNum: 0,
+                        mushafPageNumber,
+                        displayMode: READER_DISPLAY_MUSHAF
+                    });
+                }
+
+                mushafPageMap.get(mapKey).ayahs.push(ayah);
+            });
+
+            mushafPages = Array.from(mushafPageMap.values())
+                .sort((a, b) => {
+                    const aValue = Number.isInteger(a.mushafPageNumber) ? a.mushafPageNumber : Number.MAX_SAFE_INTEGER;
+                    const bValue = Number.isInteger(b.mushafPageNumber) ? b.mushafPageNumber : Number.MAX_SAFE_INTEGER;
+                    return aValue - bValue;
+                })
+                .map((page, index) => ({
+                    ...page,
+                    pageNum: index + 1
+                }));
+
+            pages = readerDisplayMode === READER_DISPLAY_MUSHAF ? mushafPages : textPages;
             totalPages = pages.length;
         }
 
-        function renderCurrentPage() {
-            if (pages.length === 0) return;
-
-            // If in tafsir mode, load tafsir instead
-            if (tafsirMode) {
-                loadTafsirForCurrentPage();
-                return;
+        function getMushafPageNumber(page) {
+            const rawPage = parseInt(page?.mushafPageNumber ?? page?.ayahs?.[0]?.page, 10);
+            if (!Number.isInteger(rawPage)) {
+                return MUSHAF_MIN_PAGE_NUMBER;
             }
 
-            const page = pages[currentPageIndex];
-            const content = document.getElementById('quranContent');
+            return Math.max(MUSHAF_MIN_PAGE_NUMBER, Math.min(rawPage, MUSHAF_MAX_PAGE_NUMBER));
+        }
 
+        function buildMushafPageImageUrl(pageNumber, source = 'local') {
+            const raw = parseInt(pageNumber, 10);
+            const safePage = Number.isInteger(raw)
+                ? Math.max(MUSHAF_MIN_PAGE_NUMBER, Math.min(raw, MUSHAF_MAX_PAGE_NUMBER))
+                : MUSHAF_MIN_PAGE_NUMBER;
+
+            const basePath = source === 'remote'
+                ? MUSHAF_IMAGE_REMOTE_BASE_URL
+                : MUSHAF_IMAGE_LOCAL_BASE_PATH;
+
+            return `${basePath}/${safePage}.png`;
+        }
+
+        function buildMushafPageImageCandidates(pageNumber) {
+            return [
+                buildMushafPageImageUrl(pageNumber, 'local'),
+                buildMushafPageImageUrl(pageNumber, 'remote')
+            ];
+        }
+
+        function renderTextPage(content, page) {
             let html = '<div class="page-content">';
 
             if (currentPageIndex === 0) {
@@ -825,6 +1166,128 @@ let totalPages = 0;
             html += '</div>';
 
             content.innerHTML = html;
+        }
+
+        function renderMushafPage(content, page) {
+            const mushafPageNumber = getMushafPageNumber(page);
+            const juz = surahToJuz[currentSurah];
+            const imageCandidates = buildMushafPageImageCandidates(mushafPageNumber);
+
+            let html = '<div class="page-content mushaf-page-content">';
+
+            if (currentPageIndex === 0) {
+                html += `
+                    <div class="page-header mushaf-page-header">
+                        <div class="surah-name">${page.surahName}</div>
+                        <div class="surah-info">${page.surahEnglish} • ${page.revelationType} • ${page.numberOfAyahs} آيات</div>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="mushaf-stage">
+                    <div class="mushaf-stage-status" data-mushaf-status>
+                        <div class="spinner"></div>
+                        <p>جار تحميل صفحة المصحف...</p>
+                    </div>
+                    <img class="mushaf-page-image is-loading" data-mushaf-image src="${imageCandidates[0]}" alt="صفحة المصحف ${mushafPageNumber}" loading="eager" fetchpriority="high" decoding="async" draggable="false">
+                </div>
+                <div class="mushaf-page-meta">الجزء ${juz} • صفحة المصحف ${mushafPageNumber} • صفحة ${currentPageIndex + 1} من ${totalPages}</div>
+            `;
+
+            html += '</div>';
+
+            content.innerHTML = html;
+
+            const pageImage = content.querySelector('[data-mushaf-image]');
+            const status = content.querySelector('[data-mushaf-status]');
+
+            if (!pageImage || !status) return;
+
+            let finalized = false;
+            let activeCandidateIndex = 0;
+
+            function cleanupListeners() {
+                pageImage.removeEventListener('load', handleLoad);
+                pageImage.removeEventListener('error', handleError);
+            }
+
+            function setLoadingState(message) {
+                if (finalized) return;
+                pageImage.classList.remove('is-error');
+                pageImage.classList.add('is-loading');
+                status.classList.remove('hidden', 'error');
+                status.innerHTML = `<div class="spinner"></div><p>${message}</p>`;
+            }
+
+            const markLoaded = () => {
+                if (finalized) return;
+                finalized = true;
+                cleanupListeners();
+                pageImage.classList.remove('is-loading');
+                status.classList.add('hidden');
+            };
+
+            const markError = () => {
+                if (finalized) return;
+                finalized = true;
+                cleanupListeners();
+                pageImage.classList.add('is-error');
+                status.classList.remove('hidden');
+                status.classList.add('error');
+                status.innerHTML = '<i class="bi bi-exclamation-circle"></i><p>تعذر تحميل صفحة المصحف الآن. يمكنك المتابعة في نمط النص.</p>';
+            };
+
+            const tryNextCandidate = () => {
+                if (activeCandidateIndex >= imageCandidates.length - 1) {
+                    markError();
+                    return;
+                }
+
+                activeCandidateIndex += 1;
+                setLoadingState('تعذر العثور على النسخة المحلية، جار التحميل الاحتياطي...');
+                pageImage.src = imageCandidates[activeCandidateIndex];
+            };
+
+            function handleLoad() {
+                markLoaded();
+            }
+
+            function handleError() {
+                tryNextCandidate();
+            }
+
+            pageImage.addEventListener('load', handleLoad);
+            pageImage.addEventListener('error', handleError);
+
+            if (pageImage.complete) {
+                if (pageImage.naturalWidth > 0) {
+                    markLoaded();
+                } else {
+                    handleError();
+                }
+            }
+        }
+
+        function renderCurrentPage() {
+            if (pages.length === 0 || currentPageIndex >= pages.length) return;
+
+            // If in tafsir mode, load tafsir instead
+            if (tafsirMode) {
+                loadTafsirForCurrentPage();
+                return;
+            }
+
+            const page = pages[currentPageIndex];
+            const content = document.getElementById('quranContent');
+            if (!content || !page) return;
+
+            if (readerDisplayMode === READER_DISPLAY_MUSHAF) {
+                renderMushafPage(content, page);
+            } else {
+                renderTextPage(content, page);
+            }
+
             hideAyahQuickActions({ immediate: true });
             savePageForCurrentSurah();
             updateReaderProgressUI();
@@ -835,7 +1298,7 @@ let totalPages = 0;
                 window.recordHabitActivity('quran');
             }
             if (window.touchBookmarkVisitByLocation && currentSurah) {
-                window.touchBookmarkVisitByLocation(currentSurah, currentPageIndex);
+                window.touchBookmarkVisitByLocation(currentSurah, resolveBookmarkPageIndex());
             }
 
             const shareModal = document.getElementById('shareAyahModal');
@@ -1009,9 +1472,10 @@ let totalPages = 0;
 
         function toggleBookmark() {
             const bookmarks = getStoredBookmarks();
+            const bookmarkPageIndex = resolveBookmarkPageIndex();
 
             // Check if this exact bookmark already exists
-            const existingBookmarks = bookmarks.filter(b => b.surah === currentSurah && b.page === currentPageIndex);
+            const existingBookmarks = bookmarks.filter(b => b.surah === currentSurah && b.page === bookmarkPageIndex);
 
             if (existingBookmarks.length > 0) {
                 // Remove existing bookmark
@@ -1023,7 +1487,7 @@ let totalPages = 0;
                     });
                 } else {
                     const remaining = bookmarks.filter(bookmark =>
-                        !(bookmark.surah === currentSurah && bookmark.page === currentPageIndex)
+                        !(bookmark.surah === currentSurah && bookmark.page === bookmarkPageIndex)
                     );
                     saveStoredBookmarks(remaining);
                 }
@@ -1038,7 +1502,7 @@ let totalPages = 0;
                 openBookmarkFolderPicker((folderName) => {
                     const latestBookmarks = getStoredBookmarks();
                     const alreadySaved = latestBookmarks.some(bookmark =>
-                        bookmark.surah === currentSurah && bookmark.page === currentPageIndex
+                        bookmark.surah === currentSurah && bookmark.page === bookmarkPageIndex
                     );
 
                     if (alreadySaved) {
@@ -1053,10 +1517,10 @@ let totalPages = 0;
                     }
 
                     const newBookmark = window.createBookmarkEntry
-                        ? window.createBookmarkEntry({ surah: currentSurah, page: currentPageIndex, folder: folderName })
+                        ? window.createBookmarkEntry({ surah: currentSurah, page: bookmarkPageIndex, folder: folderName })
                         : {
                             surah: currentSurah,
-                            page: currentPageIndex,
+                            page: bookmarkPageIndex,
                             folder: folderName,
                             timestamp: Date.now()
                         };
@@ -1082,18 +1546,31 @@ let totalPages = 0;
             if (!currentSurah) return;
 
             const bookmarks = getStoredBookmarks();
-            const btn = document.getElementById('headerBookmarkBtn');
+            const bookmarkPageIndex = resolveBookmarkPageIndex();
+            const headerBtn = document.getElementById('headerBookmarkBtn');
+            const mushafBtn = document.getElementById('mushafBookmarkBtn');
 
-            if (!btn) return; // Guard against null element
+            const isBookmarked = bookmarks.some(b => b.surah === currentSurah && b.page === bookmarkPageIndex);
 
-            const isBookmarked = bookmarks.some(b => b.surah === currentSurah && b.page === currentPageIndex);
+            [headerBtn, mushafBtn].forEach(btn => {
+                if (!btn) return;
 
-            if (isBookmarked) {
-                btn.classList.add('saved');
-                btn.querySelector('i').className = 'bi bi-bookmark-fill';
-            } else {
-                btn.classList.remove('saved');
-                btn.querySelector('i').className = 'bi bi-bookmark';
+                if (isBookmarked) {
+                    btn.classList.add('saved');
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = 'bi bi-bookmark-fill';
+                } else {
+                    btn.classList.remove('saved');
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = 'bi bi-bookmark';
+                }
+            });
+
+            if (mushafBtn) {
+                const label = mushafBtn.querySelector('span');
+                if (label) {
+                    label.textContent = isBookmarked ? 'محفوظ' : 'حفظ';
+                }
             }
         }
 
@@ -1145,7 +1622,7 @@ let totalPages = 0;
             }
             selectSurah(bookmark.surah);
             setTimeout(() => {
-                currentPageIndex = bookmark.page;
+                currentPageIndex = resolveReaderPageIndexFromTextIndex(bookmark.page);
                 renderCurrentPage();
                 updateNavigation();
             }, 100);
@@ -1176,7 +1653,7 @@ let totalPages = 0;
                 const lastBookmark = bookmarks[bookmarks.length - 1];
                 selectSurah(lastBookmark.surah);
                 setTimeout(() => {
-                    currentPageIndex = lastBookmark.page;
+                    currentPageIndex = resolveReaderPageIndexFromTextIndex(lastBookmark.page);
                     renderCurrentPage();
                     updateNavigation();
                 }, 100);
@@ -1185,6 +1662,7 @@ let totalPages = 0;
 
         renderSurahList();
         initReaderFontLevel();
+        initReaderDisplayMode();
         updateMemorizationCoachUI();
         initAyahQuickActions();
 
@@ -1347,6 +1825,12 @@ let totalPages = 0;
 
             const targetTag = event.target?.tagName;
             if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') {
+                return;
+            }
+
+            if (event.key === 'Escape' && readerDisplayMode === READER_DISPLAY_MUSHAF) {
+                event.preventDefault();
+                exitMushafFocusMode();
                 return;
             }
 
@@ -2823,7 +3307,10 @@ let totalPages = 0;
 
                 html += '</div>';
                 const juz = surahToJuz[currentSurah];
-                html += `<div class="page-number">الجزء ${juz} • صفحة ${page.pageNum} من ${totalPages}</div>`;
+                const pageLabel = readerDisplayMode === READER_DISPLAY_MUSHAF
+                    ? `صفحة المصحف ${getMushafPageNumber(page)} • صفحة ${currentPageIndex + 1} من ${totalPages}`
+                    : `صفحة ${page.pageNum} من ${totalPages}`;
+                html += `<div class="page-number">الجزء ${juz} • ${pageLabel}</div>`;
                 html += '</div>';
 
                 content.innerHTML = html;

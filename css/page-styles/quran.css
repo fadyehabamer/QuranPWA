@@ -632,6 +632,364 @@
             }
         }
 
+        .page-content.mushaf-page-content {
+            padding: 18px 16px 20px;
+        }
+
+        .mushaf-page-header {
+            margin-bottom: 16px;
+        }
+
+        .mushaf-stage {
+            position: relative;
+            min-height: 460px;
+            border-radius: 14px;
+            border: 1px solid rgba(var(--primary-rgb, 27, 94, 32), 0.2);
+            background: linear-gradient(180deg, rgba(var(--primary-rgb, 27, 94, 32), 0.08), rgba(255, 247, 230, 0.7));
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .mushaf-stage {
+            background: linear-gradient(180deg, #f8f3e8, #efe5cf);
+            border-color: rgba(141, 117, 71, 0.4);
+        }
+
+        .mushaf-stage-status {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-align: center;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-color);
+            background: rgba(255, 255, 255, 0.72);
+            z-index: 2;
+            padding: 16px;
+        }
+
+        [data-theme="dark"] .mushaf-stage-status {
+            background: rgba(248, 243, 232, 0.82);
+        }
+
+        .mushaf-stage-status.hidden {
+            display: none;
+        }
+
+        .mushaf-stage-status.error {
+            background: transparent;
+            color: #c62828;
+        }
+
+        .mushaf-page-image {
+            width: auto;
+            max-width: 100%;
+            max-height: min(1100px, 78vh);
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+            display: block;
+            transition: opacity 0.2s ease;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .mushaf-page-image.is-loading {
+            opacity: 0.05;
+        }
+
+        .mushaf-page-image.is-error {
+            display: none;
+        }
+
+        .mushaf-page-meta {
+            margin-top: 14px;
+            text-align: center;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary, #666);
+        }
+
+        @media (max-width: 768px) {
+            .page-content.mushaf-page-content {
+                padding: 14px 10px 14px;
+            }
+
+            .mushaf-stage {
+                min-height: 300px;
+                padding: 8px;
+                border-radius: 12px;
+            }
+
+            .mushaf-page-image {
+                border-radius: 8px;
+            }
+
+            .mushaf-page-meta {
+                margin-top: 10px;
+                font-size: 12px;
+            }
+        }
+
+        .mushaf-exit-btn {
+            display: none;
+            border: none;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.74);
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 14px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            z-index: 1301;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+        }
+
+        .mushaf-exit-btn i {
+            font-size: 13px;
+        }
+
+        .mushaf-exit-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .mushaf-bookmark-btn {
+            display: none;
+            border: none;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary-color);
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 800;
+            padding: 10px 14px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            z-index: 1301;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(var(--primary-rgb, 27, 94, 32), 0.3);
+        }
+
+        .mushaf-bookmark-btn.saved {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+
+        body.mushaf-focus-mode {
+            overflow: hidden;
+        }
+
+        body.mushaf-focus-mode app-sidebar,
+        body.mushaf-focus-mode app-bottom-nav,
+        body.mushaf-focus-mode .sidebar-overlay,
+        body.mushaf-focus-mode .bottom-nav,
+        body.mushaf-focus-mode .app-header,
+        body.mushaf-focus-mode .reader-header,
+        body.mushaf-focus-mode .reader-progress-strip,
+        body.mushaf-focus-mode .memorization-coach,
+        body.mushaf-focus-mode .swipe-hint,
+        body.mushaf-focus-mode .ayah-quick-actions,
+        body.mushaf-focus-mode .scroll-top-btn,
+        body.mushaf-focus-mode .audio-player-container,
+        body.mushaf-focus-mode .radio-fab,
+        body.mushaf-focus-mode .radio-panel,
+        body.mushaf-focus-mode #bookmarksSection {
+            display: none !important;
+        }
+
+        body.mushaf-focus-mode .app-content {
+            max-width: none;
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        body.mushaf-focus-mode #surahReaderView.active {
+            display: block;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1200;
+            background: #10151c;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        body.mushaf-focus-mode #surahReaderView.active::-webkit-scrollbar {
+            display: none;
+        }
+
+        body.mushaf-focus-mode #quranContent {
+            margin: 0;
+            min-height: 100vh;
+            height: 100vh;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        body.mushaf-focus-mode .page-content.mushaf-page-content {
+            width: 100%;
+            min-height: 100vh;
+            margin: 0;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            background: transparent;
+            padding: 56px 8px 8px;
+            animation: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.mushaf-focus-mode .mushaf-page-header,
+        body.mushaf-focus-mode .mushaf-page-meta {
+            display: none;
+        }
+
+        body.mushaf-focus-mode .mushaf-stage {
+            width: 100%;
+            min-height: calc(100vh - 72px);
+            border: none;
+            border-radius: 0;
+            background: #f9f4e8;
+            padding: 8px;
+        }
+
+        [data-theme="dark"] body.mushaf-focus-mode .mushaf-stage {
+            background: #f9f4e8;
+        }
+
+        body.mushaf-focus-mode .mushaf-stage-status {
+            background: rgba(249, 244, 232, 0.84);
+            color: #3a2e1e;
+        }
+
+        body.mushaf-focus-mode .mushaf-page-image {
+            max-width: 100%;
+            max-height: calc(100vh - 92px);
+            width: auto;
+            height: auto;
+            border-radius: 0;
+            box-shadow: none;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        body.mushaf-focus-mode .mushaf-exit-btn {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            display: inline-flex;
+        }
+
+        body.mushaf-focus-mode .mushaf-bookmark-btn {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            display: inline-flex;
+        }
+
+        body.mushaf-focus-mode .floating-nav-btn {
+            display: inline-flex !important;
+            z-index: 1301;
+            width: 42px;
+            height: 42px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.65);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        body.mushaf-focus-mode .floating-nav-btn:hover:not(:disabled) {
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            transform: translateY(-50%) scale(1.04);
+        }
+
+        body.mushaf-focus-mode .floating-nav-right {
+            right: 10px;
+        }
+
+        body.mushaf-focus-mode .floating-nav-left {
+            left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            body.mushaf-focus-mode #quranContent {
+                padding: 4px;
+            }
+
+            body.mushaf-focus-mode .page-content.mushaf-page-content {
+                padding: 52px 2px 2px;
+            }
+
+            body.mushaf-focus-mode .mushaf-stage {
+                min-height: calc(100vh - 64px);
+                padding: 3px;
+            }
+
+            body.mushaf-focus-mode .mushaf-page-image {
+                max-height: calc(100vh - 76px);
+            }
+
+            body.mushaf-focus-mode .mushaf-exit-btn {
+                top: 10px;
+                left: 10px;
+                padding: 8px 10px;
+                font-size: 12px;
+                gap: 6px;
+            }
+
+            body.mushaf-focus-mode .mushaf-bookmark-btn {
+                top: 10px;
+                right: 10px;
+                padding: 8px 10px;
+                font-size: 12px;
+                gap: 6px;
+            }
+
+            body.mushaf-focus-mode .floating-nav-btn {
+                display: inline-flex !important;
+                width: 40px;
+                height: 40px;
+            }
+
+            body.mushaf-focus-mode .floating-nav-right {
+                right: 6px;
+            }
+
+            body.mushaf-focus-mode .floating-nav-left {
+                left: 6px;
+            }
+        }
+
         .page-header {
             text-align: center;
             padding: 20px;

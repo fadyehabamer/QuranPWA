@@ -4,7 +4,8 @@
     "description": "Quran Progressive Web App",
     "scripts": {
         "deploy": "vercel deploy --force --prod",
-        "dev": "vercel dev"
+        "dev": "vercel dev",
+        "download:mushaf": "node scripts/download-mushaf-pages.js"
     },
     "keywords": [],
     "author": "Fady Ehab Amer",

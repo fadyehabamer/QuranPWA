@@ -17,7 +17,7 @@
         href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <script src="js/theme-preload.js"></script>
+    <script src="js/theme-preload.js"></script>
     <link rel="stylesheet" href="css/styles.css">
     <script src="js/common.js"></script>
     <link rel="stylesheet" href="css/page-styles/quran.css">
@@ -26,7 +26,7 @@
 <body>
     <!-- Sidebar Overlay -->
     <!-- Desktop Sidebar -->
-        <app-sidebar current="quran"></app-sidebar>
+    <app-sidebar current="quran"></app-sidebar>
 
     <header class="app-header glass-card">
         <button class="menu-toggle-btn" onclick="toggleSidebar()">
@@ -69,13 +69,18 @@
                     </div>
                 </div>
                 <div class="reader-header-actions">
-                    <button class="icon-btn" id="memorizationBtn" onclick="toggleMemorizationCoach()" title="مدرب الحفظ">
+                    <button class="icon-btn" id="memorizationBtn" onclick="toggleMemorizationCoach()"
+                        title="مدرب الحفظ">
                         <i class="bi bi-mortarboard-fill"></i>
                         <span>الحفظ</span>
                     </button>
                     <button class="icon-btn" id="readerFontBtn" onclick="cycleReaderFontSize()" title="حجم الخط">
                         <i class="bi bi-type"></i>
                         <span id="readerFontLabel">متوسط</span>
+                    </button>
+                    <button class="icon-btn" id="displayModeBtn" onclick="toggleReaderDisplayMode()" title="عرض المصحف">
+                        <i class="bi bi-file-earmark-image"></i>
+                        <span>المصحف</span>
                     </button>
                     <button class="icon-btn" id="tafsirBtn" onclick="toggleTafsir()" title="التفسير">
                         <i class="bi bi-book-half"></i>
@@ -112,7 +117,8 @@
 
             <div class="memorization-coach" id="memorizationCoach" aria-live="polite" style="display:none;">
                 <div class="memorization-coach-head">
-                    <div class="memorization-coach-title"><i class="bi bi-mortarboard-fill"></i><span>مدرب الحفظ</span></div>
+                    <div class="memorization-coach-title"><i class="bi bi-mortarboard-fill"></i><span>مدرب الحفظ</span>
+                    </div>
                     <div class="memorization-progress-text" id="memorizationProgressText">0 / 0</div>
                 </div>
                 <div class="memorization-progress-track">
@@ -123,18 +129,37 @@
                     <div class="memorization-ayah-ref" id="memorizationAyahRef"></div>
                 </div>
                 <div class="memorization-controls">
-                    <button class="memorization-btn" onclick="previousMemorizationAyah()"><i class="bi bi-chevron-right"></i><span>السابق</span></button>
-                    <button class="memorization-btn" id="memorizationPlayBtn" onclick="toggleMemorizationAyahAudio()"><i class="bi bi-volume-up"></i><span>استماع</span></button>
-                    <button class="memorization-btn" id="memorizationRepeatBtn" onclick="toggleMemorizationRepeat()"><i class="bi bi-arrow-repeat"></i><span>تكرار</span></button>
-                    <button class="memorization-btn" id="memorizationRevealBtn" onclick="toggleMemorizationReveal()"><i class="bi bi-eye-slash"></i><span>إخفاء</span></button>
-                    <button class="memorization-btn primary" id="memorizationDoneBtn" onclick="toggleCurrentAyahMemorized()"><i class="bi bi-check2-circle"></i><span>تم الحفظ</span></button>
-                    <button class="memorization-btn" onclick="nextMemorizationAyah()"><span>التالي</span><i class="bi bi-chevron-left"></i></button>
+                    <button class="memorization-btn" onclick="previousMemorizationAyah()"><i
+                            class="bi bi-chevron-right"></i><span>السابق</span></button>
+                    <button class="memorization-btn" id="memorizationPlayBtn" onclick="toggleMemorizationAyahAudio()"><i
+                            class="bi bi-volume-up"></i><span>استماع</span></button>
+                    <button class="memorization-btn" id="memorizationRepeatBtn" onclick="toggleMemorizationRepeat()"><i
+                            class="bi bi-arrow-repeat"></i><span>تكرار</span></button>
+                    <button class="memorization-btn" id="memorizationRevealBtn" onclick="toggleMemorizationReveal()"><i
+                            class="bi bi-eye-slash"></i><span>إخفاء</span></button>
+                    <button class="memorization-btn primary" id="memorizationDoneBtn"
+                        onclick="toggleCurrentAyahMemorized()"><i class="bi bi-check2-circle"></i><span>تم
+                            الحفظ</span></button>
+                    <button class="memorization-btn" onclick="nextMemorizationAyah()"><span>التالي</span><i
+                            class="bi bi-chevron-left"></i></button>
                 </div>
             </div>
 
             <div class="swipe-hint" id="swipeHint">اسحب لليمين للصفحة التالية • ولليسار للصفحة السابقة</div>
 
             <div id="quranContent" class="quran-content"></div>
+
+            <button class="mushaf-exit-btn" id="mushafExitBtn" onclick="exitMushafFocusMode()"
+                aria-label="الخروج من عرض المصحف">
+                <i class="bi bi-x-lg"></i>
+                <span>خروج</span>
+            </button>
+
+            <button class="mushaf-bookmark-btn" id="mushafBookmarkBtn" onclick="toggleBookmark()"
+                aria-label="حفظ الموضع">
+                <i class="bi bi-bookmark"></i>
+                <span>حفظ</span>
+            </button>
 
             <div class="ayah-quick-actions" id="ayahQuickActions" aria-hidden="true">
                 <button class="ayah-quick-btn" id="ayahQuickTafsirBtn" type="button" onclick="openHoveredAyahTafsir()">
@@ -348,21 +373,23 @@
 
                     <div class="share-actions">
                         <button class="share-action-btn secondary" id="downloadShareCardBtn"
-                            onclick="downloadAyahCardImage()"><i class="bi bi-download"></i><span>تحميل الصورة</span></button>
+                            onclick="downloadAyahCardImage()"><i class="bi bi-download"></i><span>تحميل
+                                الصورة</span></button>
                         <button class="share-action-btn primary" id="shareShareCardBtn"
-                            onclick="shareAyahCardImage()"><i class="bi bi-share-fill"></i><span>مشاركة الآن</span></button>
+                            onclick="shareAyahCardImage()"><i class="bi bi-share-fill"></i><span>مشاركة
+                                الآن</span></button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-        <script src="js/page-scripts/quran-data.js"></script>
+    <script src="js/page-scripts/quran-data.js"></script>
 
-        <script src="js/page-scripts/quran.js"></script>
+    <script src="js/page-scripts/quran.js"></script>
 
     <!-- Bottom Navigation for Mobile -->
-        <app-bottom-nav current="quran"></app-bottom-nav>
+    <app-bottom-nav current="quran"></app-bottom-nav>
 
     <!-- Custom Modal -->
     <div class="modal-overlay" id="customModal">
@@ -378,5 +405,3 @@
 </body>
 
 </html>
-
-
