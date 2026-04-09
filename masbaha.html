@@ -43,6 +43,7 @@
     <!-- Main Content -->
     <main class="app-content">
         <div class="masbaha-container">
+            <div class="masbaha-main-panel">
             <div class="lifetime-counter" id="lifetimeCounter">
                 <i class="bi bi-trophy-fill"></i>
                 <span>مجموع التسبيحات: 0</span>
@@ -50,25 +51,31 @@
 
             <div class="dhikr-selector-container">
                 <div class="dhikr-chips">
-                    <div class="dhikr-chip" onclick="selectDhikr('subhan_allah', this)">سبحان الله (33)</div>
-                    <div class="dhikr-chip" onclick="selectDhikr('alhamdulillah', this)">الحمد لله (33)</div>
-                    <div class="dhikr-chip" onclick="selectDhikr('allahu_akbar', this)">الله أكبر (33)</div>
-                    <div class="dhikr-chip" onclick="selectDhikr('la_ilaha_illa_allah', this)">لا إله إلا الله (100)
+                    <div class="dhikr-chip" data-dhikr="subhan_allah" onclick="selectDhikr('subhan_allah', this)">سبحان الله (33)</div>
+                    <div class="dhikr-chip" data-dhikr="alhamdulillah" onclick="selectDhikr('alhamdulillah', this)">الحمد لله (33)</div>
+                    <div class="dhikr-chip" data-dhikr="allahu_akbar" onclick="selectDhikr('allahu_akbar', this)">الله أكبر (33)</div>
+                    <div class="dhikr-chip" data-dhikr="la_ilaha_illa_allah" onclick="selectDhikr('la_ilaha_illa_allah', this)">لا إله إلا الله (100)
                     </div>
-                    <div class="dhikr-chip" onclick="selectDhikr('astaghfirullah', this)">أستغفر الله (100)</div>
-                    <div class="dhikr-chip" onclick="selectDhikr('salat_nabi', this)">صلى على النبي (10)</div>
-                    <div class="dhikr-chip active" onclick="selectDhikr('custom', this)">مخصص</div>
+                    <div class="dhikr-chip" data-dhikr="astaghfirullah" onclick="selectDhikr('astaghfirullah', this)">أستغفر الله (100)</div>
+                    <div class="dhikr-chip" data-dhikr="salat_nabi" onclick="selectDhikr('salat_nabi', this)">صلى على النبي (10)</div>
+                    <div class="dhikr-chip active" data-dhikr="custom" onclick="selectDhikr('custom', this)">مخصص</div>
                 </div>
             </div>
 
             <div class="counter-display">
-                <svg class="progress-ring" width="200" height="200">
+                <svg class="progress-ring" viewBox="0 0 200 200">
                     <circle class="progress-ring-bg" cx="100" cy="100" r="85"></circle>
                     <circle class="progress-ring-circle" id="progressCircle" cx="100" cy="100" r="85"></circle>
                 </svg>
                 <div class="counter-value" id="counterValue">0</div>
             </div>
             <div class="target-display" id="targetDisplay">الهدف: غير محدد</div>
+            <div class="session-insights">
+                <div class="insight-chip" id="selectedDhikrLabel">الذكر: مخصص</div>
+                <div class="insight-chip" id="remainingLabel">المتبقي: --</div>
+                <div class="insight-chip" id="todayCountLabel">تسبيحات اليوم: 0</div>
+            </div>
+            <div class="motivation-text" id="motivationText">ابدأ الآن واذكر الله</div>
 
             <button class="tap-button" id="tapButton" onclick="increment()">
                 <i class="bi bi-hand-index-fill"></i>
@@ -90,6 +97,15 @@
             </div>
 
             <div class="controls">
+                <button class="control-btn control-btn-soft" id="undoBtn" onclick="undoLastIncrement()" disabled>
+                    <i class="bi bi-arrow-counterclockwise"></i> تراجع
+                </button>
+                <button class="control-btn control-btn-soft" onclick="addBulk(10)">
+                    <i class="bi bi-plus-circle"></i> +10
+                </button>
+                <button class="control-btn control-btn-soft" id="autoToggleBtn" onclick="toggleAutoCount()">
+                    <i class="bi bi-cpu"></i> تلقائي
+                </button>
                 <button class="control-btn" onclick="reset()">
                     <i class="bi bi-arrow-clockwise"></i> إعادة تعيين
                 </button>
@@ -112,6 +128,12 @@
                     <i class="bi bi-phone-vibrate"></i> الاهتزاز
                 </button>
             </div>
+            </div>
+
+            <button class="quick-tap-fab" id="quickTapFab" onclick="increment()" aria-label="تسبيح سريع">
+                <i class="bi bi-plus-lg"></i>
+                <span>تسبيح</span>
+            </button>
 
             <div class="history">
                 <div class="history-title">

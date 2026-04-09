@@ -1,6 +1,6 @@
         .masbaha-container {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
             align-items: start;
             gap: 24px;
             max-width: 980px;
@@ -31,6 +31,8 @@
 
         .progress-ring {
             position: absolute;
+            top: 0;
+            left: 0;
             transform: rotate(-90deg);
         }
 
@@ -103,7 +105,7 @@
             border: none;
             outline: none;
             color: white;
-            font-size: 18px;
+            font-size: 52px;
             font-weight: 600;
             cursor: pointer;
             box-shadow: 0 8px 24px var(--shadow-heavy);
@@ -466,6 +468,7 @@
             margin-bottom: 8px;
             width: 100%;
             max-width: 100%;
+            min-width: 0;
             overflow-x: auto;
             padding: 5px;
             -webkit-overflow-scrolling: touch;
@@ -511,7 +514,7 @@
 
         .quick-tap-fab {
             position: fixed;
-            inset-inline-end: 18px;
+            right: 18px;
             bottom: calc(82px + env(safe-area-inset-bottom));
             z-index: 1001;
             display: inline-flex;
@@ -542,41 +545,46 @@
 
         @media (max-width: 768px) {
             .masbaha-container {
-                padding: 8px 4px 90px;
-                gap: 16px;
+                padding: 4px 4px 75px;
+                gap: 12px;
+            }
+
+            .masbaha-main-panel {
+                gap: 12px;
             }
 
             .session-insights {
-                gap: 8px;
+                gap: 6px;
             }
 
             .insight-chip {
                 font-size: 12px;
-                padding: 6px 10px;
+                padding: 4px 8px;
             }
 
             .motivation-text {
                 font-size: 13px;
+                margin-top: -4px;
             }
 
             .counter-display {
-                width: 200px;
-                height: 200px;
+                width: 160px;
+                height: 160px;
             }
 
             .progress-ring {
-                width: 200px;
-                height: 200px;
+                width: 160px;
+                height: 160px;
             }
 
             .counter-value {
-                font-size: 48px;
+                font-size: 42px;
             }
 
             .tap-button {
-                width: 150px;
-                height: 150px;
-                font-size: 18px;
+                width: 130px;
+                height: 130px;
+                font-size: 42px;
             }
 
             .history {
@@ -632,7 +640,7 @@
             }
 
             .quick-tap-fab {
-                inset-inline-end: 14px;
+                right: 14px;
                 bottom: calc(82px + env(safe-area-inset-bottom));
                 padding: 11px 14px;
                 font-size: 13px;
@@ -663,7 +671,7 @@
             .tap-button {
                 width: 200px;
                 height: 200px;
-                font-size: 24px;
+                font-size: 64px;
             }
 
             .quick-tap-fab {
