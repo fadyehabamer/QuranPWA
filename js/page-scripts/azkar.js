@@ -1,357 +1,559 @@
 let azkarData = {};
-        let currentCategory = null;
-        let zikrCounts = {};
-        let favorites = [];
-        // Load azkar data from JSON file
-        async function loadAzkarData() {
-            try {
-                const response = await fetch('data/azkar.json');
-                const jsonData = await response.json();
+let currentCategory = null;
+let zikrCounts = {};
+let favorites = [];
+let currentViewMode = localStorage.getItem('azkarViewMode') || 'swipe';
+let currentSwipeIndex = 0;
+let swipeStartX = 0;
+let swipeTracking = false;
+let swipeAnimating = false;
 
-                // Convert the JSON structure to our expected format
-                azkarData = {};
-                jsonData.forEach((category, index) => {
-                    const key = category.category.replace(/\s+/g, '_').toLowerCase();
-                    azkarData[key] = {
-                        name: category.category,
-                        azkar: category.array.map(item => ({
-                            text: item.text,
-                            repeat: getCountDescription(item.count),
-                            count: item.count
-                        }))
-                    };
-                });
+// Load azkar data from JSON file
+async function loadAzkarData() {
+    try {
+        const response = await fetch('data/azkar.json');
+        const jsonData = await response.json();
 
-                // Render categories after data is loaded
-                renderCategories();
-            } catch (error) {
-                console.error('Error loading azkar data:', error);
-                // Fallback to original data if JSON fails to load
-                azkarData = {
-                    morning: {
-                        name: 'أذكار الصباح',
-                        azkar: [
-                            {
-                                text: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
-                                repeat: "مرة واحدة",
-                                count: 1
-                            }
-                        ]
-                    }
-                };
-                renderCategories();
-            }
-        }
-
-        function getCountDescription(count) {
-            const countMap = {
-                1: "مرة واحدة",
-                3: "ثلاث مرات",
-                4: "أربع مرات",
-                7: "سبع مرات",
-                10: "عشر مرات",
-                33: "ثلاث وثلاثون",
-                34: "أربع وثلاثون",
-                100: "مائة مرة"
+        // Convert the JSON structure to our expected format
+        azkarData = {};
+        jsonData.forEach((category) => {
+            const key = category.category.replace(/\s+/g, '_').toLowerCase();
+            azkarData[key] = {
+                name: category.category,
+                azkar: category.array.map(item => ({
+                    text: item.text,
+                    repeat: getCountDescription(item.count),
+                    count: item.count
+                }))
             };
-            return countMap[count] || `${count} مرة`;
-        }
+        });
 
-        // Function to extract descriptions from text (looking for content in brackets)
-        function extractDescription(text) {
-            // Look for content in brackets [...]
-            const bracketMatches = text.match(/\[(.*?)\]/g);
-            if (bracketMatches && bracketMatches.length > 0) {
-                // Join all bracket contents with commas
-                return bracketMatches.map(match => match.slice(1, -1)).join(', ');
-            }
-
-            // Look for content in parentheses (...)
-            const parenMatches = text.match(/\((.*?)\)/g);
-            if (parenMatches && parenMatches.length > 0) {
-                // Take the first parenthetical content that looks like a description
-                for (let match of parenMatches) {
-                    const content = match.slice(1, -1);
-                    if (content.includes('مرة') || content.includes('مرات') || content.includes('قول') ||
-                        content.includes('قال') || content.includes('كان') || content.includes('من')) {
-                        return content;
+        renderCategories();
+    } catch (error) {
+        console.error('Error loading azkar data:', error);
+        // Fallback to original data if JSON fails to load
+        azkarData = {
+            morning: {
+                name: 'أذكار الصباح',
+                azkar: [
+                    {
+                        text: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
+                        repeat: 'مرة واحدة',
+                        count: 1
                     }
-                }
+                ]
             }
+        };
+        renderCategories();
+    }
+}
 
-            return '';
+function getCountDescription(count) {
+    const countMap = {
+        1: 'مرة واحدة',
+        3: 'ثلاث مرات',
+        4: 'أربع مرات',
+        7: 'سبع مرات',
+        10: 'عشر مرات',
+        33: 'ثلاث وثلاثون',
+        34: 'أربع وثلاثون',
+        100: 'مائة مرة'
+    };
+    return countMap[count] || `${count} مرة`;
+}
+
+function extractDescription(text) {
+    const bracketMatches = text.match(/\[(.*?)\]/g);
+    if (bracketMatches && bracketMatches.length > 0) {
+        return bracketMatches.map(match => match.slice(1, -1)).join(', ');
+    }
+
+    const parenMatches = text.match(/\((.*?)\)/g);
+    if (parenMatches && parenMatches.length > 0) {
+        for (const match of parenMatches) {
+            const content = match.slice(1, -1);
+            if (content.includes('مرة') || content.includes('مرات') || content.includes('قول') ||
+                content.includes('قال') || content.includes('كان') || content.includes('من')) {
+                return content;
+            }
+        }
+    }
+
+    return '';
+}
+
+function loadUserData() {
+    try {
+        const savedCounts = localStorage.getItem('zikrCounts');
+        if (savedCounts) {
+            zikrCounts = JSON.parse(savedCounts);
         }
 
-        function loadUserData() {
-            const savedCounts = localStorage.getItem('zikrCounts');
-            if (savedCounts) {
-                zikrCounts = JSON.parse(savedCounts);
-            }
-
-            const savedFavorites = localStorage.getItem('azkarFavorites');
-            if (savedFavorites) {
-                favorites = JSON.parse(savedFavorites);
-            }
+        const savedFavorites = localStorage.getItem('azkarFavorites');
+        if (savedFavorites) {
+            favorites = JSON.parse(savedFavorites);
         }
+    } catch (error) {
+        console.error('Error loading azkar user data:', error);
+        zikrCounts = {};
+        favorites = [];
+    }
+}
 
-        function saveUserData() {
-            localStorage.setItem('zikrCounts', JSON.stringify(zikrCounts));
-            localStorage.setItem('azkarFavorites', JSON.stringify(favorites));
+function saveUserData() {
+    localStorage.setItem('zikrCounts', JSON.stringify(zikrCounts));
+    localStorage.setItem('azkarFavorites', JSON.stringify(favorites));
+}
+
+function setViewModeButtonVisibility(visible) {
+    const btn = document.getElementById('viewModeBtn');
+    if (!btn) return;
+    btn.style.display = visible ? 'flex' : 'none';
+}
+
+function updateViewModeButton() {
+    const btn = document.getElementById('viewModeBtn');
+    if (!btn) return;
+
+    const icon = btn.querySelector('i');
+    const label = btn.querySelector('.view-mode-label');
+
+    if (currentViewMode === 'swipe') {
+        icon.className = 'bi bi-list-ul';
+        label.textContent = 'قائمة';
+        btn.title = 'عرض القائمة';
+    } else {
+        icon.className = 'bi bi-view-stacked';
+        label.textContent = 'بطاقات';
+        btn.title = 'عرض البطاقات';
+    }
+}
+
+function toggleViewMode() {
+    currentViewMode = currentViewMode === 'list' ? 'swipe' : 'list';
+    localStorage.setItem('azkarViewMode', currentViewMode);
+    updateViewModeButton();
+
+    if (currentCategory) {
+        renderCurrentCategoryView();
+    }
+}
+
+function renderCategories() {
+    const list = document.getElementById('categoryList');
+
+    function getCategoryIcon(categoryName) {
+        const iconMap = {
+            'أذكار الصباح': 'bi-sunrise-fill',
+            'أذكار المساء': 'bi-sunset-fill',
+            'أذكار النوم': 'bi-moon-stars-fill',
+            'أذكار الاستيقاظ': 'bi-alarm-fill',
+            'أذكار الصلاة': 'bi-building',
+            'الأذكار': 'bi-bookmark-star-fill'
+        };
+
+        return iconMap[categoryName] || 'bi-bookmark-star-fill';
+    }
+
+    let html = '';
+
+    html += `<div class="category-item" onclick="showFavorites()">
+        <div class="category-info">
+            <div class="category-icon"><i class="bi bi-heart-fill"></i></div>
+            <div class="category-name">المفضلة</div>
+        </div>
+        <div class="category-count">${favorites.length}</div>
+    </div>`;
+
+    for (const [key, category] of Object.entries(azkarData)) {
+        const icon = getCategoryIcon(category.name);
+        html += `<div class="category-item" onclick="showCategory('${key}')">
+            <div class="category-info">
+                <div class="category-icon"><i class="bi ${icon}"></i></div>
+                <div class="category-name">${category.name}</div>
+            </div>
+            <div class="category-count">${category.azkar.length}</div>
+        </div>`;
+    }
+
+    list.innerHTML = html;
+}
+
+function renderCategoryCard(categoryKey, zikr, index) {
+    const countKey = `${categoryKey}_${index}`;
+    const currentCount = zikrCounts[countKey] || 0;
+    const targetCount = getTargetCount(zikr.repeat);
+    const isCompleted = currentCount >= targetCount;
+    const isFav = favorites.some(f => f.text === zikr.text);
+    const description = extractDescription(zikr.text);
+
+    return `<div class="zikr-card" id="card_${index}">
+        <div class="zikr-text">${zikr.text}</div>
+        <div class="zikr-info">
+            ${description ? `<div class="zikr-desc">${description}</div>` : ''}
+        </div>
+        <div class="zikr-actions">
+            <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${categoryKey}', ${index})">
+                <i class="bi bi-heart${isFav ? '-fill' : ''}"></i>
+            </button>
+            <div class="zikr-repeat">${zikr.repeat}</div>
+            <button class="zikr-counter-btn ${isCompleted ? 'completed' : ''}" onclick="incrementZikr('${categoryKey}', ${index}, ${targetCount})">
+                ${isCompleted ? '✓' : `${currentCount}/${targetCount}`}
+            </button>
+        </div>
+    </div>`;
+}
+
+function renderFavoriteCard(zikr, index) {
+    const description = extractDescription(zikr.text);
+    return `<div class="zikr-card" id="card_${index}">
+        <div class="zikr-text">${zikr.text}</div>
+        <div class="zikr-info">
+            ${description ? `<div class="zikr-desc">${description}</div>` : ''}
+        </div>
+        <div class="zikr-actions">
+            <button class="favorite-btn active" onclick="removeFromFavorites(${index})">
+                <i class="bi bi-heart-fill"></i>
+            </button>
+            <div class="zikr-repeat">${zikr.repeat || getCountDescription(zikr.count)}</div>
+        </div>
+    </div>`;
+}
+
+function renderCategoryList(categoryKey) {
+    const list = document.getElementById('azkarList');
+    const category = azkarData[categoryKey];
+    let html = '';
+
+    category.azkar.forEach((zikr, index) => {
+        html += renderCategoryCard(categoryKey, zikr, index);
+    });
+
+    list.innerHTML = html;
+}
+
+function renderCategorySwipe(categoryKey) {
+    const list = document.getElementById('azkarList');
+    const category = azkarData[categoryKey];
+    const total = category.azkar.length;
+
+    if (total === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--text-color);">لا توجد أذكار في هذا القسم</div>';
+        return;
+    }
+
+    currentSwipeIndex = Math.max(0, Math.min(currentSwipeIndex, total - 1));
+    const zikr = category.azkar[currentSwipeIndex];
+
+    list.innerHTML = `<div class="swipe-view">
+        <div class="swipe-meta">
+            <span>بطاقة ${currentSwipeIndex + 1} من ${total}</span>
+            <span>اسحب يميناً ويساراً</span>
+        </div>
+        <div class="swipe-area">
+            ${renderCategoryCard(categoryKey, zikr, currentSwipeIndex).replace('zikr-card', 'zikr-card swipe-card')}
+        </div>
+        <div class="swipe-hint">تحريك يمين: التالي | تحريك يسار: السابق</div>
+        <div class="swipe-nav">
+            <button class="swipe-nav-btn" onclick="goToPreviousCard()" ${currentSwipeIndex === 0 ? 'disabled' : ''}>السابق</button>
+            <button class="swipe-nav-btn" onclick="goToNextCard()" ${currentSwipeIndex === total - 1 ? 'disabled' : ''}>التالي</button>
+        </div>
+    </div>`;
+
+    bindSwipeGesture();
+}
+
+function renderFavoritesList() {
+    const list = document.getElementById('azkarList');
+
+    if (favorites.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-color);"><i class="bi bi-heart" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 16px;"></i>لا توجد أذكار مفضلة<br><small style="opacity: 0.6;">اضغط على ❤️ لإضافة ذكر للمفضلة</small></div>';
+        return;
+    }
+
+    let html = '';
+    favorites.forEach((zikr, index) => {
+        html += renderFavoriteCard(zikr, index);
+    });
+
+    list.innerHTML = html;
+}
+
+function renderFavoritesSwipe() {
+    const list = document.getElementById('azkarList');
+    const total = favorites.length;
+
+    if (total === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-color);"><i class="bi bi-heart" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 16px;"></i>لا توجد أذكار مفضلة<br><small style="opacity: 0.6;">اضغط على ❤️ لإضافة ذكر للمفضلة</small></div>';
+        return;
+    }
+
+    currentSwipeIndex = Math.max(0, Math.min(currentSwipeIndex, total - 1));
+    const zikr = favorites[currentSwipeIndex];
+
+    list.innerHTML = `<div class="swipe-view">
+        <div class="swipe-meta">
+            <span>بطاقة ${currentSwipeIndex + 1} من ${total}</span>
+            <span>المفضلة</span>
+        </div>
+        <div class="swipe-area">
+            ${renderFavoriteCard(zikr, currentSwipeIndex).replace('zikr-card', 'zikr-card swipe-card')}
+        </div>
+        <div class="swipe-hint">اسحب يميناً ويساراً للتنقل</div>
+        <div class="swipe-nav">
+            <button class="swipe-nav-btn" onclick="goToPreviousCard()" ${currentSwipeIndex === 0 ? 'disabled' : ''}>السابق</button>
+            <button class="swipe-nav-btn" onclick="goToNextCard()" ${currentSwipeIndex === total - 1 ? 'disabled' : ''}>التالي</button>
+        </div>
+    </div>`;
+
+    bindSwipeGesture();
+}
+
+function renderCurrentCategoryView() {
+    if (!currentCategory) return;
+
+    if (currentCategory === 'favorites') {
+        if (currentViewMode === 'swipe') {
+            renderFavoritesSwipe();
+        } else {
+            renderFavoritesList();
         }
+        return;
+    }
 
-        function renderCategories() {
-            const list = document.getElementById('categoryList');
+    if (currentViewMode === 'swipe') {
+        renderCategorySwipe(currentCategory);
+    } else {
+        renderCategoryList(currentCategory);
+    }
+}
 
-            // Generate icons dynamically based on category names
-            function getCategoryIcon(categoryName) {
-                const iconMap = {
-                    'أذكار الصباح': 'bi-sunrise-fill',
-                    'أذكار المساء': 'bi-sunset-fill',
-                    'أذكار النوم': 'bi-moon-stars-fill',
-                    'أذكار الاستيقاظ': 'bi-alarm-fill',
-                    'أذكار الصلاة': 'bi-building',
-                    'الأذكار': 'bi-bookmark-star-fill'
-                };
+function showCategory(categoryKey) {
+    currentCategory = categoryKey;
+    currentSwipeIndex = 0;
 
-                // Default icon if category not found in map
-                return iconMap[categoryName] || 'bi-bookmark-star-fill';
-            }
+    document.getElementById('categoryList').style.display = 'none';
+    document.getElementById('azkarList').classList.add('active');
+    document.getElementById('headerTitle').textContent = azkarData[categoryKey].name;
+    document.getElementById('backBtn').style.display = 'flex';
+    document.getElementById('menuBtn').style.display = 'none';
 
-            let html = '';
+    setViewModeButtonVisibility(true);
+    updateViewModeButton();
+    renderCurrentCategoryView();
+}
 
-            // Add Favorites Category
-            html += `<div class="category-item" onclick="showFavorites()">
-                <div class="category-info">
-                    <div class="category-icon"><i class="bi bi-heart-fill"></i></div>
-                    <div class="category-name">المفضلة</div>
-                </div>
-                <div class="category-count">${favorites.length}</div>
-            </div>`;
+function showFavorites() {
+    currentCategory = 'favorites';
+    currentSwipeIndex = 0;
 
-            for (const [key, category] of Object.entries(azkarData)) {
-                const icon = getCategoryIcon(category.name);
-                html += `<div class="category-item" onclick="showCategory('${key}')">
-                    <div class="category-info">
-                        <div class="category-icon"><i class="bi ${icon}"></i></div>
-                        <div class="category-name">${category.name}</div>
-                    </div>
-                    <div class="category-count">${category.azkar.length}</div>
-                </div>`;
-            }
+    document.getElementById('categoryList').style.display = 'none';
+    document.getElementById('azkarList').classList.add('active');
+    document.getElementById('headerTitle').textContent = 'المفضلة';
+    document.getElementById('backBtn').style.display = 'flex';
+    document.getElementById('menuBtn').style.display = 'none';
 
-            list.innerHTML = html;
+    setViewModeButtonVisibility(true);
+    updateViewModeButton();
+    renderCurrentCategoryView();
+}
+
+function showCategories() {
+    currentCategory = null;
+    currentSwipeIndex = 0;
+
+    document.getElementById('categoryList').style.display = 'grid';
+    document.getElementById('azkarList').classList.remove('active');
+    document.getElementById('headerTitle').textContent = 'الأذكار';
+    document.getElementById('backBtn').style.display = 'none';
+    document.getElementById('menuBtn').style.display = 'flex';
+
+    setViewModeButtonVisibility(false);
+    renderCategories();
+}
+
+function getTargetCount(repeatText) {
+    if (!repeatText) return 1;
+    if (repeatText.includes('ثلاث مرات')) return 3;
+    if (repeatText.includes('ثلاث وثلاثون')) return 33;
+    if (repeatText.includes('أربع وثلاثون')) return 34;
+    if (repeatText.includes('سبع مرات')) return 7;
+    if (repeatText.includes('أربع مرات')) return 4;
+    if (repeatText.includes('مائة مرة')) return 100;
+    if (repeatText.includes('عشر مرات')) return 10;
+
+    const match = repeatText.match(/(\d+)\s*(مرة|مرات)/);
+    if (match) {
+        return parseInt(match[1], 10);
+    }
+
+    return 1;
+}
+
+function incrementZikr(categoryKey, index, target) {
+    const countKey = `${categoryKey}_${index}`;
+    let current = zikrCounts[countKey] || 0;
+    const btn = document.querySelector(`#card_${index} .zikr-counter-btn`);
+
+    if (current >= target) {
+        zikrCounts[countKey] = 0;
+        saveUserData();
+        if (btn) {
+            btn.textContent = `0/${target}`;
+            btn.classList.remove('completed');
         }
+        return;
+    }
 
-        function showCategory(categoryKey) {
-            currentCategory = categoryKey;
-            const category = azkarData[categoryKey];
-            const list = document.getElementById('azkarList');
-            let html = '';
+    current++;
+    zikrCounts[countKey] = current;
+    saveUserData();
 
-            category.azkar.forEach((zikr, index) => {
-                const countKey = `${categoryKey}_${index}`;
-                const currentCount = zikrCounts[countKey] || 0;
-                const targetCount = getTargetCount(zikr.repeat);
-                const isCompleted = currentCount >= targetCount;
-                const isFav = favorites.some(f => f.text === zikr.text);
+    if (window.recordHabitActivity) {
+        window.recordHabitActivity('azkar');
+    }
 
-                html += `<div class="zikr-card" id="card_${index}">
-                    <div class="zikr-text">${zikr.text}</div>
-                    <div class="zikr-info">
-                        ${extractDescription(zikr.text) ? `<div class="zikr-desc">${extractDescription(zikr.text)}</div>` : ''}
-                    </div>
-                    <div class="zikr-actions">
-                        <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${categoryKey}', ${index})">
-                            <i class="bi bi-heart${isFav ? '-fill' : ''}"></i>
-                        </button>
-                        <div class="zikr-repeat">${zikr.repeat}</div>
-                        <button class="zikr-counter-btn ${isCompleted ? 'completed' : ''}"
-                            onclick="incrementZikr('${categoryKey}', ${index}, ${targetCount})">
-                            ${isCompleted ? '✓' : `${currentCount}/${targetCount}`}
-                        </button>
-                    </div>
-                </div>`;
-            });
-
-            list.innerHTML = html;
-            document.getElementById('categoryList').style.display = 'none';
-            document.getElementById('azkarList').classList.add('active');
-            document.getElementById('headerTitle').textContent = category.name;
-            document.getElementById('backBtn').style.display = 'flex';
-            document.getElementById('menuBtn').style.display = 'none';
-
-            // Show and update progress bar
-            document.getElementById('progressContainer').style.display = 'block';
-            updateProgressBar();
+    if (btn) {
+        if (current >= target) {
+            btn.textContent = '✓';
+            btn.classList.add('completed');
+            if (navigator.vibrate) navigator.vibrate(50);
+        } else {
+            btn.textContent = `${current}/${target}`;
         }
+    }
+}
 
-        function showFavorites() {
-            currentCategory = 'favorites';
-            const list = document.getElementById('azkarList');
+function toggleFavorite(categoryKey, index) {
+    const zikr = azkarData[categoryKey].azkar[index];
+    const favIndex = favorites.findIndex(f => f.text === zikr.text);
 
-            if (favorites.length === 0) {
-                list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-color);"><i class="bi bi-heart" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 16px;"></i>لا توجد أذكار مفضلة<br><small style="opacity: 0.6;">اضغط على ❤️ لإضافة ذكر للمفضلة</small></div>';
-            } else {
-                let html = '';
-                favorites.forEach((zikr, index) => {
-                    html += `<div class="zikr-card">
-                        <div class="zikr-text">${zikr.text}</div>
-                        <div class="zikr-info">
-                            ${extractDescription(zikr.text) ? `<div class="zikr-desc">${extractDescription(zikr.text)}</div>` : ''}
-                        </div>
-                        <div class="zikr-actions">
-                            <button class="favorite-btn active" onclick="removeFromFavorites(${index})">
-                                <i class="bi bi-heart-fill"></i>
-                            </button>
-                            <div class="zikr-repeat">${zikr.repeat || getCountDescription(zikr.count)}</div>
-                        </div>
-                    </div>`;
-                });
-                list.innerHTML = html;
-            }
+    const btn = document.querySelector(`#card_${index} .favorite-btn`);
+    const icon = btn ? btn.querySelector('i') : null;
 
-            document.getElementById('categoryList').style.display = 'none';
-            document.getElementById('azkarList').classList.add('active');
-            document.getElementById('headerTitle').textContent = 'المفضلة';
-            document.getElementById('backBtn').style.display = 'flex';
-            document.getElementById('menuBtn').style.display = 'none';
-            document.getElementById('progressContainer').style.display = 'none';
+    if (favIndex === -1) {
+        favorites.push(zikr);
+        if (btn && icon) {
+            btn.classList.add('active');
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
         }
-
-        function showCategories() {
-            document.getElementById('categoryList').style.display = 'grid';
-            document.getElementById('azkarList').classList.remove('active');
-            document.getElementById('headerTitle').textContent = 'الأذكار';
-            document.getElementById('backBtn').style.display = 'none';
-            document.getElementById('menuBtn').style.display = 'flex';
-            document.getElementById('progressContainer').style.display = 'none';
-            renderCategories();
+    } else {
+        favorites.splice(favIndex, 1);
+        if (btn && icon) {
+            btn.classList.remove('active');
+            icon.classList.remove('bi-heart-fill');
+            icon.classList.add('bi-heart');
         }
+    }
 
-        function getTargetCount(repeatText) {
-            if (!repeatText) return 1;
-            if (repeatText.includes('ثلاث مرات')) return 3;
-            if (repeatText.includes('ثلاث وثلاثون')) return 33;
-            if (repeatText.includes('أربع وثلاثون')) return 34;
-            if (repeatText.includes('سبع مرات')) return 7;
-            if (repeatText.includes('أربع مرات')) return 4;
-            if (repeatText.includes('مائة مرة')) return 100;
-            if (repeatText.includes('عشر مرات')) return 10;
+    saveUserData();
+}
 
-            // Extract number from strings like "5 مرة"
-            const match = repeatText.match(/(\d+)\s*(مرة|مرات)/);
-            if (match) {
-                return parseInt(match[1]);
-            }
+function removeFromFavorites(index) {
+    favorites.splice(index, 1);
+    saveUserData();
 
-            return 1;
-        }
+    if (currentViewMode === 'swipe' && currentSwipeIndex >= favorites.length) {
+        currentSwipeIndex = Math.max(0, favorites.length - 1);
+    }
 
-        function incrementZikr(categoryKey, index, target) {
-            const countKey = `${categoryKey}_${index}`;
-            let current = zikrCounts[countKey] || 0;
-            const btn = document.querySelector(`#card_${index} .zikr-counter-btn`);
+    showFavorites();
+}
 
-            // If already completed, reset the count
-            if (current >= target) {
-                zikrCounts[countKey] = 0;
-                saveUserData();
-                btn.textContent = `0/${target}`;
-                btn.classList.remove('completed');
-                updateProgressBar();
-                return;
-            }
+function getCurrentItemsLength() {
+    if (!currentCategory) return 0;
+    if (currentCategory === 'favorites') return favorites.length;
+    return azkarData[currentCategory]?.azkar?.length || 0;
+}
 
-            current++;
-            zikrCounts[countKey] = current;
-            saveUserData();
+function changeCardBy(step) {
+    if (swipeAnimating) return;
 
-            if (window.recordHabitActivity) {
-                window.recordHabitActivity('azkar');
-            }
+    const total = getCurrentItemsLength();
+    const nextIndex = currentSwipeIndex + step;
+    if (total <= 1 || nextIndex < 0 || nextIndex >= total) return;
 
-            if (current >= target) {
-                btn.textContent = '✓';
-                btn.classList.add('completed');
-                if (navigator.vibrate) navigator.vibrate(50);
-            } else {
-                btn.textContent = `${current}/${target}`;
-            }
+    const card = document.querySelector('.swipe-card');
+    if (!card) {
+        currentSwipeIndex = nextIndex;
+        renderCurrentCategoryView();
+        return;
+    }
 
-            updateProgressBar();
-        }
+    swipeAnimating = true;
+    card.classList.add(step > 0 ? 'swipe-right' : 'swipe-left');
 
-        function toggleFavorite(categoryKey, index) {
-            const zikr = azkarData[categoryKey].azkar[index];
-            const favIndex = favorites.findIndex(f => f.text === zikr.text);
+    setTimeout(() => {
+        currentSwipeIndex = nextIndex;
+        swipeAnimating = false;
+        renderCurrentCategoryView();
+    }, 180);
+}
 
-            const btn = document.querySelector(`#card_${index} .favorite-btn`);
-            const icon = btn.querySelector('i');
+function goToNextCard() {
+    changeCardBy(1);
+}
 
-            if (favIndex === -1) {
-                favorites.push(zikr);
-                btn.classList.add('active');
-                icon.classList.remove('bi-heart');
-                icon.classList.add('bi-heart-fill');
-            } else {
-                favorites.splice(favIndex, 1);
-                btn.classList.remove('active');
-                icon.classList.remove('bi-heart-fill');
-                icon.classList.add('bi-heart');
-            }
+function goToPreviousCard() {
+    changeCardBy(-1);
+}
 
-            saveUserData();
-        }
+function handleSwipeEnd(endX) {
+    if (!swipeTracking) return;
+    swipeTracking = false;
 
-        function removeFromFavorites(index) {
-            favorites.splice(index, 1);
-            saveUserData();
-            showFavorites();
-        }
+    const delta = endX - swipeStartX;
+    if (Math.abs(delta) < 45) return;
 
-        function updateProgressBar() {
-            if (!currentCategory || currentCategory === 'favorites') return;
+    if (delta > 0) {
+        goToNextCard();
+    } else {
+        goToPreviousCard();
+    }
+}
 
-            const category = azkarData[currentCategory];
-            let totalTarget = 0;
-            let totalCurrent = 0;
+function bindSwipeGesture() {
+    const card = document.querySelector('.swipe-card');
+    if (!card) return;
 
-            category.azkar.forEach((zikr, index) => {
-                const target = getTargetCount(zikr.repeat);
-                const current = Math.min(zikrCounts[`${currentCategory}_${index}`] || 0, target);
-                totalTarget += target;
-                totalCurrent += current;
-            });
+    card.addEventListener('pointerdown', (event) => {
+        swipeStartX = event.clientX;
+        swipeTracking = true;
+    });
 
-            const percent = Math.round((totalCurrent / totalTarget) * 100) || 0;
-            document.getElementById('progressBar').style.width = `${percent}%`;
-            document.getElementById('progressPercent').textContent = `${percent}%`;
-        }
+    card.addEventListener('pointerup', (event) => {
+        handleSwipeEnd(event.clientX);
+    });
 
-        // Sidebar Toggle
-// Initialize
-        loadUserData();
-        loadAzkarData();
+    card.addEventListener('pointercancel', () => {
+        swipeTracking = false;
+    });
+}
 
-        // Load theme settings
-        (function () {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
+loadUserData();
+updateViewModeButton();
+loadAzkarData();
 
-            const color = localStorage.getItem('primaryColor');
-            if (color) {
-                document.documentElement.style.setProperty('--primary-color', color);
-            }
+// Load theme settings
+(function () {
+    const darkMode = localStorage.getItem('darkMode') === 'true';
+    if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
 
-            const fontSize = localStorage.getItem('fontSize');
-            if (fontSize !== null) {
-                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
-                const baseSize = fontSizes[parseInt(fontSize)] || 16;
-                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
-                document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
-            }
-        })();
+    const color = localStorage.getItem('primaryColor');
+    if (color) {
+        document.documentElement.style.setProperty('--primary-color', color);
+    }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        }
+    const fontSize = localStorage.getItem('fontSize');
+    if (fontSize !== null) {
+        const fontSizes = [12, 14, 16, 18, 20, 24, 28];
+        const baseSize = fontSizes[parseInt(fontSize, 10)] || 16;
+        document.documentElement.style.setProperty('--font-size-base', `${baseSize}px`);
+        document.documentElement.style.setProperty('--font-size-ayah', `${baseSize + 8}px`);
+    }
+})();
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' });
+}

@@ -32,6 +32,10 @@
         </button>
         <h1 id="headerTitle">الأذكار</h1>
         <div class="header-left-buttons">
+            <button class="menu-toggle-btn view-mode-btn" id="viewModeBtn" onclick="toggleViewMode()" style="display: none;" title="تبديل طريقة العرض">
+                <i class="bi bi-view-stacked"></i>
+                <span class="view-mode-label">بطاقات</span>
+            </button>
             <div class="visitor-badge">
                 <i class="bi bi-people-fill"></i>
                 <span class="count" id="visitorCount">-</span>
@@ -41,17 +45,6 @@
 
     <!-- Main Content -->
     <main class="app-content">
-        <!-- Progress Bar -->
-        <div class="progress-container" id="progressContainer">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span>التقدم:</span>
-                <span id="progressPercent">0%</span>
-            </div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progressBar"></div>
-            </div>
-        </div>
-
         <!-- Category List -->
         <div class="category-list" id="categoryList"></div>
 
