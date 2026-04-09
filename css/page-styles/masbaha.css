@@ -33,6 +33,8 @@
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
             transform: rotate(-90deg);
         }
 
@@ -656,12 +658,6 @@
             .progress-ring {
                 width: 250px;
                 height: 250px;
-            }
-
-            .progress-ring circle {
-                cx: 125;
-                cy: 125;
-                r: 110;
             }
 
             .counter-value {
