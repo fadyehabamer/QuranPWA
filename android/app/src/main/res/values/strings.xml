@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">القرآن الكريم</string>
+    <string name="title_activity_main">القرآن الكريم</string>
+    <string name="package_name">app.quran.fady</string>
+    <string name="custom_url_scheme">app.quran.fady</string>
+    <string name="widget_next_prayer_label">الصلاة القادمة</string>
+    <string name="widget_next_prayer_description">يعرض اسم الصلاة القادمة والوقت المتبقي.</string>
+    <string name="widget_ayah_label">آية اليوم</string>
+    <string name="widget_ayah_description">يعرض آية من القرآن الكريم تتغير عند فتح التطبيق.</string>
+</resources>

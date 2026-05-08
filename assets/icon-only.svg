@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B5E20"/>
+      <stop offset="100%" stop-color="#0F3D14"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF8E1"/>
+      <stop offset="100%" stop-color="#F5E7B6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0%" stop-color="rgba(255,215,128,0.35)"/>
+      <stop offset="100%" stop-color="rgba(255,215,128,0)"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <circle cx="512" cy="520" r="380" fill="url(#glow)"/>
+
+  <!-- crescent at top -->
+  <g transform="translate(700,200)">
+    <circle cx="0" cy="0" r="62" fill="#FFD479"/>
+    <circle cx="22" cy="-8" r="58" fill="#1B5E20"/>
+  </g>
+
+  <!-- open book -->
+  <g transform="translate(160,330)">
+    <!-- shadow -->
+    <ellipse cx="352" cy="370" rx="320" ry="22" fill="rgba(0,0,0,0.25)"/>
+
+    <!-- left page -->
+    <path d="M40 50 Q40 30 60 30 L340 30 Q352 30 352 42 L352 350 Q200 320 60 350 Q40 354 40 334 Z"
+          fill="url(#page)" stroke="#C9A24A" stroke-width="3"/>
+    <!-- right page -->
+    <path d="M664 50 Q664 30 644 30 L364 30 Q352 30 352 42 L352 350 Q504 320 644 350 Q664 354 664 334 Z"
+          fill="url(#page)" stroke="#C9A24A" stroke-width="3"/>
+
+    <!-- decorative borders -->
+    <rect x="70" y="70" width="252" height="240" fill="none" stroke="#C9A24A" stroke-width="2"/>
+    <rect x="382" y="70" width="252" height="240" fill="none" stroke="#C9A24A" stroke-width="2"/>
+
+    <!-- arabic-style ornamental lines (left page) -->
+    <line x1="100" y1="120" x2="290" y2="120" stroke="#1B5E20" stroke-width="6" stroke-linecap="round"/>
+    <line x1="100" y1="160" x2="270" y2="160" stroke="#1B5E20" stroke-width="6" stroke-linecap="round"/>
+    <line x1="100" y1="200" x2="290" y2="200" stroke="#1B5E20" stroke-width="6" stroke-linecap="round"/>
+    <line x1="100" y1="240" x2="240" y2="240" stroke="#1B5E20" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- right page -->
+    <line x1="412" y1="120" x2="600" y2="120" stroke="#1B5E20" stroke-width="6" stroke-linecap="round"/>
+    <line x1="412" y1="160" x2="580" y2="160" stroke="#1B5E20" stroke-width="6" stroke-linecap="round"/>
+    <line x1="412" y1="200" x2="600" y2="200" stroke="#1B5E20" stroke-width="6" stroke-linecap="round"/>
+    <line x1="412" y1="240" x2="560" y2="240" stroke="#1B5E20" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- center spine -->
+    <path d="M352 30 L352 350" stroke="#8B6914" stroke-width="4"/>
+  </g>
+</svg>

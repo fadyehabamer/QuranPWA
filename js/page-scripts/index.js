@@ -49,6 +49,15 @@ function hexToRgb(hex) {
             navigator.serviceWorker.register('/sw.js', { scope: '/' });
         }
         // Daily Verse Logic
+        function pushAyahToWidget(verseData) {
+            if (!verseData || !window.NativeBridge || typeof window.NativeBridge.setAyahOfDay !== 'function') return;
+            window.NativeBridge.setAyahOfDay({
+                text: verseData.text,
+                surah: verseData.surah,
+                ayah: verseData.numberInSurah || 0
+            });
+        }
+
         async function loadDailyVerse() {
             const section = document.getElementById('dailyVerseSection');
             const textElement = document.getElementById('dailyVerseText');
@@ -64,6 +73,7 @@ function hexToRgb(hex) {
                     textElement.textContent = data.text;
                     infoElement.textContent = `${data.surah} - آية ${data.numberInSurah}`;
                     section.style.display = 'block';
+                    pushAyahToWidget(data);
                     return;
                 }
             }
@@ -87,6 +97,7 @@ function hexToRgb(hex) {
                     textElement.textContent = verseData.text;
                     infoElement.textContent = `${verseData.surah} - آية ${verseData.numberInSurah}`;
                     section.style.display = 'block';
+                    pushAyahToWidget(verseData);
                 }
             } catch (error) {
                 console.error('Error fetching daily verse:', error);

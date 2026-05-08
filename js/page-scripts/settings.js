@@ -204,23 +204,29 @@ let deferredPrompt;
             const isEnabled = toggle.classList.toggle('active');
 
             if (isEnabled) {
-                // Request permission
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
+                const granted = window.NativeBridge
+                    ? await window.NativeBridge.requestNotificationPermission()
+                    : (await Notification.requestPermission()) === 'granted';
+
+                if (granted) {
                     document.getElementById('notificationSettings').style.display = 'block';
                     localStorage.setItem('notificationsEnabled', 'true');
+                    scheduleNotifications();
                 } else {
                     toggle.classList.remove('active');
                     showModal({
                         type: 'warning',
                         icon: '⚠',
                         title: 'تنبيه',
-                        message: 'يجب السماح بالإشعارات في إعدادات المتصفح'
+                        message: 'يجب السماح بالإشعارات من إعدادات الجهاز'
                     });
                 }
             } else {
                 document.getElementById('notificationSettings').style.display = 'none';
                 localStorage.setItem('notificationsEnabled', 'false');
+                if (window.NativeBridge) {
+                    window.NativeBridge.cancelAllNotifications();
+                }
             }
         }
 
@@ -308,31 +314,22 @@ let deferredPrompt;
         }
 
         function scheduleNotifications() {
-            // This would integrate with the service worker for actual scheduling
-            if ('serviceWorker' in navigator && 'PushManager' in window) {
-                navigator.serviceWorker.ready.then(registration => {
-                    // Schedule notifications based on saved times
-                    notifications.forEach(notif => {
-                        const [hours, minutes] = notif.time.split(':');
-                        const now = new Date();
-                        const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
-                            parseInt(hours), parseInt(minutes));
+            if (localStorage.getItem('notificationsEnabled') !== 'true') return;
 
-                        if (scheduledTime > now && notif.days.includes(now.getDay())) {
-                            const delay = scheduledTime - now;
-                            setTimeout(() => {
-                                registration.showNotification('القرآن الكريم', {
-                                    body: 'حان وقت قراءة القرآن والأذكار',
-                                    icon: 'assets/icons/icon-192.png',
-                                    badge: 'assets/icons/icon-192.png',
-                                    vibrate: [200, 100, 200],
-                                    dir: 'rtl',
-                                    lang: 'ar'
-                                });
-                            }, delay);
-                        }
-                    });
-                });
+            const items = (notifications || []).map((notif, index) => {
+                const [hours, minutes] = (notif.time || '00:00').split(':');
+                return {
+                    id: index + 1,
+                    title: 'القرآن الكريم',
+                    body: 'حان وقت قراءة القرآن والأذكار',
+                    hour: parseInt(hours, 10) || 0,
+                    minute: parseInt(minutes, 10) || 0,
+                    days: Array.isArray(notif.days) ? notif.days : []
+                };
+            });
+
+            if (window.NativeBridge && typeof window.NativeBridge.scheduleDailyNotifications === 'function') {
+                window.NativeBridge.scheduleDailyNotifications(items);
             }
         }
 

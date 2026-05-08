@@ -589,6 +589,30 @@ let userLocation = null;
             return { name: 'Fajr', time: timings.Fajr, tomorrow: true };
         }
 
+        function pushNextPrayerToWidget() {
+            if (!prayerTimes || !window.NativeBridge || typeof window.NativeBridge.setNextPrayer !== 'function') return;
+
+            const nextPrayer = getNextPrayer(prayerTimes.timings);
+            const [h, m] = nextPrayer.time.split(':').map(Number);
+            const now = new Date();
+            const target = new Date(now);
+            target.setHours(h, m, 0, 0);
+            if (nextPrayer.tomorrow || target <= now) {
+                target.setDate(target.getDate() + 1);
+            }
+            const remainingMinutes = Math.max(0, Math.round((target - now) / 60000));
+            const locationName = localStorage.getItem('locationText') || '';
+
+            window.NativeBridge.setNextPrayer({
+                name: nextPrayer.name,
+                nameAr: prayerNames[nextPrayer.name] || '',
+                time: nextPrayer.time,
+                remainingMinutes,
+                location: locationName,
+                isTomorrow: !!nextPrayer.tomorrow
+            });
+        }
+
         // Update remaining time display
         function updateRemainingTime() {
             if (!prayerTimes) return;
@@ -596,6 +620,8 @@ let userLocation = null;
             const nextPrayer = getNextPrayer(prayerTimes.timings);
             const remaining = calculateRemainingTime(nextPrayer.time);
             const tahajjudTime = calculateTahajjudTime(prayerTimes.timings);
+
+            pushNextPrayerToWidget();
 
             document.getElementById('nextPrayerName').textContent = prayerNames[nextPrayer.name];
             document.getElementById('nextPrayerRemaining').textContent = nextPrayer.tomorrow ?
