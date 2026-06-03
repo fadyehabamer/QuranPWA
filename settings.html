@@ -13,7 +13,6 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="js/theme-preload.js"></script>
-        <script src="js/native-bridge.js"></script>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="data/manifest.json">
     <meta name="theme-color" content="#1B5E20">
@@ -35,17 +34,7 @@
         </div>
     </div>
 
-    <div class="app-header glass-card">
-        <h1>الإعدادات</h1>
-        <div class="header-left-buttons">
-            <div class="visitor-badge">
-                <i class="bi bi-people-fill"></i>
-                <span class="count" id="visitorCount">-</span>
-            </div>
-            <button class="header-back-btn" onclick="window.location.href='/'">→</button>
-            <button class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
-        </div>
-    </div>
+    <app-header title="الإعدادات" no-settings></app-header>
 
     <div class="app-content settings-container">
         <!-- Theme Settings -->

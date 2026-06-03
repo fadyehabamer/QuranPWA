@@ -1,0 +1,132 @@
+        .ref-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .ref-intro {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: 24px;
+            text-align: justify;
+        }
+
+        .ref-intro h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+        }
+
+        .ref-intro p {
+            font-size: 15px;
+            line-height: 1.9;
+            color: var(--text-color);
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .ref-section {
+            margin-bottom: 28px;
+        }
+
+        .ref-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 14px;
+            padding-right: 4px;
+        }
+
+        .ref-section-title i {
+            font-size: 20px;
+        }
+
+        .ref-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        @media (min-width: 640px) {
+            .ref-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .ref-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 3px 10px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .ref-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--shadow);
+        }
+
+        .ref-card-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .ref-card-url {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            color: var(--primary-color);
+            direction: ltr;
+            text-align: left;
+            word-break: break-all;
+            background: rgba(127, 127, 127, 0.08);
+            padding: 6px 8px;
+            border-radius: 8px;
+        }
+
+        .ref-card-desc {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-color);
+            opacity: 0.85;
+            margin: 0;
+            text-align: justify;
+        }
+
+        .ref-card-link {
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .ref-card-link:hover {
+            text-decoration: underline;
+        }
+
+        .ref-note {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 3px 10px var(--shadow);
+            font-size: 13.5px;
+            line-height: 1.8;
+            color: var(--text-color);
+            opacity: 0.85;
+            text-align: justify;
+            margin-top: 8px;
+        }

@@ -204,9 +204,9 @@ let deferredPrompt;
             const isEnabled = toggle.classList.toggle('active');
 
             if (isEnabled) {
-                const granted = window.NativeBridge
-                    ? await window.NativeBridge.requestNotificationPermission()
-                    : (await Notification.requestPermission()) === 'granted';
+                const granted = ('Notification' in window)
+                    ? (await Notification.requestPermission()) === 'granted'
+                    : false;
 
                 if (granted) {
                     document.getElementById('notificationSettings').style.display = 'block';
@@ -224,9 +224,6 @@ let deferredPrompt;
             } else {
                 document.getElementById('notificationSettings').style.display = 'none';
                 localStorage.setItem('notificationsEnabled', 'false');
-                if (window.NativeBridge) {
-                    window.NativeBridge.cancelAllNotifications();
-                }
             }
         }
 
@@ -328,9 +325,32 @@ let deferredPrompt;
                 };
             });
 
-            if (window.NativeBridge && typeof window.NativeBridge.scheduleDailyNotifications === 'function') {
-                window.NativeBridge.scheduleDailyNotifications(items);
-            }
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+            // Web notifications can't schedule recurring alerts without a push
+            // backend, so fire a one-shot reminder for any time still ahead today.
+            items.forEach((item) => {
+                const today = new Date();
+                const target = new Date(today.getFullYear(), today.getMonth(), today.getDate(),
+                    item.hour, item.minute);
+                const delay = target.getTime() - Date.now();
+                if (delay <= 0 || delay > 24 * 60 * 60 * 1000) return;
+                setTimeout(() => {
+                    try {
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.ready.then((reg) => {
+                                reg.showNotification(item.title, {
+                                    body: item.body,
+                                    icon: '/assets/icons/icon-192.png',
+                                    badge: '/assets/icons/icon-192.png'
+                                });
+                            });
+                        } else {
+                            new Notification(item.title, { body: item.body, icon: '/assets/icons/icon-192.png' });
+                        }
+                    } catch (_) {}
+                }, delay);
+            });
         }
 
         function saveSettings() {

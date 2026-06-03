@@ -135,14 +135,6 @@ function playSuccessSound() {
 function triggerVibration(duration = 30) {
     if (!vibrationEnabled) return;
 
-    // Prefer native haptics (real iOS Taptic Engine / Android pattern)
-    // and fall back to web vibrate. NativeBridge handles both internally.
-    if (window.NativeBridge && typeof window.NativeBridge.haptic === 'function') {
-        const style = duration >= 40 ? 'Heavy' : (duration >= 25 ? 'Medium' : 'Light');
-        window.NativeBridge.haptic(style);
-        return;
-    }
-
     if (navigator.vibrate) {
         navigator.vibrate(duration);
     }
@@ -308,8 +300,8 @@ function applyIncrement(amount = 1, options = {}) {
     if (target > 0 && previousCount < target && count >= target) {
         stopAutoCount();
         playSuccessSound();
-        if (vibrationEnabled && window.NativeBridge && typeof window.NativeBridge.hapticSuccess === 'function') {
-            window.NativeBridge.hapticSuccess();
+        if (vibrationEnabled && navigator.vibrate) {
+            navigator.vibrate([30, 50, 30]);
         }
 
         showModal({

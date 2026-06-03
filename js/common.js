@@ -1291,6 +1291,7 @@ const APP_NAV_ITEMS = [
     { key: 'prayer', href: 'prayer-times.html', label: 'مواقيت الصلاة', bottomLabel: 'الصلاة', bottomIcon: 'bi-clock-fill' },
     { key: 'features', href: 'features.html', label: 'كل الميزات', bottomLabel: 'الميزات', bottomIcon: 'bi-grid-fill' },
     { key: 'bio', href: 'bio.html', label: 'عن المطور' },
+    { key: 'references', href: 'references.html', label: 'المصادر والمراجع' },
     { key: 'settings', href: 'settings.html', label: 'الإعدادات' }
 ];
 
@@ -1323,6 +1324,7 @@ function getNavKeyFromPath(pathname) {
     if (path.endsWith('/prayer-times.html')) return 'prayer';
     if (path.endsWith('/features.html')) return 'features';
     if (path.endsWith('/bio.html')) return 'bio';
+    if (path.endsWith('/references.html')) return 'references';
     if (path.endsWith('/settings.html')) return 'settings';
     return 'home';
 }
@@ -1380,6 +1382,21 @@ function buildBottomNavMarkup(currentKey) {
     </nav>`;
 }
 
+function buildHeaderMarkup(opts) {
+    const headingId = opts.headingId ? ` id="${opts.headingId}"` : '';
+    const backBtn = opts.showBack
+        ? `<button class="header-back-btn" onclick="window.location.href='${opts.backHref}'" aria-label="رجوع"><i class="bi bi-arrow-right"></i></button>`
+        : '';
+    const settingsBtn = opts.showSettings
+        ? `<button class="settings-btn" onclick="window.location.href='settings.html'" aria-label="الإعدادات"><i class="bi bi-gear-fill"></i></button>`
+        : '';
+
+    return `
+        <button class="menu-toggle-btn" onclick="toggleSidebar()" aria-label="القائمة"><i class="bi bi-list"></i></button>
+        <h1${headingId}>${opts.title || ''}</h1>
+        <div class="header-left-buttons">${backBtn}${settingsBtn}</div>`;
+}
+
 function toggleSidebar(forceOpen) {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -1417,8 +1434,31 @@ if (window.customElements && !customElements.get('app-sidebar')) {
         }
     }
 
+    // Shared top header. Renders the same layout the home page uses
+    // (menu toggle, title, then a right-side cluster). Attributes:
+    //   title       — heading text (required)
+    //   home        — root page: omits the back button (home only)
+    //   no-back     — hide the back button on a non-home page
+    //   back        — custom back URL (default "/")
+    //   no-settings — hide the settings gear (e.g. the settings page itself)
+    //   heading-id  — id to put on the <h1> (for pages that retitle it in JS)
+    class AppHeader extends HTMLElement {
+        connectedCallback() {
+            const isHome = this.hasAttribute('home');
+            this.classList.add('app-header', 'glass-card');
+            this.innerHTML = buildHeaderMarkup({
+                title: this.getAttribute('title') || '',
+                headingId: this.getAttribute('heading-id') || '',
+                showBack: !isHome && !this.hasAttribute('no-back'),
+                backHref: this.getAttribute('back') || '/',
+                showSettings: !this.hasAttribute('no-settings')
+            });
+        }
+    }
+
     customElements.define('app-sidebar', AppSidebar);
     customElements.define('app-bottom-nav', AppBottomNav);
+    customElements.define('app-header', AppHeader);
 }
 
 // Theme & Settings Management
