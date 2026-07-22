@@ -461,7 +461,7 @@ let totalPages = 0;
                 const number = index + 1;
                 const juz = surahToJuz[number];
                 html += `
-                    <div class="surah-item" onclick="selectSurah(` + number + `)" data-name="` + surah.name + `" data-number="` + number + `">
+                    <button type="button" class="surah-item" onclick="selectSurah(` + number + `)" data-name="` + surah.name + `" data-number="` + number + `">
                         <div class="surah-item-right">
                             <div class="surah-number">` + number + `</div>
                             <div class="surah-item-info">
@@ -469,7 +469,7 @@ let totalPages = 0;
                                 <div class="surah-item-details">الجزء ` + juz + ` • ` + surah.type + ` • ` + surah.verses + ` آيات</div>
                             </div>
                         </div>
-                    </div>
+                    </button>
                 `;
             });
 
@@ -1235,7 +1235,7 @@ let totalPages = 0;
                 pageImage.classList.add('is-error');
                 status.classList.remove('hidden');
                 status.classList.add('error');
-                status.innerHTML = '<i class="bi bi-exclamation-circle"></i><p>تعذر تحميل صفحة المصحف الآن. يمكنك المتابعة في نمط النص.</p>';
+                status.innerHTML = '<i class="bi bi-exclamation-circle" aria-hidden="true"></i><p>تعذر تحميل صفحة المصحف الآن. يمكنك المتابعة في نمط النص.</p>';
             };
 
             const tryNextCandidate = () => {
@@ -1443,7 +1443,7 @@ let totalPages = 0;
 
             showModal({
                 type: 'info',
-                icon: '<i class="bi bi-folder-plus"></i>',
+                icon: '<i class="bi bi-folder-plus" aria-hidden="true"></i>',
                 title: 'حفظ الموضع في مجلد',
                 message: `
                     <div class="bookmark-save-modal">
@@ -1493,7 +1493,7 @@ let totalPages = 0;
                 }
                 showModal({
                     type: 'info',
-                    icon: '<i class="bi bi-info-circle-fill"></i>',
+                    icon: '<i class="bi bi-info-circle-fill" aria-hidden="true"></i>',
                     title: 'تم الإلغاء',
                     message: 'تم إلغاء حفظ الموضع'
                 });
@@ -1508,7 +1508,7 @@ let totalPages = 0;
                     if (alreadySaved) {
                         showModal({
                             type: 'info',
-                            icon: '<i class="bi bi-info-circle-fill"></i>',
+                            icon: '<i class="bi bi-info-circle-fill" aria-hidden="true"></i>',
                             title: 'الموضع محفوظ بالفعل',
                             message: 'هذا الموضع محفوظ مسبقاً.'
                         });
@@ -1529,7 +1529,7 @@ let totalPages = 0;
                     saveStoredBookmarks(latestBookmarks);
                     showModal({
                         type: 'success',
-                        icon: '<i class="bi bi-check-circle-fill"></i>',
+                        icon: '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>',
                         title: 'تم الحفظ',
                         message: `تم حفظ موضع القراءة في مجلد ${escapeHtml(folderName)}.`
                     });
@@ -1600,13 +1600,14 @@ let totalPages = 0;
 
             bookmarksSection.style.display = 'block';
             bookmarksList.innerHTML = bookmarks.map((bookmark, index) => `
-                <div class="bookmark-item" onclick="loadBookmark(` + index + `)">
-                    <div class="bookmark-info">
-                        <div class="bookmark-name">` + surahInfo[bookmark.surah - 1].name + `</div>
-                        <div class="bookmark-details">صفحة ` + (bookmark.page + 1) + `</div>
-                    </div>
+                <div class="bookmark-item">
+                    <button type="button" class="bookmark-info" onclick="loadBookmark(` + index + `)">
+                        <span class="bookmark-name">` + surahInfo[bookmark.surah - 1].name + `</span>
+                        <span class="bookmark-details">صفحة ` + (bookmark.page + 1) + `</span>
+                    </button>
                     <div class="bookmark-actions">
-                        <button class="bookmark-delete-btn" onclick="event.stopPropagation(); deleteBookmark(` + index + `)"></button>
+                        <button type="button" class="bookmark-delete-btn" aria-label="حذف العلامة"
+                            onclick="deleteBookmark(` + index + `)"><i class="bi bi-trash-fill" aria-hidden="true"></i></button>
                     </div>
                 </div>
             `).join('');
@@ -1821,6 +1822,9 @@ let totalPages = 0;
 
         document.addEventListener('keydown', (event) => {
             if (!isReaderViewActive()) return;
+            // A11y.openDialog owns Escape while a dialog is up; the mushaf
+            // shortcuts only apply when nothing is layered over the reader.
+            if (window.A11y && window.A11y.isDialogOpen()) return;
             if (document.querySelector('.modal-overlay.active')) return;
 
             const targetTag = event.target?.tagName;
@@ -1983,7 +1987,11 @@ let totalPages = 0;
             const icon = playBtn.querySelector('i');
             if (icon) {
                 icon.className = isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill';
+                icon.setAttribute('aria-hidden', 'true');
             }
+            // The icon is the button's only content, so the accessible name has
+            // to follow the state or the control keeps announcing "تشغيل".
+            playBtn.setAttribute('aria-label', isPlaying ? 'إيقاف مؤقت' : 'تشغيل');
         }
 
         function seekAudio(event) {
@@ -1997,7 +2005,13 @@ let totalPages = 0;
             const percentage = Math.max(0, Math.min(1, 1 - (clickX / width)));
 
             // Calculate target ayah index based on percentage
-            const targetIndex = Math.floor(percentage * allAyahs.length);
+            seekToAyahIndex(Math.floor(percentage * allAyahs.length));
+        }
+
+        // Shared by the pointer handler above and the keyboard handler below so
+        // the slider behaves identically however it is driven.
+        function seekToAyahIndex(targetIndex) {
+            if (allAyahs.length === 0) return;
 
             if (targetIndex >= 0 && targetIndex < allAyahs.length) {
                 currentAyahIndex = targetIndex;
@@ -2042,6 +2056,38 @@ let totalPages = 0;
             }
         }
 
+        // Keyboard driving for the `role="slider"` progress bar. The bar reads
+        // right-to-left, so ArrowRight steps backwards like the visual seek does.
+        (function initAudioProgressKeyboard() {
+            const progress = document.getElementById('audioProgress');
+            if (!progress) return;
+
+            progress.addEventListener('keydown', (event) => {
+                if (allAyahs.length === 0) return;
+                let target = null;
+
+                if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                    target = currentAyahIndex + 1;
+                } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                    target = currentAyahIndex - 1;
+                } else if (event.key === 'PageUp') {
+                    target = currentAyahIndex + 5;
+                } else if (event.key === 'PageDown') {
+                    target = currentAyahIndex - 5;
+                } else if (event.key === 'Home') {
+                    target = 0;
+                } else if (event.key === 'End') {
+                    target = allAyahs.length - 1;
+                } else {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+                seekToAyahIndex(Math.max(0, Math.min(allAyahs.length - 1, target)));
+            });
+        })();
+
         function showTemporaryMessage(text) {
             // Remove existing message if any
             const existing = document.querySelector('.seek-message');
@@ -2080,6 +2126,18 @@ let totalPages = 0;
             const progressBar = document.getElementById('audioProgressBar');
             if (progressBar) {
                 progressBar.style.width = progress + '%';
+            }
+
+            const slider = document.getElementById('audioProgress');
+            if (slider) {
+                slider.setAttribute('aria-valuenow', String(Math.round(progress)));
+                const ayah = allAyahs[currentAyahIndex];
+                slider.setAttribute(
+                    'aria-valuetext',
+                    ayah
+                        ? `الآية ${ayah.numberInSurah} من ${allAyahs.length} • ${Math.round(progress)}%`
+                        : `${Math.round(progress)}%`
+                );
             }
         }
 
@@ -2219,11 +2277,11 @@ let totalPages = 0;
             listenBtn.classList.toggle('active', isTargetPlaying || isTargetLoading);
 
             if (isTargetLoading) {
-                listenBtn.innerHTML = '<i class="bi bi-hourglass-split"></i><span>جار التحميل</span>';
+                listenBtn.innerHTML = '<i class="bi bi-hourglass-split" aria-hidden="true"></i><span>جار التحميل</span>';
             } else if (isTargetPlaying) {
-                listenBtn.innerHTML = '<i class="bi bi-stop-fill"></i><span>إيقاف</span>';
+                listenBtn.innerHTML = '<i class="bi bi-stop-fill" aria-hidden="true"></i><span>إيقاف</span>';
             } else {
-                listenBtn.innerHTML = '<i class="bi bi-volume-up"></i><span>استماع</span>';
+                listenBtn.innerHTML = '<i class="bi bi-volume-up" aria-hidden="true"></i><span>استماع</span>';
             }
         }
 
@@ -2493,8 +2551,8 @@ let totalPages = 0;
                 repeatBtn.disabled = true;
                 playBtn.classList.remove('active');
                 repeatBtn.classList.remove('active');
-                playBtn.innerHTML = '<i class="bi bi-volume-up"></i><span>استماع</span>';
-                repeatBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>تكرار</span>';
+                playBtn.innerHTML = '<i class="bi bi-volume-up" aria-hidden="true"></i><span>استماع</span>';
+                repeatBtn.innerHTML = '<i class="bi bi-arrow-repeat" aria-hidden="true"></i><span>تكرار</span>';
                 return;
             }
 
@@ -2509,8 +2567,8 @@ let totalPages = 0;
                 repeatBtn.disabled = true;
                 playBtn.classList.remove('active');
                 repeatBtn.classList.remove('active');
-                playBtn.innerHTML = '<i class="bi bi-volume-up"></i><span>استماع</span>';
-                repeatBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>تكرار</span>';
+                playBtn.innerHTML = '<i class="bi bi-volume-up" aria-hidden="true"></i><span>استماع</span>';
+                repeatBtn.innerHTML = '<i class="bi bi-arrow-repeat" aria-hidden="true"></i><span>تكرار</span>';
                 return;
             }
 
@@ -2527,15 +2585,15 @@ let totalPages = 0;
 
             ayahCard.classList.toggle('hidden', !memorizationReveal);
             revealBtn.innerHTML = memorizationReveal
-                ? '<i class="bi bi-eye-slash"></i><span>إخفاء</span>'
-                : '<i class="bi bi-eye"></i><span>إظهار</span>';
+                ? '<i class="bi bi-eye-slash" aria-hidden="true"></i><span>إخفاء</span>'
+                : '<i class="bi bi-eye" aria-hidden="true"></i><span>إظهار</span>';
 
             const ayahKey = String(ayah.number);
             const isMemorized = Boolean(memorizedAyahsByNumber[ayahKey]);
             doneBtn.classList.toggle('done', isMemorized);
             doneBtn.innerHTML = isMemorized
-                ? '<i class="bi bi-patch-check-fill"></i><span>محفوظة</span>'
-                : '<i class="bi bi-check2-circle"></i><span>تم الحفظ</span>';
+                ? '<i class="bi bi-patch-check-fill" aria-hidden="true"></i><span>محفوظة</span>'
+                : '<i class="bi bi-check2-circle" aria-hidden="true"></i><span>تم الحفظ</span>';
 
             const isPlayingCurrentAyah = Boolean(
                 memorizationAudio && !memorizationAudio.paused && memorizationAudioAyahNumber === ayah.number
@@ -2551,16 +2609,16 @@ let totalPages = 0;
             repeatBtn.classList.toggle('active', memorizationRepeatEnabled);
 
             if (isLoadingCurrentAyah) {
-                playBtn.innerHTML = '<i class="bi bi-hourglass-split"></i><span>جار التحميل</span>';
+                playBtn.innerHTML = '<i class="bi bi-hourglass-split" aria-hidden="true"></i><span>جار التحميل</span>';
             } else if (isPlayingCurrentAyah) {
-                playBtn.innerHTML = '<i class="bi bi-stop-fill"></i><span>إيقاف</span>';
+                playBtn.innerHTML = '<i class="bi bi-stop-fill" aria-hidden="true"></i><span>إيقاف</span>';
             } else {
-                playBtn.innerHTML = '<i class="bi bi-volume-up"></i><span>استماع</span>';
+                playBtn.innerHTML = '<i class="bi bi-volume-up" aria-hidden="true"></i><span>استماع</span>';
             }
 
             repeatBtn.innerHTML = memorizationRepeatEnabled
-                ? '<i class="bi bi-arrow-repeat"></i><span>تكرار شغال</span>'
-                : '<i class="bi bi-arrow-repeat"></i><span>تكرار</span>';
+                ? '<i class="bi bi-arrow-repeat" aria-hidden="true"></i><span>تكرار شغال</span>'
+                : '<i class="bi bi-arrow-repeat" aria-hidden="true"></i><span>تكرار</span>';
 
             updateAyahQuickActionsUI();
         }
@@ -2812,16 +2870,29 @@ let totalPages = 0;
             updateShareStyleControlsUI();
             onShareTafsirToggle();
             const modal = document.getElementById('shareAyahModal');
-            if (modal) {
-                modal.classList.add('active');
+            if (!modal) return;
+
+            modal.classList.add('active');
+
+            if (window.A11y) {
+                window.A11y.openDialog(modal, {
+                    panel: modal.querySelector('.share-modal-content'),
+                    onClose: function () {
+                        modal.classList.remove('active');
+                    }
+                });
             }
         }
 
         function closeShareAyahModal() {
             const modal = document.getElementById('shareAyahModal');
-            if (modal) {
-                modal.classList.remove('active');
+            if (!modal) return;
+
+            if (window.A11y && window.A11y.isDialogOpen(modal)) {
+                window.A11y.closeDialog(modal);
+                return;
             }
+            modal.classList.remove('active');
         }
 
         function wrapCanvasRtlText(ctx, text, x, startY, maxWidth, lineHeight, maxLines = 8) {
@@ -3147,17 +3218,33 @@ let totalPages = 0;
 
         function openReciterModal() {
             const modal = document.getElementById('reciterModal');
-            if (modal) {
-                modal.classList.add('active');
-                updateReciterSelection();
+            if (!modal) return;
+
+            modal.classList.add('active');
+            updateReciterSelection();
+
+            // Focus trap, scroll lock, Escape-to-close and focus restore.
+            if (window.A11y) {
+                window.A11y.openDialog(modal, {
+                    panel: modal.querySelector('.reciter-modal-content'),
+                    initialFocus: modal.querySelector('.reciter-item.active') || undefined,
+                    onClose: function () {
+                        modal.classList.remove('active');
+                    }
+                });
             }
         }
 
         function closeReciterModal() {
             const modal = document.getElementById('reciterModal');
-            if (modal) {
-                modal.classList.remove('active');
+            if (!modal) return;
+
+            if (window.A11y && window.A11y.isDialogOpen(modal)) {
+                // closeDialog runs onClose, which drops the class and restores focus.
+                window.A11y.closeDialog(modal);
+                return;
             }
+            modal.classList.remove('active');
         }
 
         function selectReciter(reciterCode, reciterName) {
@@ -3193,11 +3280,9 @@ let totalPages = 0;
         function updateReciterSelection() {
             const items = document.querySelectorAll('.reciter-item');
             items.forEach(item => {
-                if (item.dataset.reciter === currentReciter) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
+                const selected = item.dataset.reciter === currentReciter;
+                item.classList.toggle('active', selected);
+                item.setAttribute('aria-pressed', selected ? 'true' : 'false');
             });
         }
 

@@ -1,0 +1,612 @@
+/* ==========================================================================
+   Home — native mobile layout
+   --------------------------------------------------------------------------
+   Loaded last on index.html, so it is the authoritative layer for the home
+   screen. The old .prayer-widget / .home-actions / .smart-dashboard blocks in
+   index.css are no longer in the markup; this file replaces them.
+
+   One deliberate gradient lives in the whole app: the prayer hero's sky. It is
+   always a dark surface with light ink — like a photo — so its contrast is
+   self-contained and does not depend on the app theme. Everything else stays
+   flat warm paper with green/gold as accents only.
+   ========================================================================== */
+
+.home-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5, 1.25rem);
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  padding-block-end: calc(var(--space-6, 1.5rem) + env(safe-area-inset-bottom));
+}
+
+/* ==========================================================================
+   1. Prayer hero — dynamic time-of-day card
+   ========================================================================== */
+.prayer-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--radius-2xl, 24px);
+  padding: var(--space-5, 1.25rem);
+  padding-block-start: calc(var(--space-5, 1.25rem) + 2px);
+  color: #fff;
+  /* Fallback sky; JS sets data-phase to swap it. */
+  background: linear-gradient(160deg, #1f3a5f 0%, #2c5364 100%);
+  box-shadow: 0 18px 40px -22px rgba(15, 23, 42, 0.55);
+  min-height: 236px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+}
+
+/* Bottom scrim guarantees light-ink contrast on every phase, whatever the
+   sky's lightest stop is. */
+.prayer-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0) 34%, rgba(0, 0, 0, 0.32) 100%);
+  pointer-events: none;
+}
+
+/* Faint calligraphic watermark, self-contained (no asset fetch). */
+.prayer-hero::before {
+  content: "۩";
+  position: absolute;
+  inset-block-start: -0.35em;
+  inset-inline-start: -0.12em;
+  z-index: -1;
+  font-size: 12rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+/* --- Time-of-day phases (dark, low-chroma; light ink stays ≥4.5:1) --- */
+.prayer-hero[data-phase="night"]     { background: linear-gradient(160deg, #171d33 0%, #0d1120 100%); }
+.prayer-hero[data-phase="dawn"]      { background: linear-gradient(160deg, #2a2a4a 0%, #4a3a52 45%, #274357 100%); }
+.prayer-hero[data-phase="morning"]   { background: linear-gradient(160deg, #1f3a5f 0%, #2c5364 100%); }
+.prayer-hero[data-phase="noon"]      { background: linear-gradient(160deg, #1c4a63 0%, #2f6178 100%); }
+.prayer-hero[data-phase="afternoon"] { background: linear-gradient(160deg, #354063 0%, #6b5335 100%); }
+.prayer-hero[data-phase="sunset"]    { background: linear-gradient(160deg, #2a2140 0%, #6b3a44 62%, #8a4a2a 100%); }
+
+.prayer-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 0.75rem);
+}
+
+.ph-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+.ph-location i { font-size: 0.9rem; opacity: 0.85; }
+.ph-location span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ph-actions {
+  display: inline-flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.ph-icon-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: background var(--dur-2, 180ms) var(--ease, ease);
+}
+.ph-icon-btn:hover { background: rgba(255, 255, 255, 0.24); }
+
+/* --- Next-prayer focus --- */
+.prayer-hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-block-start: auto;
+}
+.ph-next-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.72);
+}
+.ph-next-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.ph-next-name {
+  font-family: var(--font-arabic, "Amiri", serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.ph-next-time {
+  font-size: 1.375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--gold-300, #f9d423);
+}
+.ph-countdown {
+  margin-block-start: 2px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Timeline between previous and next prayer --- */
+.ph-timeline {
+  margin-block: 2px;
+}
+.ph-track {
+  position: relative;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+.ph-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.55), var(--gold-300, #f9d423));
+  transition: width var(--dur-4, 420ms) var(--ease, ease);
+}
+
+/* --- Five prayer chips --- */
+.prayer-hero-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.pw-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border-radius: var(--radius-md, 12px);
+  text-align: center;
+  transition: background var(--dur-2, 180ms) var(--ease, ease);
+}
+.pw-item.active {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.pw-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+}
+.pw-item.active .pw-name { color: #fff; }
+.pw-time {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.92);
+}
+.pw-item.active .pw-time { color: var(--gold-300, #f9d423); }
+
+/* Location-detect fallback inside the hero. */
+.detect-location-container {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--space-2, 0.5rem);
+}
+.detect-location-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.detect-location-btn:hover { background: rgba(255, 255, 255, 0.24); }
+
+/* ==========================================================================
+   2. Quick-action grid — Continue reading + Khatma
+   ========================================================================== */
+.home-quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3, 0.75rem);
+}
+@media (max-width: 359px) {
+  .home-quick-grid { grid-template-columns: 1fr; }
+}
+
+.quick-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+  min-height: 132px;
+  padding: var(--space-4, 1rem);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl, 20px);
+  background: var(--surface-1);
+  color: var(--text-color);
+  text-align: start;
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+  transition: transform var(--dur-2, 180ms) var(--ease, ease),
+              box-shadow var(--dur-2, 180ms) var(--ease, ease),
+              border-color var(--dur-2, 180ms) var(--ease, ease);
+}
+.quick-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 10px 28px -20px rgba(26, 23, 20, 0.5);
+}
+.quick-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.quick-card-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md, 12px);
+  background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.quick-card.gold .quick-card-icon {
+  background: color-mix(in srgb, var(--secondary-color) 16%, transparent);
+  color: var(--gold-600, #a86207);
+}
+.quick-card-label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.quick-card-body { margin-block-start: auto; }
+.quick-card-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.quick-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-block-start: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+.quick-card.gold .quick-card-cta { color: var(--gold-600, #a86207); }
+
+/* Khatma progress */
+.quick-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-block-start: auto;
+}
+.quick-progress-track {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.quick-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold-500, #d4820a), var(--gold-400, #e9a908));
+  transition: width var(--dur-4, 420ms) var(--ease, ease);
+}
+.quick-progress-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.quick-progress-percent {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--text-color);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   3. Daily inspiration — verse + hadith glass cards
+   ========================================================================== */
+.inspiration-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl, 20px);
+  padding: var(--space-5, 1.25rem);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px));
+  backdrop-filter: blur(var(--glass-blur, 16px));
+}
+/* Calligraphic watermark, self-contained. */
+.inspiration-card::before {
+  content: "﴾﴿";
+  position: absolute;
+  inset-block-start: -0.28em;
+  inset-inline-end: -0.05em;
+  z-index: -1;
+  font-family: var(--font-arabic, "Amiri", serif);
+  font-size: 8rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--primary-color) 7%, transparent);
+  pointer-events: none;
+}
+
+.inspiration-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-block-end: var(--space-3, 0.75rem);
+}
+.inspiration-card.gold .inspiration-label { color: var(--gold-600, #a86207); }
+.inspiration-card.gold::before { color: color-mix(in srgb, var(--secondary-color) 9%, transparent); }
+
+.verse-arabic {
+  font-family: var(--font-arabic, "Amiri", serif);
+  font-size: 1.5rem;
+  line-height: 2;
+  font-weight: 700;
+  color: var(--text-color);
+  text-align: center;
+}
+.verse-ref {
+  margin-block-start: var(--space-3, 0.75rem);
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.hadith-text {
+  font-family: var(--font-arabic, "Amiri", serif);
+  font-size: 1.1875rem;
+  line-height: 1.9;
+  color: var(--text-color);
+}
+
+/* Verse action row */
+.inspiration-actions {
+  display: flex;
+  gap: var(--space-2, 0.5rem);
+  margin-block-start: var(--space-4, 1rem);
+  padding-block-start: var(--space-4, 1rem);
+  border-block-start: 1px solid var(--border-color);
+}
+.inspiration-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-2, 180ms) var(--ease, ease),
+              color var(--dur-2, 180ms) var(--ease, ease),
+              border-color var(--dur-2, 180ms) var(--ease, ease);
+}
+.inspiration-btn i { font-size: 1rem; }
+.inspiration-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-color);
+}
+.inspiration-btn.is-active {
+  background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+  border-color: color-mix(in srgb, var(--primary-color) 30%, transparent);
+  color: var(--primary-color);
+}
+
+/* ==========================================================================
+   4. Mood support — horizontal pills + glass prompt
+   ========================================================================== */
+.mood-widget {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl, 20px);
+  padding: var(--space-5, 1.25rem);
+  background: var(--surface-1);
+}
+.mood-widget-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+.mood-widget-title i { color: var(--primary-color); }
+.mood-widget-subtitle {
+  margin-block: 6px var(--space-4, 1rem);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* Horizontal scrolling pills */
+.mood-pills {
+  display: flex;
+  gap: var(--space-2, 0.5rem);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  margin-inline: calc(-1 * var(--space-5, 1.25rem));
+  padding-inline: var(--space-5, 1.25rem);
+  padding-block-end: 4px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.mood-pills::-webkit-scrollbar { display: none; }
+.mood-chip {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-2, 180ms) var(--ease, ease),
+              color var(--dur-2, 180ms) var(--ease, ease),
+              border-color var(--dur-2, 180ms) var(--ease, ease);
+}
+.mood-chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text-color);
+}
+.mood-chip.is-active {
+  background: color-mix(in srgb, var(--primary-color) 14%, transparent);
+  border-color: color-mix(in srgb, var(--primary-color) 32%, transparent);
+  color: var(--primary-color);
+}
+
+.mood-prompt {
+  position: relative;
+  margin-block-start: var(--space-4, 1rem);
+}
+.mood-input {
+  width: 100%;
+  min-height: 92px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--surface-2);
+  color: var(--text-color);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color var(--dur-2, 180ms) var(--ease, ease),
+              box-shadow var(--dur-2, 180ms) var(--ease, ease);
+}
+.mood-input::placeholder { color: var(--text-muted); }
+.mood-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 18%, transparent);
+}
+
+.mood-generate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 50px;
+  margin-block-start: var(--space-3, 0.75rem);
+  border: none;
+  border-radius: var(--radius-lg, 16px);
+  background: var(--primary-color);
+  color: var(--on-primary);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter var(--dur-2, 180ms) var(--ease, ease);
+}
+.mood-generate-btn:hover { filter: brightness(1.06); }
+.mood-generate-btn:disabled { opacity: 0.7; cursor: default; }
+
+/* ==========================================================================
+   Motion / reduced-motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .prayer-hero, .quick-card, .inspiration-btn, .mood-chip,
+  .ph-fill, .quick-progress-fill, .mood-input, .ph-icon-btn {
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   Coarse-pointer press feedback (native tap-down)
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  .quick-card:active,
+  .inspiration-btn:active,
+  .mood-chip:active,
+  .ph-icon-btn:active,
+  .detect-location-btn:active { transform: scale(0.97); }
+  .mood-generate-btn:active { filter: brightness(0.94); }
+  .quick-card:hover { box-shadow: none; border-color: var(--border-color); }
+}
+
+/* ==========================================================================
+   Dark theme — paper surfaces only; the hero stays its own dark sky.
+   ========================================================================== */
+:root[data-theme="dark"] .quick-card,
+:root[data-theme="dark"] .mood-widget {
+  background: var(--surface-1);
+  border-color: var(--border-color);
+}
+:root[data-theme="dark"] .inspiration-card {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+:root[data-theme="dark"] .inspiration-btn,
+:root[data-theme="dark"] .mood-chip { background: var(--surface-2); }
+:root[data-theme="dark"] .quick-card.gold .quick-card-cta,
+:root[data-theme="dark"] .inspiration-card.gold .inspiration-label,
+:root[data-theme="dark"] .quick-card.gold .quick-card-icon { color: var(--gold-300, #f9d423); }

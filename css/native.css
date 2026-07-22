@@ -1,0 +1,409 @@
+/* ==========================================================================
+   Native mobile shell.
+
+   Loads last, after app-ui.css. Everything here is what separates "a website
+   on a phone" from "an app": inset grouped lists instead of bordered cards,
+   a large collapsing title, press-down feedback, bottom sheets, and chrome
+   that behaves like chrome (unselectable, no tap flash, contained scroll).
+
+   Most rules are scoped to the phone breakpoint. Above it the layout goes
+   back to a normal responsive web page, which is correct — desktop should
+   not pretend to be a phone.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Chrome behaviour
+   -------------------------------------------------------------------------- */
+
+html {
+  /* Prevents the whole document rubber-banding behind fixed chrome. */
+  overscroll-behavior-y: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  /* Native momentum, and no bounce past the ends of the page. */
+  overscroll-behavior-y: contain;
+}
+
+/* Chrome is not content: it should not be selectable or show a tap flash.
+   Body copy and scripture stay selectable so users can still copy an ayah. */
+.app-header,
+.bottom-nav,
+.desktop-sidebar,
+.large-title-bar,
+.btn,
+button,
+.nav-item,
+.sidebar-nav-item,
+.tab-bar {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* --------------------------------------------------------------------------
+   Press feedback
+
+   Native UI responds on touch-DOWN, not on release, and does it in under
+   100ms. Hover states do nothing on a phone; this is what replaces them.
+   -------------------------------------------------------------------------- */
+
+@media (hover: none) and (pointer: coarse) {
+  .btn,
+  .nav-item,
+  .sidebar-nav-item,
+  .list-row,
+  .card--interactive,
+  .surah-item,
+  .bookmark-item,
+  .country-item,
+  .reciter-item,
+  .category-item,
+  .setting-item,
+  .pw-item,
+  .feature-open-link,
+  .dashboard-card,
+  .hero-cta,
+  .tool-btn,
+  .action-btn,
+  .khatma-btn {
+    transition: opacity var(--duration-instant) linear,
+                background-color var(--duration-instant) linear;
+  }
+
+  /* Rows tint; standalone controls dim. Both read as "received your tap". */
+  .list-row:active,
+  .surah-item:active,
+  .bookmark-item:active,
+  .country-item:active,
+  .reciter-item:active,
+  .category-item:active,
+  .setting-item:active,
+  .pw-item:active,
+  .sidebar-nav-item:active,
+  .dashboard-card:active {
+    background-color: var(--surface-3);
+  }
+
+  .btn:active,
+  .hero-cta:active,
+  .tool-btn:active,
+  .action-btn:active,
+  .khatma-btn:active,
+  .nav-item:active,
+  .feature-open-link:active {
+    opacity: 0.55;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Inset grouped lists — the core native pattern.
+
+   A card with a 1px border floating on a canvas is a web convention. Native
+   groups are a filled rounded rect with NO border, hairline separators
+   *inside*, and the section label as plain text *outside*, above the group.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .glass-card,
+  .card,
+  .khatma-core-feature,
+  .prayer-widget,
+  .verse-card,
+  .hadith-card,
+  .resume-card,
+  .khatma-card,
+  .khatma-section,
+  .smart-dashboard-section,
+  .mood-support-section,
+  .quick-actions,
+  .habit-streak-card,
+  .habit-ring-card,
+  .setting-group,
+  .ref-card,
+  .bio-card,
+  .stats-section,
+  .folder-overview-card,
+  .hub-hero,
+  .more-hero,
+  .khatma-hero,
+  .next-prayer-highlight,
+  .hero-section {
+    border: none;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    background: var(--surface-1);
+  }
+
+  /* The accent edge marks stay — they are the one bit of green left. */
+  .hero-section,
+  .resume-card,
+  .hub-hero,
+  .more-hero,
+  .khatma-hero,
+  .next-prayer-highlight {
+    border-inline-start: 3px solid var(--primary-color);
+  }
+
+  .verse-card { border-block-start: 3px solid var(--primary-color); }
+  .hadith-card { border-block-start: 3px solid var(--secondary-color); }
+
+  /* Section labels sit outside the group, quiet and small — the native
+     grouped-list header. */
+  .dashboard-header,
+  .quick-actions-title,
+  .feature-section-title,
+  .ref-section-title,
+  .history-title,
+  .setting-section-title {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    padding-inline: var(--space-2);
+    margin-block-end: var(--space-2);
+  }
+
+  /* Separators run inside the group and inset past the leading icon, the way
+     native list separators align to the text column. */
+  .list-group > * + *,
+  .setting-item + .setting-item,
+  .smart-dashboard-section .dashboard-card + .dashboard-card {
+    border-block-start: 1px solid var(--border-color);
+  }
+
+  .app-content {
+    padding-inline: var(--space-3);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Large collapsing title
+
+   The title starts big in the content, then crossfades into the compact
+   header bar as the user scrolls — the single most recognisable native
+   navigation behaviour. Driven by `data-scrolled` on <body> (js/native-ui.js).
+   -------------------------------------------------------------------------- */
+
+.large-title-bar {
+  padding-inline: var(--space-4);
+  padding-block: var(--space-2) var(--space-4);
+  /* Never act as a scroll anchor — it is inserted after first paint. */
+  overflow-anchor: none;
+}
+
+.large-title {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.03em;
+  line-height: var(--leading-tight);
+  color: var(--text-color);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  /* The compact bar's title is hidden until the large one scrolls away. */
+  .app-header h1 {
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  body[data-scrolled="true"] .app-header h1 {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* The header is transparent over the canvas until content slides under it,
+     then it gains its surface and hairline. */
+  .app-header {
+    background: transparent;
+    border-block-end-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  body[data-scrolled="true"] .app-header {
+    background: var(--glass-bg);
+    border-block-end-color: var(--border-color);
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  }
+
+  body[data-scrolled="true"] .large-title {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition:
+      opacity var(--transition-fast),
+      transform var(--transition-fast);
+  }
+}
+
+/* Above the phone breakpoint the large title is redundant. */
+@media (min-width: 769px) {
+  .large-title-bar { display: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Bottom sheets
+
+   Native presents choices from the bottom edge, within thumb reach, with a
+   grabber. A centred dialog box is a desktop convention.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .modal-overlay,
+  .dialog-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal,
+  .dialog-panel,
+  .modal-content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding-block-end: calc(var(--space-6) + var(--safe-bottom));
+    animation: sheet-up var(--duration-slow) var(--ease-out);
+    max-height: 88vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Grabber. Purely decorative, so it is hidden from assistive tech. */
+  .modal::before,
+  .dialog-panel::before,
+  .modal-content::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 4px;
+    margin: 0 auto var(--space-4);
+    border-radius: var(--radius-full);
+    background: var(--border-strong);
+  }
+
+  @keyframes sheet-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  /* Sheet actions stack full width and sit within thumb reach. */
+  .modal .modal-actions {
+    flex-direction: column-reverse;
+    gap: var(--space-2);
+  }
+
+  .modal .modal-btn {
+    width: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Tab bar first
+
+   The drawer duplicates the tab bar and is a web pattern on phones. It stays
+   reachable (it holds the six items the tab bar cannot show) but stops being
+   the primary affordance: the tab bar carries navigation, and the drawer is
+   labelled "المزيد" rather than presented as the main menu.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .bottom-nav {
+    /* Hairline only — no shadow, no float. */
+    border-block-start: 1px solid var(--border-color);
+    box-shadow: none;
+  }
+
+  .nav-item {
+    gap: 2px;
+  }
+
+  .nav-icon {
+    font-size: 1.35rem;
+    width: auto;
+    height: auto;
+    background: none;
+    border-radius: 0;
+  }
+
+  /* Native tab bars indicate the active tab with the icon and label colour,
+     not with a pill behind the glyph. */
+  .nav-item.active .nav-icon {
+    background: none;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Scroll containers
+   -------------------------------------------------------------------------- */
+
+.sidebar-nav,
+.radio-stations,
+.modal,
+.dialog-panel {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Standalone (installed) PWA gets the full safe-area treatment. */
+@media (display-mode: standalone) {
+  .app-header {
+    padding-block-start: calc(var(--space-2) + var(--safe-top));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Home primary actions
+
+   Replaces the hero card. Sits directly under the large title as a pair of
+   full-width actions — the first thing a daily-use app should offer.
+   -------------------------------------------------------------------------- */
+
+.home-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  margin-block-end: var(--space-5);
+}
+
+@media (min-width: 480px) {
+  .home-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.home-actions .hero-cta {
+  width: 100%;
+  min-height: 50px;
+}
+
+/* --------------------------------------------------------------------------
+   Mushaf overlay controls
+
+   The bookmark button floats on the scanned page with a near-white pill, so
+   its ink must be theme-independent: in dark mode --primary-color is a light
+   green and measured 2.15:1 there.
+
+   The exit button is deliberately excluded — it has a dark scrim pill
+   (rgba(0,0,0,.74)) and correctly keeps white text.
+   -------------------------------------------------------------------------- */
+
+.mushaf-bookmark-btn,
+[data-theme="dark"] .mushaf-bookmark-btn {
+  color: #154a19;
+}

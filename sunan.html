@@ -3,20 +3,32 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>سنن النبي ﷺ</title>
+    <meta name="description" content="السنن النبوية اليومية مصنفة حسب الموضوع.">
     <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/page-styles/sunan.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
@@ -24,53 +36,60 @@
     <!-- Desktop Sidebar -->
         <app-sidebar current="sunan"></app-sidebar>
 
+    <!-- Bespoke header (not <app-header>): sunan.js drives #backBtn and
+         #headerTitle at runtime. -->
     <header class="app-header glass-card">
-        <button class="menu-toggle-btn" onclick="toggleSidebar()">
-            <i class="bi bi-list"></i>
+        <!-- aria-controls="sidebar" + .menu-toggle-btn is the selector
+             syncSidebarA11y() in common.js uses to keep aria-expanded in sync. -->
+        <button class="menu-toggle-btn" onclick="toggleSidebar()" aria-label="القائمة" aria-expanded="false"
+            aria-controls="sidebar">
+            <i class="bi bi-list" aria-hidden="true"></i>
         </button>
         <h1 id="headerTitle">سنن النبي ﷺ</h1>
         <div class="header-left-buttons">
             <div class="visitor-badge">
-                <i class="bi bi-people-fill"></i>
+                <i class="bi bi-people-fill" aria-hidden="true"></i>
                 <span class="count" id="visitorCount">-</span>
             </div>
-            <button class="header-back-btn" id="backBtn" onclick="showCategories()" style="display: none;">
-                <i class="bi bi-arrow-right"></i>
+            <button class="header-back-btn" id="backBtn" onclick="showCategories()" style="display: none;"
+                aria-label="رجوع">
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
             </button>
-            <button class="settings-btn" onclick="window.location.href='settings.html'">
-                <i class="bi bi-gear-fill"></i>
+            <button class="settings-btn" onclick="window.location.href='settings.html'" aria-label="الإعدادات">
+                <i class="bi bi-gear-fill" aria-hidden="true"></i>
             </button>
         </div>
     </header>
 
     <main class="app-content">
         <div class="sunan-container">
-            <!-- Categories Grid -->
+            <!-- Categories Grid. Real <button>s, not clickable <div>s: they are
+                 now in the tab order and activate with Enter/Space. -->
             <div class="category-grid" id="categoryGrid">
-                <div class="category-card" onclick="showSunan('waking_up')">
-                    <div class="category-icon"><i class="bi bi-sun"></i></div>
-                    <div class="category-title">سنن الاستيقاظ</div>
-                </div>
-                <div class="category-card" onclick="showSunan('ablution')">
-                    <div class="category-icon"><i class="bi bi-droplet"></i></div>
-                    <div class="category-title">سنن الوضوء</div>
-                </div>
-                <div class="category-card" onclick="showSunan('prayer')">
-                    <div class="category-icon"><i class="bi bi-person"></i></div>
-                    <div class="category-title">سنن الصلاة</div>
-                </div>
-                <div class="category-card" onclick="showSunan('eating')">
-                    <div class="category-icon"><i class="bi bi-cup-hot"></i></div>
-                    <div class="category-title">سنن الطعام</div>
-                </div>
-                <div class="category-card" onclick="showSunan('sleeping')">
-                    <div class="category-icon"><i class="bi bi-moon-stars"></i></div>
-                    <div class="category-title">سنن النوم</div>
-                </div>
-                <div class="category-card" onclick="showSunan('general')">
-                    <div class="category-icon"><i class="bi bi-stars"></i></div>
-                    <div class="category-title">سنن عامة</div>
-                </div>
+                <button type="button" class="category-card" onclick="showSunan('waking_up')">
+                    <span class="category-icon"><i class="bi bi-sun" aria-hidden="true"></i></span>
+                    <span class="category-title">سنن الاستيقاظ</span>
+                </button>
+                <button type="button" class="category-card" onclick="showSunan('ablution')">
+                    <span class="category-icon"><i class="bi bi-droplet" aria-hidden="true"></i></span>
+                    <span class="category-title">سنن الوضوء</span>
+                </button>
+                <button type="button" class="category-card" onclick="showSunan('prayer')">
+                    <span class="category-icon"><i class="bi bi-person" aria-hidden="true"></i></span>
+                    <span class="category-title">سنن الصلاة</span>
+                </button>
+                <button type="button" class="category-card" onclick="showSunan('eating')">
+                    <span class="category-icon"><i class="bi bi-cup-hot" aria-hidden="true"></i></span>
+                    <span class="category-title">سنن الطعام</span>
+                </button>
+                <button type="button" class="category-card" onclick="showSunan('sleeping')">
+                    <span class="category-icon"><i class="bi bi-moon-stars" aria-hidden="true"></i></span>
+                    <span class="category-title">سنن النوم</span>
+                </button>
+                <button type="button" class="category-card" onclick="showSunan('general')">
+                    <span class="category-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
+                    <span class="category-title">سنن عامة</span>
+                </button>
             </div>
 
             <!-- Sunan List -->
@@ -83,6 +102,7 @@
 
     <script src="js/common.js"></script>
         <script src="js/page-scripts/sunan.js"></script>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

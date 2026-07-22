@@ -3,12 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>مركز الختمة والاستمرارية</title>
+    <meta name="description" content="خطط ختمتك للقرآن الكريم وتابع تقدمك اليومي.">
     <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
     <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,12 +18,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/page-styles/khatma.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
@@ -32,18 +39,18 @@
     <main class="app-content">
         <div class="khatma-page-container">
             <section class="khatma-hero glass-card">
-                <div class="khatma-hero-badge"><i class="bi bi-stars"></i> ميزة أساسية</div>
+                <div class="khatma-hero-badge"><i class="bi bi-stars" aria-hidden="true"></i> ميزة أساسية</div>
                 <h2>خطة الختمة والاستمرارية</h2>
-                <p>صفحة مخصصة لمتابعة سلسلة القراءة اليومية، وحلقات العادات، وخطة ختمة مرنة مع تعويض تلقائي.</p>
+                <p>تابع سلسلة قراءتك اليومية، وحدد هدف ختمتك، ودع التطبيق يعوّض ما فاتك تلقائيا.</p>
                 <div class="khatma-hero-actions">
-                    <a href="quran.html" class="khatma-hero-btn"><i class="bi bi-book-fill"></i><span>افتح القرآن الآن</span></a>
-                    <a href="#khatmaPlannerSection" class="khatma-hero-btn secondary"><i class="bi bi-journal-check"></i><span>ابدأ خطة ختمة</span></a>
+                    <a href="quran.html" class="khatma-hero-btn"><i class="bi bi-book-fill" aria-hidden="true"></i><span>افتح القرآن الآن</span></a>
+                    <a href="#khatmaPlannerSection" class="khatma-hero-btn secondary"><i class="bi bi-journal-check" aria-hidden="true"></i><span>ابدأ خطة ختمة</span></a>
                 </div>
             </section>
 
             <section class="habit-dashboard-section" id="habitDashboardSection">
                 <div class="habit-header">
-                    <div class="habit-title"><i class="bi bi-graph-up-arrow"></i> الاستمرارية</div>
+                    <div class="habit-title"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i> الاستمرارية</div>
                 </div>
 
                 <div class="habit-streak-card glass-card">
@@ -80,7 +87,7 @@
 
             <section class="khatma-section" id="khatmaPlannerSection">
                 <div class="khatma-card glass-card">
-                    <div class="khatma-title"><i class="bi bi-journal-check"></i> خطة الختمة</div>
+                    <div class="khatma-title"><i class="bi bi-journal-check" aria-hidden="true"></i> خطة الختمة</div>
                     <div class="khatma-subtitle">خطة يومية تلقائية مع تعويض تلقائي عند فوات يوم</div>
 
                     <div id="khatmaSetupView">
@@ -118,6 +125,7 @@
                         <div class="khatma-today-target" id="khatmaTodayTargetText"></div>
 
                         <div class="khatma-read-row">
+                            <label class="sr-only" for="khatmaPagesReadInput">كم صفحة قرأت اليوم؟</label>
                             <input class="khatma-input" type="number" id="khatmaPagesReadInput" min="1"
                                 placeholder="كم صفحة قرأت اليوم؟">
                             <button class="khatma-btn" onclick="addKhatmaProgress()">تحديث</button>
@@ -137,6 +145,7 @@
 
     <script src="js/common.js"></script>
     <script src="js/page-scripts/khatma.js"></script>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

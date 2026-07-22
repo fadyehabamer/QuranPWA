@@ -1,3 +1,22 @@
+        /* Mushaf paper surface.
+           The mushaf pages are photographs of cream-coloured paper, so the
+           stage that backs them stays warm in BOTH themes on purpose — a dark
+           backing turns the scan into a floating cut-out. Only the surround
+           (the letterbox behind the stage) follows the theme. */
+        :root {
+            --mushaf-paper-top: #f8f3e8;
+            --mushaf-paper-bottom: #efe5cf;
+            --mushaf-paper-solid: #f9f4e8;
+            --mushaf-paper-veil: rgba(249, 244, 232, 0.84);
+            --mushaf-paper-ink: #3a2e1e;
+            --mushaf-paper-border: rgba(141, 117, 71, 0.4);
+            --mushaf-surround: #ece5d6;
+        }
+
+        [data-theme="dark"] {
+            --mushaf-surround: #10151c;
+        }
+
         body {
             padding-bottom: 0;
         }
@@ -41,7 +60,7 @@
         .bookmarks-title {
             font-size: 20px;
             color: var(--primary-color);
-            margin-bottom: 16px;
+            margin: 0 0 16px;
             font-weight: 600;
         }
 
@@ -59,18 +78,38 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            cursor: pointer;
+            gap: 12px;
             transition: all 0.2s;
         }
 
-        .bookmark-item:active {
-            transform: scale(0.98);
-        }
-
+        /* The row used to be a `<div onclick>`; the label is now the real
+           button so the delete control can stay a sibling button instead of
+           being nested inside another button. */
         .bookmark-info {
             display: flex;
             flex-direction: column;
+            align-items: flex-start;
             gap: 4px;
+            flex: 1;
+            min-width: 0;
+            padding: 0;
+            border: none;
+            background: none;
+            font: inherit;
+            color: inherit;
+            text-align: start;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .bookmark-info:active {
+            transform: scale(0.98);
+        }
+
+        .bookmark-info:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: var(--focus-ring-offset);
+            border-radius: 8px;
         }
 
         .bookmark-name {
@@ -91,13 +130,19 @@
         }
 
         .bookmark-delete-btn {
-            background: rgba(244, 67, 54, 0.1);
+            background: var(--danger-surface);
             border: none;
-            color: #f44336;
+            color: var(--danger);
             padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            min-height: 40px;
         }
 
         .search-container {
@@ -117,8 +162,11 @@
         }
 
         .search-container input:focus {
-            outline: none;
             border-color: var(--primary-color);
+        }
+
+        .search-container input:focus-visible {
+            box-shadow: var(--focus-ring);
         }
 
         .instant-search-results {
@@ -153,7 +201,7 @@
             background: transparent;
             color: var(--text-color);
             padding: 11px 12px;
-            text-align: right;
+            text-align: start;
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -184,7 +232,7 @@
         }
 
         .ayah-search-highlight {
-            background: rgba(76, 175, 80, 0.16);
+            background: rgba(var(--primary-rgb), 0.16);
             border-radius: 10px;
             padding: 2px 4px;
             animation: ayahResultPulse 1.8s ease;
@@ -192,11 +240,11 @@
 
         @keyframes ayahResultPulse {
             0% {
-                background: rgba(76, 175, 80, 0.34);
+                background: rgba(var(--primary-rgb), 0.34);
             }
 
             100% {
-                background: rgba(76, 175, 80, 0.1);
+                background: rgba(var(--primary-rgb), 0.1);
             }
         }
 
@@ -247,7 +295,7 @@
         }
 
         .reader-header .icon-btn {
-            background: rgba(27, 94, 32, 0.05);
+            background: rgba(var(--primary-rgb), 0.05);
             border: none;
             color: var(--primary-color);
             padding: 6px;
@@ -263,8 +311,14 @@
             min-width: 0;
         }
 
+        .reader-header .icon-btn:focus-visible,
+        .reader-header .icon-btn-back:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: var(--focus-ring-offset);
+        }
+
         .reader-header .icon-btn-back {
-            background: rgba(27, 94, 32, 0.05);
+            background: rgba(var(--primary-rgb), 0.05);
             border: none;
             color: var(--primary-color);
             width: 36px;
@@ -291,13 +345,13 @@
 
         .reader-header .icon-btn:hover {
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
         }
 
         .reader-progress-strip {
             position: sticky;
             top: 82px;
-            z-index: 95;
+            z-index: calc(var(--z-sticky) - 10);
             margin: -6px 0 14px;
             border: 1px solid rgba(var(--primary-rgb), 0.2);
             border-radius: 12px;
@@ -368,7 +422,7 @@
         .memorization-progress-text {
             font-size: 12px;
             font-weight: 700;
-            color: var(--text-secondary, #666);
+            color: var(--text-secondary);
             font-family: 'Cairo', sans-serif;
         }
 
@@ -416,7 +470,7 @@
             text-align: center;
             font-size: 12px;
             font-family: 'Cairo', sans-serif;
-            color: var(--text-secondary, #666);
+            color: var(--text-secondary);
             font-weight: 700;
         }
 
@@ -447,13 +501,13 @@
         .memorization-btn.primary {
             background: var(--primary-color);
             border-color: var(--primary-color);
-            color: #fff;
+            color: var(--on-primary);
         }
 
         .memorization-btn.done {
-            background: rgba(46, 125, 50, 0.2);
-            border-color: rgba(46, 125, 50, 0.45);
-            color: #2e7d32;
+            background: var(--success-surface);
+            border-color: var(--success);
+            color: var(--success);
         }
 
         .memorization-btn.active {
@@ -507,7 +561,10 @@
             gap: 16px;
         }
 
+        /* Rendered as a real `<button>` by renderSurahList(); these reset the
+           UA button styling so the card layout is unchanged. */
         .surah-item {
+            width: 100%;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
@@ -515,8 +572,16 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            text-align: start;
+            font: inherit;
+            color: inherit;
             cursor: pointer;
             transition: all 0.15s;
+        }
+
+        .surah-item:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: var(--focus-ring-offset);
         }
 
         .surah-item:hover {
@@ -537,7 +602,7 @@
             width: 40px;
             height: 40px;
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -644,8 +709,8 @@
             position: relative;
             min-height: 460px;
             border-radius: 14px;
-            border: 1px solid rgba(var(--primary-rgb, 27, 94, 32), 0.2);
-            background: linear-gradient(180deg, rgba(var(--primary-rgb, 27, 94, 32), 0.08), rgba(255, 247, 230, 0.7));
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
+            background: linear-gradient(180deg, rgba(var(--primary-rgb), 0.08), rgba(255, 247, 230, 0.7));
             padding: 12px;
             display: flex;
             align-items: center;
@@ -654,8 +719,8 @@
         }
 
         [data-theme="dark"] .mushaf-stage {
-            background: linear-gradient(180deg, #f8f3e8, #efe5cf);
-            border-color: rgba(141, 117, 71, 0.4);
+            background: linear-gradient(180deg, var(--mushaf-paper-top), var(--mushaf-paper-bottom));
+            border-color: var(--mushaf-paper-border);
         }
 
         .mushaf-stage-status {
@@ -677,7 +742,8 @@
         }
 
         [data-theme="dark"] .mushaf-stage-status {
-            background: rgba(248, 243, 232, 0.82);
+            background: var(--mushaf-paper-veil);
+            color: var(--mushaf-paper-ink);
         }
 
         .mushaf-stage-status.hidden {
@@ -686,6 +752,8 @@
 
         .mushaf-stage-status.error {
             background: transparent;
+            /* Sits on the always-cream mushaf paper, so it needs a fixed dark
+               red rather than --danger (which goes light in the dark theme). */
             color: #c62828;
         }
 
@@ -716,7 +784,7 @@
             font-family: 'Cairo', sans-serif;
             font-size: 13px;
             font-weight: 700;
-            color: var(--text-secondary, #666);
+            color: var(--text-secondary);
         }
 
         @media (max-width: 768px) {
@@ -754,7 +822,7 @@
             justify-content: center;
             gap: 8px;
             cursor: pointer;
-            z-index: 1301;
+            z-index: calc(var(--z-nav) + 60);
             box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
         }
 
@@ -780,14 +848,14 @@
             justify-content: center;
             gap: 8px;
             cursor: pointer;
-            z-index: 1301;
+            z-index: calc(var(--z-nav) + 60);
             box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(var(--primary-rgb, 27, 94, 32), 0.3);
+            border: 1px solid rgba(var(--primary-rgb), 0.3);
         }
 
         .mushaf-bookmark-btn.saved {
             background: var(--primary-color);
-            color: #fff;
+            color: var(--on-primary);
             border-color: var(--primary-color);
         }
 
@@ -817,6 +885,7 @@
             max-width: none;
             width: 100%;
             height: 100vh;
+            height: 100dvh;
             margin: 0;
             padding: 0;
         }
@@ -827,8 +896,9 @@
             inset: 0;
             width: 100%;
             height: 100vh;
-            z-index: 1200;
-            background: #10151c;
+            height: 100dvh;
+            z-index: calc(var(--z-nav) + 50);
+            background: var(--mushaf-surround);
             overflow: hidden;
             margin: 0;
             padding: 0;
@@ -843,7 +913,9 @@
         body.mushaf-focus-mode #quranContent {
             margin: 0;
             min-height: 100vh;
+            min-height: 100dvh;
             height: 100vh;
+            height: 100dvh;
             padding: 8px;
             display: flex;
             align-items: center;
@@ -854,6 +926,7 @@
         body.mushaf-focus-mode .page-content.mushaf-page-content {
             width: 100%;
             min-height: 100vh;
+            min-height: 100dvh;
             margin: 0;
             border: none;
             border-radius: 0;
@@ -875,24 +948,26 @@
         body.mushaf-focus-mode .mushaf-stage {
             width: 100%;
             min-height: calc(100vh - 72px);
+            min-height: calc(100dvh - 72px);
             border: none;
             border-radius: 0;
-            background: #f9f4e8;
+            background: var(--mushaf-paper-solid);
             padding: 8px;
         }
 
         [data-theme="dark"] body.mushaf-focus-mode .mushaf-stage {
-            background: #f9f4e8;
+            background: var(--mushaf-paper-solid);
         }
 
         body.mushaf-focus-mode .mushaf-stage-status {
-            background: rgba(249, 244, 232, 0.84);
-            color: #3a2e1e;
+            background: var(--mushaf-paper-veil);
+            color: var(--mushaf-paper-ink);
         }
 
         body.mushaf-focus-mode .mushaf-page-image {
             max-width: 100%;
             max-height: calc(100vh - 92px);
+            max-height: calc(100dvh - 92px);
             width: auto;
             height: auto;
             border-radius: 0;
@@ -904,20 +979,20 @@
         body.mushaf-focus-mode .mushaf-exit-btn {
             position: fixed;
             top: 12px;
-            left: 12px;
+            inset-inline-end: 12px;
             display: inline-flex;
         }
 
         body.mushaf-focus-mode .mushaf-bookmark-btn {
             position: fixed;
             top: 12px;
-            right: 12px;
+            inset-inline-start: 12px;
             display: inline-flex;
         }
 
         body.mushaf-focus-mode .floating-nav-btn {
             display: inline-flex !important;
-            z-index: 1301;
+            z-index: calc(var(--z-nav) + 60);
             width: 42px;
             height: 42px;
             top: 50%;
@@ -934,11 +1009,11 @@
         }
 
         body.mushaf-focus-mode .floating-nav-right {
-            right: 10px;
+            inset-inline-start: 10px;
         }
 
         body.mushaf-focus-mode .floating-nav-left {
-            left: 10px;
+            inset-inline-end: 10px;
         }
 
         @media (max-width: 768px) {
@@ -952,16 +1027,18 @@
 
             body.mushaf-focus-mode .mushaf-stage {
                 min-height: calc(100vh - 64px);
+                min-height: calc(100dvh - 64px);
                 padding: 3px;
             }
 
             body.mushaf-focus-mode .mushaf-page-image {
                 max-height: calc(100vh - 76px);
+                max-height: calc(100dvh - 76px);
             }
 
             body.mushaf-focus-mode .mushaf-exit-btn {
                 top: 10px;
-                left: 10px;
+                inset-inline-end: 10px;
                 padding: 8px 10px;
                 font-size: 12px;
                 gap: 6px;
@@ -969,7 +1046,7 @@
 
             body.mushaf-focus-mode .mushaf-bookmark-btn {
                 top: 10px;
-                right: 10px;
+                inset-inline-start: 10px;
                 padding: 8px 10px;
                 font-size: 12px;
                 gap: 6px;
@@ -982,11 +1059,11 @@
             }
 
             body.mushaf-focus-mode .floating-nav-right {
-                right: 6px;
+                inset-inline-start: 6px;
             }
 
             body.mushaf-focus-mode .floating-nav-left {
-                left: 6px;
+                inset-inline-end: 6px;
             }
         }
 
@@ -1042,6 +1119,8 @@
 
         .ayah-quick-actions {
             position: fixed;
+            /* Placed imperatively by updateAyahQuickActionsPosition(), which
+               writes `style.left` in viewport pixels — physical on purpose. */
             top: 0;
             left: 0;
             display: flex;
@@ -1054,7 +1133,7 @@
             box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            z-index: 1200;
+            z-index: calc(var(--z-nav) + 50);
             opacity: 0;
             pointer-events: none;
             transform: translate(-50%, -6px) scale(0.97);
@@ -1095,7 +1174,7 @@
 
         .ayah-quick-btn.active {
             background: var(--primary-color);
-            color: #fff;
+            color: var(--on-primary);
         }
 
         .ayah-quick-btn:disabled {
@@ -1104,7 +1183,7 @@
         }
 
         .ayah.playing {
-            background-color: rgba(27, 94, 32, 0.12);
+            background-color: rgba(var(--primary-rgb), 0.12);
         }
 
         .ayah-number {
@@ -1114,7 +1193,7 @@
             width: 32px;
             height: 32px;
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             border-radius: 50%;
             font-size: 14px;
             font-weight: 600;
@@ -1125,7 +1204,7 @@
         .ayah-separator {
             display: inline-block;
             margin: 0 8px;
-            color: #ddd;
+            color: var(--border-strong);
             font-size: 18px;
             vertical-align: middle;
             display: none;
@@ -1135,17 +1214,17 @@
             text-align: center;
             margin-top: 20px;
             font-size: 14px;
-            color: #999;
+            color: var(--text-muted);
         }
 
         .floating-controls {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            inset-inline-start: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            z-index: 100;
+            z-index: var(--z-sticky);
             align-items: flex-end;
         }
 
@@ -1157,14 +1236,15 @@
         .swipe-hint {
             position: fixed;
             bottom: 180px;
-            left: 50%;
-            transform: translateX(-50%);
+            inset-inline: 0;
+            margin-inline: auto;
+            width: fit-content;
             background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 13px;
-            z-index: 99;
+            z-index: calc(var(--z-sticky) - 4);
             opacity: 0;
             pointer-events: none;
             white-space: nowrap;
@@ -1293,7 +1373,7 @@
         }
 
         .floating-bookmark {
-            background: white;
+            background: var(--card-bg);
             color: var(--primary-color);
             border: 1px solid var(--primary-color);
             padding: 12px 24px;
@@ -1309,7 +1389,7 @@
 
         .floating-bookmark.saved {
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             border-color: var(--primary-color);
         }
 
@@ -1320,7 +1400,7 @@
 
             .floating-controls {
                 bottom: 80px;
-                right: 15px;
+                inset-inline-start: 15px;
                 gap: 12px;
             }
 
@@ -1340,7 +1420,7 @@
                 align-items: center;
                 gap: 20px;
                 bottom: 30px;
-                right: 30px;
+                inset-inline-start: 30px;
             }
 
             .nav-controls {
@@ -1368,7 +1448,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.15s ease;
-            z-index: 98;
+            z-index: calc(var(--z-sticky) - 6);
         }
 
         [data-theme="dark"] .floating-nav-btn {
@@ -1377,12 +1457,17 @@
             color: var(--primary-color);
         }
 
+        /* The `-right` / `-left` names are historical and are referenced from
+           quran.html and quran.js, so they stay. What they *mean* is
+           previous / next, so they are positioned with logical insets: the
+           previous-page button sits on the inline start edge, the next-page
+           button on the inline end edge, in either writing direction. */
         .floating-nav-right {
-            right: 20px;
+            inset-inline-start: 20px;
         }
 
         .floating-nav-left {
-            left: 20px;
+            inset-inline-end: 20px;
         }
 
         @media (max-width: 768px) {
@@ -1393,7 +1478,7 @@
 
         .floating-nav-btn:hover:not(:disabled) {
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             transform: translateY(-50%) scale(1.08);
         }
 
@@ -1410,7 +1495,7 @@
 
         .scroll-top-btn {
             position: fixed;
-            right: 18px;
+            inset-inline-start: 18px;
             bottom: 92px;
             width: 42px;
             height: 42px;
@@ -1423,7 +1508,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            z-index: 100;
+            z-index: var(--z-sticky);
             opacity: 0;
             visibility: hidden;
             transform: translateY(8px);
@@ -1440,12 +1525,12 @@
 
         .scroll-top-btn:hover {
             background: var(--primary-color);
-            color: #fff;
+            color: var(--on-primary);
         }
 
         @media (min-width: 769px) {
             .scroll-top-btn {
-                right: 28px;
+                inset-inline-start: 28px;
                 bottom: 28px;
             }
         }
@@ -1464,14 +1549,14 @@
         .audio-player-container {
             position: fixed;
             bottom: 200px;
-            left: 20px;
+            inset-inline-end: 20px;
             width: 300px;
-            background: var(--card-bg, #fff);
+            background: var(--card-bg);
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-            border: 1px solid var(--border-color, #e8e8e8);
+            border: 1px solid var(--border-color);
             padding: 16px;
-            z-index: 1099;
+            z-index: calc(var(--z-nav) + 20);
             display: none;
             flex-direction: column;
             gap: 12px;
@@ -1503,7 +1588,7 @@
             gap: 4px;
             min-width: 0;
             direction: rtl;
-            text-align: right;
+            text-align: start;
         }
 
         #currentAyahNum {
@@ -1520,7 +1605,7 @@
         .audio-btn {
             background: var(--primary-color);
             border: none;
-            color: white;
+            color: var(--on-primary);
             font-size: 14px;
             cursor: pointer;
             width: 38px;
@@ -1558,6 +1643,13 @@
             height: 6px;
         }
 
+        /* `role="slider"`, so it takes keyboard focus — a 4px bar needs an
+           offset ring to be visible at all. */
+        .audio-progress:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 4px;
+        }
+
         .audio-progress-bar {
             height: 100%;
             background: var(--primary-color);
@@ -1565,13 +1657,13 @@
             width: 0%;
             transition: width 0.2s ease;
             position: absolute;
-            right: 0;
+            inset-inline-end: 0;
         }
 
         .audio-progress-bar::after {
             content: '';
             position: absolute;
-            left: -5px;
+            inset-inline-start: -5px;
             top: 50%;
             transform: translateY(-50%);
             width: 10px;
@@ -1608,7 +1700,7 @@
             background: var(--card-bg);
         }
 
-        .reciter-modal-content h3 {
+        .reciter-modal-content h2 {
             margin: 0;
             font-size: 17px;
             font-family: 'Cairo', sans-serif;
@@ -1646,17 +1738,27 @@
         }
 
         .reciter-item {
+            width: 100%;
             padding: 12px 14px;
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
+            border: none;
             border-radius: 12px;
             margin-bottom: 4px;
             transition: all 0.15s;
             background: transparent;
+            color: inherit;
+            text-align: start;
             font-family: 'Cairo', sans-serif;
+            font-size: inherit;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        .reciter-item:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: -2px;
         }
 
         .reciter-item:hover {
@@ -1690,14 +1792,14 @@
         }
 
         .reciter-item.active {
-            background: rgba(var(--primary-rgb, 27, 94, 32), 0.1);
+            background: rgba(var(--primary-rgb), 0.1);
         }
 
         .bookmark-save-modal {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            text-align: right;
+            text-align: start;
             margin-top: 6px;
         }
 
@@ -1705,7 +1807,7 @@
             font-family: 'Cairo', sans-serif;
             font-size: 13px;
             font-weight: 700;
-            color: var(--text-secondary, #666);
+            color: var(--text-secondary);
         }
 
         .bookmark-save-select,
@@ -1723,9 +1825,11 @@
         @media (min-width: 769px) {
             .audio-player-container {
                 bottom: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                right: auto;
+                /* Centre without a transform so the slide-up keyframes stay
+                   free to use `transform` and the panel is never off-centre
+                   mid-animation. */
+                inset-inline: 0;
+                margin-inline: auto;
                 width: calc(100% - 120px);
                 max-width: 640px;
                 border-radius: 20px 20px 0 0;
@@ -1755,19 +1859,19 @@
         .audio-toggle-btn {
             position: fixed;
             bottom: 140px;
-            left: 20px;
+            inset-inline-end: 20px;
             width: 40px;
             height: 40px;
             border-radius: 50%;
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             border: none;
             font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 97;
+            z-index: calc(var(--z-sticky) - 8);
             transition: all 0.15s;
 
             display: none;
@@ -1781,7 +1885,7 @@
         @media (max-width: 768px) {
             .audio-toggle-btn {
                 bottom: 145px;
-                left: 15px;
+                inset-inline-end: 15px;
                 width: 36px;
                 height: 36px;
                 font-size: 16px;
@@ -1837,7 +1941,7 @@
 
         .ayah-tafsir:hover {
             border-color: var(--primary-color);
-            box-shadow: 0 2px 8px var(--shadow);
+            box-shadow: var(--elev-2);
         }
 
         .tafsir-ayah-number {
@@ -1847,7 +1951,7 @@
             width: 36px;
             height: 36px;
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             border-radius: 50%;
             font-size: 16px;
             font-weight: 600;
@@ -1872,8 +1976,8 @@
         .tafsir-error {
             text-align: center;
             padding: 40px;
-            color: #f44336;
-            background: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+            background: var(--danger-surface);
             border-radius: 12px;
             margin: 20px;
         }
@@ -1895,7 +1999,7 @@
             font-size: 15px;
             line-height: 1.9;
             color: var(--text-color);
-            text-align: right;
+            text-align: start;
         }
 
         @media (max-width: 768px) {
@@ -1926,7 +2030,7 @@
         /* Active button states */
         .icon-btn.active {
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             border-color: var(--primary-color);
         }
 
@@ -1955,7 +2059,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(135deg, rgba(var(--primary-rgb, 27, 94, 32), 0.16), rgba(var(--primary-rgb, 27, 94, 32), 0.04));
+            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.16), rgba(var(--primary-rgb), 0.04));
             position: relative;
         }
 
@@ -1976,11 +2080,11 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 92% 0%, rgba(var(--primary-rgb, 27, 94, 32), 0.2), transparent 45%);
+            background: radial-gradient(circle at 92% 0%, rgba(var(--primary-rgb), 0.2), transparent 45%);
             pointer-events: none;
         }
 
-        .share-modal-content .modal-header h3 {
+        .share-modal-content .modal-header h2 {
             margin: 0;
             font-family: 'Cairo', sans-serif;
             font-size: 19px;
@@ -2002,7 +2106,7 @@
             height: 36px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.62);
-            border: 1px solid rgba(var(--primary-rgb, 27, 94, 32), 0.22);
+            border: 1px solid rgba(var(--primary-rgb), 0.22);
             color: var(--primary-color);
             position: relative;
             z-index: 1;
@@ -2013,7 +2117,7 @@
         }
 
         .share-modal-content .modal-close-btn:hover {
-            background: white;
+            background: var(--surface-1);
             transform: rotate(90deg);
         }
 
@@ -2027,16 +2131,16 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            background: linear-gradient(180deg, rgba(var(--primary-rgb, 27, 94, 32), 0.03), transparent 36%);
+            background: linear-gradient(180deg, rgba(var(--primary-rgb), 0.03), transparent 36%);
         }
 
         .share-field,
         .share-toggle,
         .share-style-picker {
-            border: 1px solid rgba(var(--primary-rgb, 27, 94, 32), 0.16);
+            border: 1px solid rgba(var(--primary-rgb), 0.16);
             border-radius: 14px;
             padding: 10px 12px;
-            background: linear-gradient(135deg, rgba(var(--primary-rgb, 27, 94, 32), 0.08), rgba(var(--primary-rgb, 27, 94, 32), 0.02));
+            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08), rgba(var(--primary-rgb), 0.02));
         }
 
         .share-field {
@@ -2064,7 +2168,6 @@
             font-family: 'Cairo', sans-serif;
             padding: 10px 12px;
             font-size: 14px;
-            outline: none;
         }
 
         .share-field textarea {
@@ -2076,7 +2179,11 @@
         .share-field select:focus,
         .share-field textarea:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 27, 94, 32), 0.12);
+        }
+
+        .share-field select:focus-visible,
+        .share-field textarea:focus-visible {
+            box-shadow: var(--focus-ring);
         }
 
         .share-field-meta {
@@ -2085,11 +2192,11 @@
             color: var(--text-color);
             opacity: 0.7;
             direction: ltr;
-            text-align: left;
+            text-align: start;
         }
 
         .share-field-meta.warn {
-            color: #8f4b00;
+            color: var(--warning);
             opacity: 0.95;
         }
 
@@ -2101,7 +2208,7 @@
 
         .share-style-btn {
             flex: 1;
-            border: 1px solid rgba(var(--primary-rgb, 27, 94, 32), 0.28);
+            border: 1px solid rgba(var(--primary-rgb), 0.28);
             border-radius: 10px;
             background: var(--card-bg);
             color: var(--text-color);
@@ -2120,9 +2227,9 @@
 
         .share-style-btn.active {
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             border-color: var(--primary-color);
-            box-shadow: 0 10px 18px rgba(var(--primary-rgb, 27, 94, 32), 0.28);
+            box-shadow: 0 10px 18px rgba(var(--primary-rgb), 0.28);
         }
 
         .share-toggle {
@@ -2149,9 +2256,9 @@
         }
 
         .share-preview {
-            --share-preview-border: rgba(var(--primary-rgb, 27, 94, 32), 0.2);
-            --share-preview-bg: radial-gradient(circle at 0% 0%, rgba(var(--primary-rgb, 27, 94, 32), 0.18), transparent 45%),
-                linear-gradient(135deg, rgba(var(--primary-rgb, 27, 94, 32), 0.1), var(--bg-color));
+            --share-preview-border: rgba(var(--primary-rgb), 0.2);
+            --share-preview-bg: radial-gradient(circle at 0% 0%, rgba(var(--primary-rgb), 0.18), transparent 45%),
+                linear-gradient(135deg, rgba(var(--primary-rgb), 0.1), #f7f4ec);
             --share-preview-ayah-color: #243125;
             --share-preview-tafsir-color: #2f4a31;
             --share-preview-ref-color: #1b5e20;
@@ -2161,13 +2268,17 @@
             border: 1px solid var(--share-preview-border);
             border-radius: 14px;
             padding: 14px;
-            background: var(--share-preview-bg);
+            /* Opaque base beneath the gradient. The gradient's first stop is
+               translucent, so without this the dark modal behind showed
+               through under the preview's fixed dark ink. */
+            background-color: #f7f4ec;
+            background-image: var(--share-preview-bg);
         }
 
         .share-preview.style-classic {
-            --share-preview-border: rgba(var(--primary-rgb, 27, 94, 32), 0.2);
-            --share-preview-bg: radial-gradient(circle at 0% 0%, rgba(var(--primary-rgb, 27, 94, 32), 0.18), transparent 45%),
-                linear-gradient(135deg, rgba(var(--primary-rgb, 27, 94, 32), 0.1), var(--bg-color));
+            --share-preview-border: rgba(var(--primary-rgb), 0.2);
+            --share-preview-bg: radial-gradient(circle at 0% 0%, rgba(var(--primary-rgb), 0.18), transparent 45%),
+                linear-gradient(135deg, rgba(var(--primary-rgb), 0.1), #f7f4ec);
             --share-preview-ayah-color: #243125;
             --share-preview-tafsir-color: #2f4a31;
             --share-preview-ref-color: #1b5e20;
@@ -2277,14 +2388,14 @@
 
         .share-action-btn.primary {
             background: var(--primary-color);
-            color: white;
-            box-shadow: 0 12px 20px rgba(var(--primary-rgb, 27, 94, 32), 0.25);
+            color: var(--on-primary);
+            box-shadow: 0 12px 20px rgba(var(--primary-rgb), 0.25);
         }
 
         .share-action-btn.secondary {
-            background: rgba(var(--primary-rgb, 27, 94, 32), 0.1);
+            background: rgba(var(--primary-rgb), 0.1);
             color: var(--primary-color);
-            border: 1px solid rgba(var(--primary-rgb, 27, 94, 32), 0.25);
+            border: 1px solid rgba(var(--primary-rgb), 0.25);
         }
 
         .share-action-btn:hover:not(:disabled) {
@@ -2306,7 +2417,7 @@
                 padding: 14px 14px;
             }
 
-            .share-modal-content .modal-header h3 {
+            .share-modal-content .modal-header h2 {
                 font-size: 17px;
             }
 

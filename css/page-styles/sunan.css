@@ -1,83 +1,155 @@
+        /* Sunan ============================================================
+           Flat native-app language: one card treatment, no shadows, no
+           gradients, the shared 44px icon tile, and grouped-list rows for the
+           sunnah entries instead of a stack of separate cards.
+           ================================================================== */
+
+        /* .app-content already supplies the gutter and max width. */
         .sunan-container {
-            padding: 20px;
+            max-width: var(--container);
+            margin: 0 auto;
+            padding: 0;
         }
 
         .category-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: var(--space-3);
+            margin-block-end: var(--space-5);
         }
 
+        @media (min-width: 640px) {
+            .category-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        /* Rendered as a real <button>; the resets below keep the original card
+           layout that the previous clickable <div> had. */
         .category-card {
-            background: var(--card-bg);
+            background: var(--surface-1);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            width: 100%;
+            min-height: 96px;
+            font: inherit;
+            color: inherit;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 2px 8px var(--shadow);
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast);
+            box-shadow: none;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: var(--space-3);
         }
 
+        /* Was a 5px jump on a 0.3s `all` transition, then a shadow bloom. */
         .category-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px var(--shadow-heavy);
-            border-color: var(--primary-color);
+            transform: none;
+            box-shadow: none;
+            background: var(--surface-2);
+            border-color: var(--border-strong);
         }
 
+        /* Selection is state: tinted fill plus weight, never a shadow. */
+        .category-card.active,
+        .category-card[aria-pressed="true"] {
+            background: rgba(var(--primary-rgb), 0.12);
+            border-color: rgba(var(--primary-rgb), 0.32);
+        }
+
+        .category-card:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
+        }
+
+        /* The one icon treatment used across the app: a 44px tinted tile. */
         .category-icon {
-            font-size: 32px;
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            font-size: 1.25rem;
+            line-height: 1;
             color: var(--primary-color);
-            margin-bottom: 5px;
+            background: rgba(var(--primary-rgb), 0.12);
+            border: none;
+            border-radius: var(--radius-md);
+            flex-shrink: 0;
+            margin-block-end: 0;
+            transition: background-color var(--transition-fast);
+        }
+
+        .category-card:hover .category-icon {
+            background: rgba(var(--primary-rgb), 0.2);
         }
 
         .category-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--primary-color);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            line-height: var(--leading-tight);
+            color: var(--text-color);
         }
 
+        /* One card holding the entries as grouped rows, rather than a stack
+           of separate cards each with its own border. */
         .sunan-list {
             display: none;
             flex-direction: column;
-            gap: 15px;
+            gap: 0;
+            background: var(--surface-1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
         }
 
         .sunan-list.active {
             display: flex;
         }
 
+        /* Static content, so it deliberately does not react to hover. */
         .sunnah-item {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 4px var(--shadow);
-            transition: all 0.2s;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding-block: var(--space-4);
+            padding-inline: var(--space-5);
+            box-shadow: none;
+        }
+
+        .sunnah-item + .sunnah-item {
+            border-block-start: 1px solid var(--border-color);
         }
 
         .sunnah-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px var(--shadow);
+            transform: none;
+            box-shadow: none;
         }
 
         .sunnah-text {
-            font-size: 18px;
-            line-height: 1.8;
+            font-size: var(--text-md);
+            line-height: var(--leading-relaxed);
             color: var(--text-color);
-            margin-bottom: 10px;
+            margin-block-end: var(--space-2);
         }
 
         .sunnah-source {
-            font-size: 14px;
-            color: var(--primary-color);
-            opacity: 0.8;
-            font-weight: 600;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            font-weight: var(--weight-medium);
         }
 
-    
+        @media (max-width: 768px) {
+            .category-card {
+                padding: var(--space-3);
+            }
+
+            .sunnah-item {
+                padding-inline: var(--space-4);
+            }
+        }

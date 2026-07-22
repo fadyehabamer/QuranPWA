@@ -1,115 +1,135 @@
+        /* References =======================================================
+           Flat native-app language: one shared card treatment (--surface-1,
+           hairline border, --radius-lg, no shadow), the 4px spacing ramp, and
+           --text-* sizes replacing the 12.5/13.5/14/15/16/18/20px mix.
+           ================================================================== */
+
+        /* .app-content already supplies the gutter; only the reading measure
+           is narrowed here. */
         .ref-container {
-            max-width: 860px;
+            max-width: var(--container-narrow);
             margin: 0 auto;
-            padding: 24px;
+            padding: 0;
         }
 
         .ref-intro {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 12px var(--shadow);
-            margin-bottom: 24px;
-            text-align: justify;
+            background: var(--surface-1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            box-shadow: none;
+            margin-block-end: var(--space-4);
+            text-align: start;
         }
 
         .ref-intro h2 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 12px;
+            font-size: var(--text-lg);
+            font-weight: var(--weight-bold);
+            line-height: var(--leading-tight);
+            letter-spacing: -0.01em;
+            color: var(--text-color);
+            margin-block-end: var(--space-3);
         }
 
         .ref-intro p {
-            font-size: 15px;
-            line-height: 1.9;
-            color: var(--text-color);
-            opacity: 0.9;
+            font-size: var(--text-base);
+            line-height: var(--leading-normal);
+            color: var(--text-secondary);
             margin: 0;
         }
 
         .ref-section {
-            margin-bottom: 28px;
+            margin-block-end: var(--space-6);
         }
 
+        /* Section header: small and muted, clearly subordinate to the page
+           title. No letter-spacing — it breaks Arabic cursive joining. */
         .ref-section-title {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 14px;
-            padding-right: 4px;
+            gap: var(--space-3);
+            font-size: var(--text-base);
+            font-weight: var(--weight-bold);
+            color: var(--text-color);
+            margin-block-end: var(--space-3);
+            padding-inline-start: var(--space-1);
         }
 
         .ref-section-title i {
-            font-size: 20px;
+            font-size: var(--text-lg);
+            color: var(--primary-color);
         }
 
         .ref-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 14px;
+            gap: var(--space-3);
         }
 
         @media (min-width: 640px) {
             .ref-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             }
         }
 
         .ref-card {
-            background: var(--card-bg);
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 3px 10px var(--shadow);
+            background: var(--surface-1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            box-shadow: none;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            gap: var(--space-3);
+            transition: border-color var(--transition-fast);
         }
 
+        /* Static content: no lift, no shadow — only the edge responds. */
         .ref-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px var(--shadow);
+            transform: none;
+            border-color: var(--border-strong);
+            box-shadow: none;
         }
 
         .ref-card-name {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: var(--text-md);
+            font-weight: var(--weight-bold);
+            line-height: var(--leading-tight);
             color: var(--text-color);
         }
 
         .ref-card-url {
             font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            font-size: 12.5px;
+            font-size: var(--text-sm);
             color: var(--primary-color);
             direction: ltr;
-            text-align: left;
+            text-align: start;
             word-break: break-all;
-            background: rgba(127, 127, 127, 0.08);
-            padding: 6px 8px;
-            border-radius: 8px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-color);
+            padding-block: var(--space-2);
+            padding-inline: var(--space-3);
+            border-radius: var(--radius-xs);
         }
 
         .ref-card-desc {
-            font-size: 14px;
-            line-height: 1.7;
-            color: var(--text-color);
-            opacity: 0.85;
+            font-size: var(--text-base);
+            line-height: var(--leading-snug);
+            color: var(--text-secondary);
             margin: 0;
-            text-align: justify;
+            text-align: start;
         }
 
         .ref-card-link {
             align-self: flex-start;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            margin-top: 4px;
-            font-size: 13px;
-            font-weight: 600;
+            gap: var(--space-2);
+            margin-block-start: auto;
+            min-height: var(--tap-target);
+            padding-block-start: var(--space-2);
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
             color: var(--primary-color);
             text-decoration: none;
         }
@@ -119,14 +139,14 @@
         }
 
         .ref-note {
-            background: var(--card-bg);
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 3px 10px var(--shadow);
-            font-size: 13.5px;
-            line-height: 1.8;
-            color: var(--text-color);
-            opacity: 0.85;
-            text-align: justify;
-            margin-top: 8px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            box-shadow: none;
+            font-size: var(--text-base);
+            line-height: var(--leading-normal);
+            color: var(--text-secondary);
+            text-align: start;
+            margin-block-start: var(--space-4);
         }

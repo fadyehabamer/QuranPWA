@@ -3,20 +3,32 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>المسبحة الإلكترونية</title>
+    <meta name="description" content="مسبحة إلكترونية بعدّاد قابل للتخصيص وحفظ السجل.">
     <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/page-styles/masbaha.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
@@ -31,28 +43,30 @@
         <div class="masbaha-container">
             <div class="masbaha-main-panel">
             <div class="lifetime-counter" id="lifetimeCounter">
-                <i class="bi bi-trophy-fill"></i>
+                <i class="bi bi-trophy-fill" aria-hidden="true"></i>
                 <span>مجموع التسبيحات: 0</span>
             </div>
 
             <div class="dhikr-selector-container">
-                <div class="dhikr-chips">
-                    <div class="dhikr-chip" data-dhikr="subhan_allah" onclick="selectDhikr('subhan_allah', this)">سبحان الله (33)</div>
-                    <div class="dhikr-chip" data-dhikr="alhamdulillah" onclick="selectDhikr('alhamdulillah', this)">الحمد لله (33)</div>
-                    <div class="dhikr-chip" data-dhikr="allahu_akbar" onclick="selectDhikr('allahu_akbar', this)">الله أكبر (33)</div>
-                    <div class="dhikr-chip" data-dhikr="la_ilaha_illa_allah" onclick="selectDhikr('la_ilaha_illa_allah', this)">لا إله إلا الله (100)
-                    </div>
-                    <div class="dhikr-chip" data-dhikr="astaghfirullah" onclick="selectDhikr('astaghfirullah', this)">أستغفر الله (100)</div>
-                    <div class="dhikr-chip" data-dhikr="salat_nabi" onclick="selectDhikr('salat_nabi', this)">صلى على النبي (10)</div>
-                    <div class="dhikr-chip active" data-dhikr="custom" onclick="selectDhikr('custom', this)">مخصص</div>
+                <div class="dhikr-chips" role="group" aria-label="اختيار الذكر">
+                    <button type="button" class="dhikr-chip" data-dhikr="subhan_allah" aria-pressed="false" onclick="selectDhikr('subhan_allah', this)">سبحان الله (33)</button>
+                    <button type="button" class="dhikr-chip" data-dhikr="alhamdulillah" aria-pressed="false" onclick="selectDhikr('alhamdulillah', this)">الحمد لله (33)</button>
+                    <button type="button" class="dhikr-chip" data-dhikr="allahu_akbar" aria-pressed="false" onclick="selectDhikr('allahu_akbar', this)">الله أكبر (33)</button>
+                    <button type="button" class="dhikr-chip" data-dhikr="la_ilaha_illa_allah" aria-pressed="false" onclick="selectDhikr('la_ilaha_illa_allah', this)">لا إله إلا الله (100)</button>
+                    <button type="button" class="dhikr-chip" data-dhikr="astaghfirullah" aria-pressed="false" onclick="selectDhikr('astaghfirullah', this)">أستغفر الله (100)</button>
+                    <button type="button" class="dhikr-chip" data-dhikr="salat_nabi" aria-pressed="false" onclick="selectDhikr('salat_nabi', this)">صلى على النبي (10)</button>
+                    <button type="button" class="dhikr-chip active" data-dhikr="custom" aria-pressed="true" onclick="selectDhikr('custom', this)">مخصص</button>
                 </div>
             </div>
 
-            <div class="counter-display">
-                <svg class="progress-ring" viewBox="0 0 200 200">
+            <!-- The ring only re-draws the number, so it is decorative; the
+                 count itself is announced from the live region. -->
+            <div class="counter-display" role="status" aria-live="polite" aria-atomic="true">
+                <svg class="progress-ring" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
                     <circle class="progress-ring-bg" cx="100" cy="100" r="85"></circle>
                     <circle class="progress-ring-circle" id="progressCircle" cx="100" cy="100" r="85"></circle>
                 </svg>
+                <span class="sr-only">عدد التسبيحات:</span>
                 <div class="counter-value" id="counterValue">0</div>
             </div>
             <div class="target-display" id="targetDisplay">الهدف: غير محدد</div>
@@ -63,70 +77,71 @@
             </div>
             <div class="motivation-text" id="motivationText">ابدأ الآن واذكر الله</div>
 
-            <button class="tap-button" id="tapButton" onclick="increment()">
-                <i class="bi bi-hand-index-fill"></i>
+            <button type="button" class="tap-button" id="tapButton" aria-label="تسبيح" onclick="increment()">
+                <i class="bi bi-hand-index-fill" aria-hidden="true"></i>
             </button>
 
-            <div class="preset-buttons">
-                <button class="preset-btn" onclick="setTarget(33)">33</button>
-                <button class="preset-btn" onclick="setTarget(99)">99</button>
-                <button class="preset-btn" onclick="setTarget(100)">100</button>
-                <button class="preset-btn" onclick="setTarget(500)">500</button>
-                <button class="preset-btn" onclick="setTarget(1000)">1000</button>
+            <div class="preset-buttons" role="group" aria-label="أهداف جاهزة">
+                <button type="button" class="preset-btn" aria-label="الهدف 33" onclick="setTarget(33)">33</button>
+                <button type="button" class="preset-btn" aria-label="الهدف 99" onclick="setTarget(99)">99</button>
+                <button type="button" class="preset-btn" aria-label="الهدف 100" onclick="setTarget(100)">100</button>
+                <button type="button" class="preset-btn" aria-label="الهدف 500" onclick="setTarget(500)">500</button>
+                <button type="button" class="preset-btn" aria-label="الهدف 1000" onclick="setTarget(1000)">1000</button>
             </div>
 
             <div class="custom-target">
+                <label class="sr-only" for="customTargetInput">هدف مخصص</label>
                 <input type="number" id="customTargetInput" placeholder="هدف مخصص" min="1">
-                <button onclick="setCustomTarget()" 
-                    style="font-family: 'cairo';"
-                >حفظ</button>
+                <button type="button" onclick="setCustomTarget()">حفظ</button>
             </div>
 
             <div class="controls">
-                <button class="control-btn control-btn-soft" id="undoBtn" onclick="undoLastIncrement()" disabled>
-                    <i class="bi bi-arrow-counterclockwise"></i> تراجع
+                <button type="button" class="control-btn control-btn-soft" id="undoBtn" onclick="undoLastIncrement()" disabled>
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> تراجع
                 </button>
-                <button class="control-btn control-btn-soft" onclick="addBulk(10)">
-                    <i class="bi bi-plus-circle"></i> +10
+                <button type="button" class="control-btn control-btn-soft" onclick="addBulk(10)">
+                    <i class="bi bi-plus-circle" aria-hidden="true"></i> +10
                 </button>
-                <button class="control-btn control-btn-soft" id="autoToggleBtn" onclick="toggleAutoCount()">
-                    <i class="bi bi-cpu"></i> تلقائي
+                <button type="button" class="control-btn control-btn-soft" id="autoToggleBtn" aria-pressed="false" onclick="toggleAutoCount()">
+                    <i class="bi bi-cpu" aria-hidden="true"></i> تلقائي
                 </button>
-                <button class="control-btn" onclick="reset()">
-                    <i class="bi bi-arrow-clockwise"></i> إعادة تعيين
+                <button type="button" class="control-btn" onclick="reset()">
+                    <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> إعادة تعيين
                 </button>
-                <button class="control-btn" onclick="saveCount()">
-                    <i class="bi bi-bookmark-fill"></i> حفظ في السجل
+                <button type="button" class="control-btn" onclick="saveCount()">
+                    <i class="bi bi-bookmark-fill" aria-hidden="true"></i> حفظ في السجل
                 </button>
-                <div style="position: relative;">
-                    <button class="sound-toggle" id="soundToggle" onclick="toggleSoundMenu()">
-                        <span id="soundIcon">🔊</span> الصوت
+                <div class="sound-control">
+                    <button type="button" class="sound-toggle" id="soundToggle"
+                        aria-expanded="false" aria-controls="soundSelector" onclick="toggleSoundMenu()">
+                        <i class="bi bi-volume-up-fill" id="soundIcon" aria-hidden="true"></i> الصوت
                     </button>
                     <div class="sound-selector" id="soundSelector">
-                        <select class="sound-select" onchange="changeSound(this.value)">
+                        <label class="sr-only" for="soundSelect">نوع صوت التسبيح</label>
+                        <select class="sound-select" id="soundSelect" onchange="changeSound(this.value)">
                             <option value="beep">صفير</option>
                             <option value="click">نقرة</option>
                             <option value="water">ماء</option>
                         </select>
                     </div>
                 </div>
-                <button class="sound-toggle" id="vibrationToggle" onclick="toggleVibration()">
-                    <i class="bi bi-phone-vibrate"></i> الاهتزاز
+                <button type="button" class="sound-toggle" id="vibrationToggle" aria-pressed="true" onclick="toggleVibration()">
+                    <i class="bi bi-phone-vibrate" aria-hidden="true"></i> الاهتزاز
                 </button>
             </div>
             </div>
 
-            <button class="quick-tap-fab" id="quickTapFab" onclick="increment()" aria-label="تسبيح سريع">
-                <i class="bi bi-plus-lg"></i>
+            <button type="button" class="quick-tap-fab" id="quickTapFab" onclick="increment()" aria-label="تسبيح سريع">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
                 <span>تسبيح</span>
             </button>
 
             <div class="history">
-                <div class="history-title">
+                <h2 class="history-title">
                     سجل التسبيح
-                    <button class="clear-all-btn" id="clearHistoryBtn" onclick="clearHistory()"
+                    <button type="button" class="clear-all-btn" id="clearHistoryBtn" onclick="clearHistory()"
                         style="display: none;">مسح الكل</button>
-                </div>
+                </h2>
                 <div class="history-list" id="historyList"></div>
             </div>
         </div>
@@ -149,6 +164,7 @@
 
     <script src="js/common.js"></script>
         <script src="js/page-scripts/masbaha.js"></script>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

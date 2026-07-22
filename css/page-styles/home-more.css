@@ -4,131 +4,385 @@
             font-family: 'Cairo', sans-serif;
         }
 
+        /* Home (full) ======================================================
+           Flat native-app language: no surface gradients, no decorative
+           pseudo-elements, one card, and the feature list rendered as a
+           grouped list of rows rather than six large tiles.
+           `css/app-ui.css` loads after this file and owns the shared
+           patterns; page-specific layout is scoped to .home-more-container
+           so it wins without !important.
+           ================================================================== */
+
+        /* .app-content already provides the gutter and max width. */
         .home-more-container {
-            max-width: 1000px;
+            max-width: var(--container);
             margin: 0 auto;
         }
 
+        /* Hero -------------------------------------------------------------
+           Was a radial wash stacked on a linear tint. Now the same flat
+           accent panel used by every other page hero. */
         .more-hero {
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.14), rgba(var(--primary-rgb), 0.04));
-            padding: 22px;
-            margin-bottom: 26px;
+            border-radius: var(--radius-lg);
+            border: 1px solid transparent;
+            background: var(--primary-color);
+            background-image: none;
+            color: var(--on-primary);
+            padding: var(--space-5);
+            margin-block-end: var(--space-4);
+            box-shadow: none;
+        }
+
+        [data-theme="dark"] .more-hero {
+            background: #16391d;
+            background-image: none;
+            color: #e9f4ec;
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: none;
         }
 
         .more-hero h2 {
-            font-size: 30px;
-            margin-bottom: 8px;
-            color: var(--text-color);
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            line-height: var(--leading-tight);
+            letter-spacing: -0.02em;
+            margin-block-end: var(--space-3);
+            color: inherit;
         }
 
         .more-hero p {
-            color: var(--text-secondary, #666);
-            font-size: 15px;
-            line-height: 1.8;
-            margin-bottom: 14px;
+            color: inherit;
+            opacity: 0.86;
+            font-size: var(--text-base);
+            line-height: var(--leading-normal);
+            margin-block-end: var(--space-5);
+            max-width: 62ch;
         }
 
+        /* On an accent panel the CTA cannot be another accent fill; it is a
+           translucent overlay that works in both themes. */
         .more-hero a {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--space-2);
             text-decoration: none;
-            border-radius: 10px;
-            padding: 10px 14px;
-            background: var(--primary-color);
-            color: #fff;
-            font-weight: 700;
-            font-size: 14px;
+            border-radius: var(--radius-sm);
+            min-height: var(--tap-target);
+            padding-block: var(--space-3);
+            padding-inline: var(--space-5);
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            color: inherit;
+            font-weight: var(--weight-semibold);
+            font-size: var(--text-base);
+            box-shadow: none;
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast);
         }
 
-        .quick-actions {
-            background: var(--card-bg);
+        .more-hero a:hover {
+            background: rgba(255, 255, 255, 0.24);
+            border-color: rgba(255, 255, 255, 0.38);
+        }
+
+        /* Feature list -----------------------------------------------------
+           Six large tiles became one grouped list: a single card, hairline
+           dividers, 44px icon tile, title, description, chevron. Scoped to
+           the page container so it beats the shared tile rule in app-ui.css
+           without !important. */
+        .home-more-container .features-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            background: var(--surface-1);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 22px;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-block-end: var(--space-4);
+        }
+
+        .home-more-container .feature-card {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            column-gap: var(--space-3);
+            row-gap: var(--space-1);
+            padding-block: var(--space-3);
+            padding-inline: var(--space-4);
+            min-height: 64px;
+            height: auto;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            text-align: start;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: background-color var(--transition-fast);
+        }
+
+        .home-more-container .feature-card + .feature-card {
+            border-block-start: 1px solid var(--border-color);
+        }
+
+        .home-more-container .feature-card:hover {
+            background: var(--surface-2);
+        }
+
+        /* The list card clips its children, so the ring is drawn inside the
+           row rather than as an outer box-shadow that would be cut off. */
+        .home-more-container .feature-card:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: -2px;
+        }
+
+        /* Disclosure chevron. The document is RTL, so inline-start is the
+           right edge; the rotated corner therefore points inline-end. */
+        .home-more-container .feature-card::after {
+            content: "";
+            grid-column: 3;
+            grid-row: 1 / span 2;
+            inline-size: 8px;
+            block-size: 8px;
+            border-inline-start: 2px solid var(--text-muted);
+            border-block-end: 2px solid var(--text-muted);
+            transform: rotate(135deg);
+        }
+
+        .home-more-container .feature-icon {
+            grid-column: 1;
+            grid-row: 1 / span 2;
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            font-size: 1.25rem;
+            line-height: 1;
+            border-radius: var(--radius-md);
+            background: rgba(var(--primary-rgb), 0.12);
+            border: none;
+            color: var(--primary-color);
+            margin: 0;
+            transition: background-color var(--transition-fast);
+        }
+
+        /* Was `scale(1.1) rotate(5deg)` — a size change on hover. */
+        .feature-card:hover .feature-icon {
+            transform: none;
+            background: rgba(var(--primary-rgb), 0.2);
+        }
+
+        .feature-icon i {
+            color: inherit;
+            font-size: inherit;
+            line-height: 1;
+        }
+
+        .home-more-container .feature-title {
+            grid-column: 2;
+            grid-row: 1;
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            line-height: var(--leading-tight);
+            letter-spacing: 0;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .home-more-container .feature-description {
+            grid-column: 2;
+            grid-row: 2;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            line-height: var(--leading-snug);
+            margin: 0;
+        }
+
+        /* Stats ------------------------------------------------------------ */
+        .stats-section {
+            padding: var(--space-5);
+            margin-block-end: var(--space-4);
+            text-align: center;
+            box-shadow: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--space-4);
+        }
+
+        .stat-number {
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            line-height: var(--leading-tight);
+            letter-spacing: -0.02em;
+            color: var(--text-color);
+            margin-block-end: var(--space-1);
+            font-feature-settings: "tnum";
+        }
+
+        .stat-label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            font-weight: var(--weight-medium);
+        }
+
+        /* Quick actions ---------------------------------------------------- */
+        .quick-actions {
+            background: var(--surface-1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-block-end: var(--space-4);
+            box-shadow: none;
         }
 
         .quick-actions-title {
-            font-size: 18px;
+            font-size: var(--text-base);
             color: var(--text-color);
-            font-weight: 700;
-            margin-bottom: 16px;
-            text-align: center;
+            font-weight: var(--weight-bold);
+            letter-spacing: -0.01em;
+            margin-block-end: var(--space-4);
+            text-align: start;
         }
 
         .action-buttons {
             display: flex;
-            gap: 12px;
+            gap: var(--space-3);
             flex-wrap: wrap;
-            justify-content: center;
         }
 
         .action-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
+            min-height: var(--tap-target);
+            padding-block: var(--space-3);
+            padding-inline: var(--space-5);
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
             background: var(--primary-color);
-            color: white;
-            font-size: 14px;
-            font-weight: 700;
+            color: var(--on-primary);
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: var(--space-2);
+            box-shadow: none;
             -webkit-tap-highlight-color: transparent;
         }
 
         .action-btn:hover {
             background: var(--primary-light);
-            transform: translateY(-1px);
         }
 
+        /* Was `--bg-color`, i.e. the page background sitting on a card — it
+           disappeared entirely in dark mode. Now a real surface with an edge. */
         .action-btn.secondary {
-            background: var(--bg-color);
+            background: var(--surface-2);
+            border-color: var(--border-color);
             color: var(--text-color);
+            box-shadow: none;
         }
 
         .action-btn.secondary:hover {
-            background: var(--primary-color);
-            color: white;
+            background: var(--surface-3);
+            border-color: var(--border-color);
+            color: var(--text-color);
         }
 
+        /* Quick tools ------------------------------------------------------
+           A three-up row of square controls, matching the tool row on the
+           home page. */
         .quick-tools {
-            margin-bottom: 26px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--space-3);
+            margin-block-end: var(--space-4);
         }
 
         .tool-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
             color: var(--text-color);
-            background: var(--card-bg);
+            background: var(--surface-1);
             border: 1px solid var(--border-color);
-            min-width: 96px;
+            border-radius: var(--radius-lg);
+            min-width: 0;
+            min-height: 76px;
+            padding-block: var(--space-3);
+            padding-inline: var(--space-3);
+            box-shadow: none;
+            cursor: pointer;
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast);
         }
 
-        .tool-btn i,
+        /* Was `color: white` plus a 4px lift in styles.css. */
+        .tool-btn:hover {
+            background: var(--surface-2);
+            color: var(--text-color);
+            border-color: var(--border-strong);
+        }
+
         .tool-btn .tool-label {
             color: inherit;
         }
 
+        .tool-btn i {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+
+        .tool-label {
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+        }
+
         [data-theme="dark"] .tool-btn {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.18);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+            background: var(--surface-1);
+            border-color: var(--border-color);
+            box-shadow: none;
         }
 
         [data-theme="dark"] .tool-btn:hover {
-            background: var(--primary-color);
-            color: #fff;
-            border-color: var(--primary-color);
+            background: var(--surface-2);
+            color: var(--text-color);
+            border-color: var(--border-strong);
         }
 
         @media (max-width: 768px) {
+            .more-hero {
+                padding: var(--space-5);
+                border-radius: var(--radius-lg);
+            }
+
             .more-hero h2 {
-                font-size: 24px;
+                font-size: var(--text-xl);
+            }
+
+            .stats-section {
+                padding: var(--space-5);
+            }
+
+            /* Three short numbers fit comfortably side by side; stacking them
+               produced a 300px-tall block of whitespace. */
+            .stats-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: var(--space-3);
             }
 
             .action-buttons {
@@ -140,4 +394,3 @@
                 justify-content: center;
             }
         }
-    

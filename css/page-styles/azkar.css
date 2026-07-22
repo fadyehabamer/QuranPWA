@@ -1,69 +1,115 @@
+        /* ======================================================================
+           Azkar — restyled onto the design tokens.
+
+           Two surfaces carry this page: the category grid (navigation) and the
+           zikr card (long-form Arabic reading). They now use one card language,
+           one radius and one spacing ramp, and the zikr body gets the generous
+           leading and constrained measure that Arabic with diacritics needs.
+           ====================================================================== */
+
+        /* ---- Category grid ---------------------------------------------------- */
+
         .category-list {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-            padding: 0 4px;
-            margin-top: 20px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: var(--space-3);
+            margin-block: var(--space-5);
+            padding-inline: 0;
         }
 
+        /* Rendered as a real <button>; the resets below keep the original card
+           layout that the previous clickable <div> had. */
         .category-item {
-            background: var(--card-bg);
+            background: var(--surface-1);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px 16px;
+            border-radius: var(--radius-lg);
+            padding-block: var(--space-5);
+            padding-inline: var(--space-4);
+            width: 100%;
+            min-height: var(--tap-target);
+            font: inherit;
+            color: inherit;
             cursor: pointer;
-            transition: all 0.2s ease;
+            box-shadow: var(--elev-2);
+            /* `all` also animated layout properties; name what moves. */
+            transition:
+                transform var(--transition-fast),
+                border-color var(--transition-fast),
+                box-shadow var(--transition-fast),
+                background-color var(--transition-fast);
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            gap: 12px;
+            gap: var(--space-3);
         }
 
         .category-item:hover {
-            transform: translateY(-3px);
-            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            border-color: rgba(var(--primary-rgb), 0.45);
+            box-shadow: var(--elev-4);
         }
 
         .category-item:active {
-            transform: translateY(-1px) scale(0.98);
+            transform: translateY(0);
+            box-shadow: var(--elev-1);
+        }
+
+        @media (hover: none) {
+            .category-item:hover {
+                transform: none;
+                box-shadow: var(--elev-2);
+                border-color: var(--border-color);
+            }
         }
 
         .category-icon {
             width: 56px;
             height: 56px;
+            /* Tinted tile rather than a solid slab, so the card reads as one
+               surface with an icon on it instead of two competing blocks. */
+            background: rgba(var(--primary-rgb), 0.12);
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
+            border-radius: var(--radius-md);
+            display: grid;
+            place-items: center;
+            font-size: 1.625rem;
+            color: var(--primary-color);
+            transition:
+                background-color var(--transition-fast),
+                color var(--transition-fast);
+        }
+
+        .category-item:hover .category-icon {
             background: var(--primary-color);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            color: white;
+            color: var(--on-primary);
         }
 
         .category-info {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            gap: var(--space-2);
         }
 
         .category-name {
-            font-size: 15px;
+            font-size: var(--text-md);
+            line-height: var(--leading-snug);
             color: var(--text-color);
-            font-weight: 600;
+            font-weight: var(--weight-semibold);
         }
 
         .category-count {
-            background: var(--primary-color);
-            color: white;
+            background: rgba(var(--primary-rgb), 0.12);
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
+            color: var(--primary-color);
             min-width: 28px;
-            height: 28px;
-            padding: 0 10px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 600;
+            height: 26px;
+            padding-inline: var(--space-2);
+            border-radius: var(--radius-full);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-bold);
+            font-feature-settings: "tnum";
             display: flex;
             align-items: center;
             justify-content: center;
@@ -71,23 +117,26 @@
 
         @media (max-width: 400px) {
             .category-list {
-                gap: 10px;
+                gap: var(--space-2);
             }
 
             .category-item {
-                padding: 16px 12px;
+                padding-block: var(--space-4);
+                padding-inline: var(--space-3);
             }
 
             .category-icon {
                 width: 48px;
                 height: 48px;
-                font-size: 22px;
+                font-size: 1.375rem;
             }
 
             .category-name {
-                font-size: 14px;
+                font-size: var(--text-base);
             }
         }
+
+        /* ---- Zikr cards -------------------------------------------------------- */
 
         .azkar-list {
             display: none;
@@ -98,141 +147,231 @@
         }
 
         .zikr-card {
-            background: var(--card-bg);
+            background: var(--surface-1);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 16px;
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+            box-shadow: var(--elev-2);
+            /* Static card — it must not lift; only its controls react. */
         }
 
         .zikr-text {
-            font-family: 'Amiri', serif;
+            font-family: var(--font-quran);
             font-size: var(--font-size-ayah);
-            line-height: 2.2;
+            /* Diacritics and descenders stack in Arabic; this is the reading
+               leading, not a decorative one. */
+            line-height: var(--leading-quran);
             color: var(--primary-color);
-            margin-bottom: 16px;
+            margin-block: 0 var(--space-4);
+            margin-inline: auto;
+            /* A comfortable measure — full-width lines are hard to track. */
+            max-width: 46ch;
             text-align: center;
         }
 
         .zikr-info {
-            padding-top: 16px;
+            padding-top: var(--space-4);
             border-top: 1px solid var(--border-color);
         }
 
         .zikr-desc {
             font-size: var(--font-size-base);
             color: var(--text-color);
-            line-height: 1.6;
+            line-height: var(--leading-relaxed);
+            max-width: var(--measure);
         }
 
         .zikr-reference {
-            font-size: 13px;
-            color: var(--text-color);
-            opacity: 0.7;
-            margin-top: 8px;
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+            opacity: 1;
+            line-height: var(--leading-normal);
+            margin-top: var(--space-2);
         }
 
         .zikr-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            padding-top: 15px;
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
             border-top: 1px solid var(--border-color);
         }
 
         .zikr-repeat {
-            font-size: 14px;
-            color: var(--primary-color);
-            font-weight: 600;
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+            font-weight: var(--weight-semibold);
+            font-feature-settings: "tnum";
         }
 
+        /* The counter is the thing people actually press, repeatedly — it gets
+           a solid fill, real padding and a pressed state so it feels tactile. */
         .zikr-counter-btn {
             background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 5px 15px;
-            font-size: 14px;
+            color: var(--on-primary);
+            border: 1px solid transparent;
+            border-radius: var(--radius-full);
+            padding-block: var(--space-2);
+            padding-inline: var(--space-5);
+            font-size: var(--text-md);
+            font-weight: var(--weight-bold);
+            font-feature-settings: "tnum";
             cursor: pointer;
-            transition: all 0.2s;
+            box-shadow: var(--elev-2);
+            transition:
+                background-color var(--transition-fast),
+                box-shadow var(--transition-fast),
+                transform var(--transition-fast),
+                opacity var(--transition-fast);
+            /* Was ~26px tall — below the 44px minimum touch target. */
+            min-height: var(--tap-target);
+            min-width: 84px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
+        .zikr-counter-btn:hover {
+            background: var(--primary-light);
+            box-shadow: var(--elev-3);
+        }
+
+        .zikr-counter-btn:active {
+            transform: scale(0.96);
+            box-shadow: var(--elev-1);
+        }
+
+        /* Was a hardcoded #2E7D32 with no dark override — it ignored the user's
+           chosen accent colour and sat at ~2.5:1 against white in dark mode.
+           Completed also changes shape (outline, not fill) so the state is not
+           signalled by colour alone. */
         .zikr-counter-btn.completed {
-            background: #2E7D32;
-            opacity: 0.8;
+            background: rgba(var(--primary-rgb), 0.12);
+            border-color: rgba(var(--primary-rgb), 0.4);
+            color: var(--primary-color);
+            box-shadow: none;
+            opacity: 1;
+        }
+
+        .zikr-counter-btn.completed:hover {
+            background: rgba(var(--primary-rgb), 0.2);
+            box-shadow: none;
         }
 
         .favorite-btn {
             background: none;
             border: none;
-            color: var(--text-color);
-            font-size: 20px;
+            color: var(--text-muted);
+            font-size: 1.25rem;
             cursor: pointer;
-            transition: all 0.2s;
+            border-radius: var(--radius-full);
+            transition:
+                color var(--transition-fast),
+                background-color var(--transition-fast),
+                transform var(--transition-fast);
+            /* Icon-only control — meet the 44px minimum touch target. */
+            min-width: var(--tap-target);
+            min-height: var(--tap-target);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .favorite-btn.active {
-            color: #e91e63;
+        .favorite-btn:hover {
+            background: var(--surface-2);
+            color: var(--text-color);
         }
+
+        .favorite-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* Tokenised so the filled heart keeps its contrast in both themes;
+           #e91e63 was fixed and dropped to ~4.2:1 on the dark surface. */
+        .favorite-btn.active {
+            color: var(--danger);
+        }
+
+        .favorite-btn.active:hover {
+            background: var(--danger-surface);
+            color: var(--danger);
+        }
+
+        /* ---- Progress ---------------------------------------------------------- */
 
         .progress-container {
-            margin-bottom: 20px;
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 12px;
+            margin-bottom: var(--space-5);
+            background: var(--surface-1);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
             border: 1px solid var(--border-color);
+            box-shadow: var(--elev-1);
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            color: var(--text-secondary);
             display: none;
         }
 
         .progress-bar-bg {
             width: 100%;
-            height: 10px;
-            background: var(--bg-color);
-            border-radius: 5px;
+            height: 8px;
+            background: rgba(var(--primary-rgb), 0.12);
+            border-radius: var(--radius-full);
             overflow: hidden;
-            margin-top: 10px;
+            margin-top: var(--space-3);
         }
 
         .progress-bar-fill {
             height: 100%;
-            background: var(--primary-color);
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+            border-radius: var(--radius-full);
             width: 0%;
-            transition: width 0.3s ease;
+            transition: width var(--transition-slow);
         }
+
+        /* ---- View mode / swipe -------------------------------------------------- */
 
         .view-mode-btn {
             width: auto;
             min-width: 86px;
             height: 36px;
-            border-radius: 18px;
-            gap: 6px;
-            padding: 0 10px;
-            font-size: 13px;
-            font-weight: 600;
+            border-radius: var(--radius-full);
+            gap: var(--space-2);
+            padding-inline: var(--space-3);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
         }
 
         .view-mode-label {
-            font-size: 12px;
+            font-size: var(--text-sm);
             line-height: 1;
         }
 
         .swipe-view {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: var(--space-3);
         }
 
         .swipe-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--card-bg);
+            gap: var(--space-3);
+            background: var(--surface-2);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 10px 14px;
-            font-size: 14px;
-            color: var(--text-color);
+            border-radius: var(--radius-lg);
+            padding-block: var(--space-3);
+            padding-inline: var(--space-4);
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            color: var(--text-secondary);
+            font-feature-settings: "tnum";
         }
 
         .swipe-area {
@@ -249,7 +388,7 @@
             user-select: none;
             -webkit-user-select: none;
             cursor: grab;
-            animation: swipeCardIn 0.2s ease;
+            animation: swipeCardIn var(--duration-normal) var(--ease-out);
         }
 
         .swipe-card:active {
@@ -266,37 +405,46 @@
 
         .swipe-hint {
             text-align: center;
-            font-size: 13px;
-            color: var(--text-color);
-            opacity: 0.75;
+            font-size: var(--text-base);
+            color: var(--text-muted);
+            opacity: 1;
         }
 
         .swipe-nav {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: var(--space-2);
         }
 
         .swipe-nav-btn {
             border: 1px solid var(--border-color);
-            background: var(--card-bg);
+            background: var(--surface-1);
             color: var(--text-color);
-            border-radius: 10px;
-            height: 42px;
-            font-size: 14px;
-            font-weight: 600;
+            border-radius: var(--radius-sm);
+            min-height: var(--tap-target);
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
             cursor: pointer;
-            transition: all 0.2s ease;
+            box-shadow: var(--elev-1);
+            transition:
+                border-color var(--transition-fast),
+                color var(--transition-fast),
+                background-color var(--transition-fast),
+                box-shadow var(--transition-fast),
+                opacity var(--transition-fast);
         }
 
         .swipe-nav-btn:not(:disabled):hover {
             border-color: var(--primary-color);
             color: var(--primary-color);
+            background: var(--surface-2);
+            box-shadow: var(--elev-2);
         }
 
         .swipe-nav-btn:disabled {
             opacity: 0.45;
             cursor: not-allowed;
+            box-shadow: none;
         }
 
         @keyframes swipeCardIn {
@@ -310,6 +458,8 @@
             }
         }
 
+        /* Physical translateX: these are gesture animations tied to the actual
+           direction the finger moved, not to the writing direction. */
         @keyframes swipeOutLeft {
             from {
                 opacity: 1;
@@ -344,4 +494,3 @@
                 display: none;
             }
         }
-    

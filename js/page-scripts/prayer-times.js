@@ -21,6 +21,9 @@ let userLocation = null;
         let calibrationGuideInterval = null;
         let calibrationGuideEndsAt = 0;
         let calibrationGuideRunning = false;
+        let qiblaLastAnnouncedTs = 0;
+        let qiblaLastAnnouncedHeading = null;
+        let qiblaLastAnnouncedText = '';
 
         const ORIENTATION_UPDATE_INTERVAL_MS = 80;
         const HEADING_SMOOTH_FACTOR = 0.22;
@@ -32,6 +35,9 @@ let userLocation = null;
         const CALIBRATION_GUIDE_MS = 2000;
         const CALIBRATION_HINT_HIDDEN_STORAGE_KEY = 'qiblaCalibrationHintHiddenV1';
         const TILT_POOR_DEG = 65;
+        // Live-region pacing for the qibla bearing announcement.
+        const QIBLA_ANNOUNCE_INTERVAL_MS = 2500;
+        const QIBLA_ANNOUNCE_STEP_DEG = 10;
         const SHARED_COUNTRY_STORAGE_KEY = 'preferredManualCountryV1';
         const LEGACY_COUNTRY_STORAGE_KEY = 'selectedCountry';
 
@@ -50,14 +56,19 @@ let userLocation = null;
             Tahajjud: 'قيام الليل'
         };
 
+        // Single source of truth for the prayer glyphs. This table used to be
+        // duplicated inside renderPrayerTimes(); both copies were emoji, which
+        // render inconsistently per-platform and are announced by screen
+        // readers as their unicode name ("sunrise", "star"). Bootstrap Icons
+        // are used everywhere else in the app and are marked aria-hidden.
         const prayerIcons = {
-            Fajr: '🌅',
-            Sunrise: '☀️',
-            Dhuhr: '🌞',
-            Asr: '🌇',
-            Maghrib: '🌆',
-            Isha: '🌙',
-            Tahajjud: '⭐'
+            Fajr: 'bi-sunrise',
+            Sunrise: 'bi-brightness-high',
+            Dhuhr: 'bi-sun',
+            Asr: 'bi-sunset',
+            Maghrib: 'bi-moon',
+            Isha: 'bi-moon-stars',
+            Tahajjud: 'bi-stars'
         };
 
         function getStoredCountrySelection() {
@@ -334,6 +345,47 @@ let userLocation = null;
             }
 
             updateCalibrationHintToggleUI();
+
+            updateQiblaLiveReadout();
+        }
+
+        /**
+         * The compass is a live visual instrument with no non-visual
+         * equivalent. This announces the bearing through a polite live region,
+         * throttled so a sensor firing ~12x/second does not flood the screen
+         * reader: it only speaks when the phone has turned by at least
+         * QIBLA_ANNOUNCE_STEP_DEG and at most once every
+         * QIBLA_ANNOUNCE_INTERVAL_MS.
+         */
+        function updateQiblaLiveReadout() {
+            const readout = document.getElementById('qiblaLiveReadout');
+            if (!readout || qiblaBearing === null) return;
+
+            const now = Date.now();
+            if (now - qiblaLastAnnouncedTs < QIBLA_ANNOUNCE_INTERVAL_MS) return;
+
+            let text;
+            if (currentHeading === null) {
+                text = `اتجاه القبلة ${Math.round(qiblaBearing)} درجة، ${getDirectionName(qiblaBearing)}. اتجاه الهاتف غير متاح.`;
+                // Nothing moves while the sensor is unavailable, so say it once.
+                if (text === qiblaLastAnnouncedText) return;
+            } else {
+                const heading = Math.round(currentHeading);
+                if (qiblaLastAnnouncedHeading !== null
+                    && getAngularDifference(heading, qiblaLastAnnouncedHeading) < QIBLA_ANNOUNCE_STEP_DEG) {
+                    return;
+                }
+                const diff = Math.round(getAngularDifference(qiblaBearing, currentHeading));
+                const alignment = diff <= 10
+                    ? 'أنت موجّه نحو القبلة'
+                    : `انحراف ${diff} درجة عن القبلة`;
+                text = `اتجاه القبلة ${Math.round(qiblaBearing)} درجة. اتجاه الهاتف ${heading} درجة، ${getDirectionName(currentHeading)}. ${alignment}.`;
+                qiblaLastAnnouncedHeading = heading;
+            }
+
+            qiblaLastAnnouncedTs = now;
+            qiblaLastAnnouncedText = text;
+            readout.textContent = text;
         }
 
         function handleDeviceOrientation(event) {
@@ -450,6 +502,10 @@ let userLocation = null;
             headingUnstableReason = 'حرّك الهاتف بحركة 8 بعد تغيير المكان';
             orientationTiltPoor = false;
             calibrationGuideRunning = false;
+            // Force a fresh announcement for the new location.
+            qiblaLastAnnouncedTs = 0;
+            qiblaLastAnnouncedHeading = null;
+            qiblaLastAnnouncedText = '';
             clearCalibrationGuideInterval();
             startQiblaOrientation();
             updateQiblaDisplay();
@@ -484,8 +540,17 @@ let userLocation = null;
 
         // Fetch prayer times from Aladhan API
         async function fetchPrayerTimes(latitude, longitude) {
+            // toISOString() returns the UTC date. East of Greenwich that rolls
+            // over early: at 01:00 local in UTC+3 the UTC date is still
+            // yesterday, so the app fetched the WRONG DAY's timings every
+            // night between midnight and 03:00. Build the date from local
+            // calendar parts instead.
             const today = new Date();
-            const date = today.toISOString().split('T')[0];
+            const date = [
+                today.getFullYear(),
+                String(today.getMonth() + 1).padStart(2, '0'),
+                String(today.getDate()).padStart(2, '0')
+            ].join('-');
 
             const url = `https://api.aladhan.com/v1/timings/${date}?latitude=${latitude}&longitude=${longitude}&method=2`;
 
@@ -509,20 +574,19 @@ let userLocation = null;
         }
 
         // Calculate remaining time to next prayer
-        function calculateRemainingTime(prayerTime) {
-            const now = new Date();
-            const [hours, minutes] = prayerTime.split(':');
-            const prayerDate = new Date();
-            prayerDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        function calculateRemainingTime(prayerTime, timezone) {
+            // Measured in the timings' own timezone, matching getNextPrayer.
+            // Using the device clock here made the countdown disagree with the
+            // prayer it was counting down to whenever the two differed.
+            const [hours, minutes] = String(prayerTime).split(':');
+            const target = parseInt(hours, 10) * 60 + parseInt(minutes, 10);
+            const current = minutesNowAt(timezone);
 
-            // If prayer time has passed today, add 1 day
-            if (prayerDate <= now) {
-                prayerDate.setDate(prayerDate.getDate() + 1);
-            }
+            // Wrap to tomorrow when the time has already passed today.
+            const minutesLeftTotal = ((target - current) % 1440 + 1440) % 1440;
 
-            const diff = prayerDate - now;
-            const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
-            const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const hoursLeft = Math.floor(minutesLeftTotal / 60);
+            const minutesLeft = minutesLeftTotal % 60;
 
             if (hoursLeft > 0) {
                 return `${hoursLeft} ساعة و ${minutesLeft} دقيقة`;
@@ -551,22 +615,59 @@ let userLocation = null;
             let nightDuration = fajrMinutes - ishaMinutes;
             if (nightDuration < 0) nightDuration += 24 * 60; // Handle overnight
 
-            // Last third of the night starts at: Fajr - (night duration / 3)
-            const lastThirdStart = fajrMinutes - Math.floor(nightDuration / 3);
+            // Last third of the night starts at: Fajr - (night duration / 3).
+            // This can go negative when Fajr is early (it crosses back over
+            // midnight), which produced times like "-2:35". Wrap into 0..1439.
+            const lastThirdStart = ((fajrMinutes - Math.floor(nightDuration / 3)) % 1440 + 1440) % 1440;
 
-            // Convert back to time format
-            const hours = Math.floor(lastThirdStart / 60) % 24;
+            const hours = Math.floor(lastThirdStart / 60);
             const minutes = lastThirdStart % 60;
 
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         }
 
-        // Get next prayer
-        function getNextPrayer(timings) {
+        /**
+         * Minutes since midnight *at the location the timings belong to*.
+         *
+         * The Aladhan response is in the target location's timezone, but the
+         * comparison used the device clock. Anyone reading times for a place
+         * in a different timezone than their phone got the wrong "next
+         * prayer" — the whole schedule was shifted against their clock.
+         */
+        function minutesNowAt(timezone) {
             const now = new Date();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
+            if (!timezone) return now.getHours() * 60 + now.getMinutes();
+            try {
+                const parts = new Intl.DateTimeFormat('en-GB', {
+                    timeZone: timezone,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                }).formatToParts(now);
+                const h = Number(parts.find(p => p.type === 'hour').value);
+                const m = Number(parts.find(p => p.type === 'minute').value);
+                return h * 60 + m;
+            } catch (_e) {
+                // Unknown/invalid IANA zone — fall back to the device clock.
+                return now.getHours() * 60 + now.getMinutes();
+            }
+        }
+
+        // Get next prayer
+        function getNextPrayer(timings, timezone) {
+            const currentTime = minutesNowAt(timezone);
             const tahajjudTime = calculateTahajjudTime(timings);
 
+            const toMinutes = (t) => {
+                const [h, m] = String(t).split(':');
+                return parseInt(h, 10) * 60 + parseInt(m, 10);
+            };
+
+            // Tahajjud falls after midnight, so in a fixed list it sat *last*
+            // while its clock time was the *earliest*. The scan returned the
+            // first entry later than now, so Tahajjud could never be selected:
+            // between midnight and Fajr the loop matched Fajr and skipped it.
+            // Sorting by actual clock time is what makes the scan correct.
             const prayers = [
                 { name: 'Fajr', time: timings.Fajr },
                 { name: 'Dhuhr', time: timings.Dhuhr },
@@ -574,27 +675,30 @@ let userLocation = null;
                 { name: 'Maghrib', time: timings.Maghrib },
                 { name: 'Isha', time: timings.Isha },
                 { name: 'Tahajjud', time: tahajjudTime }
-            ];
+            ]
+                .map(p => ({ ...p, minutes: toMinutes(p.time) }))
+                .sort((a, b) => a.minutes - b.minutes);
 
             for (const prayer of prayers) {
-                const [hours, minutes] = prayer.time.split(':');
-                const prayerMinutes = parseInt(hours) * 60 + parseInt(minutes);
-
-                if (prayerMinutes > currentTime) {
+                if (prayer.minutes > currentTime) {
                     return prayer;
                 }
             }
 
-            // If all prayers passed, return Fajr for tomorrow
-            return { name: 'Fajr', time: timings.Fajr, tomorrow: true };
+            // Everything today has passed — the next one is tomorrow's first.
+            const first = prayers[0];
+            return { name: first.name, time: first.time, minutes: first.minutes, tomorrow: true };
         }
 
         // Update remaining time display
         function updateRemainingTime() {
             if (!prayerTimes) return;
 
-            const nextPrayer = getNextPrayer(prayerTimes.timings);
-            const remaining = calculateRemainingTime(nextPrayer.time);
+            // The API reports timings in the location's timezone; pass it
+            // through so "next prayer" and its countdown agree with it.
+            const tz = prayerTimes.meta && prayerTimes.meta.timezone;
+            const nextPrayer = getNextPrayer(prayerTimes.timings, tz);
+            const remaining = calculateRemainingTime(nextPrayer.time, tz);
             const tahajjudTime = calculateTahajjudTime(prayerTimes.timings);
 
             document.getElementById('nextPrayerName').textContent = prayerNames[nextPrayer.name];
@@ -606,30 +710,33 @@ let userLocation = null;
         // Render prayer times
         function renderPrayerTimes(data) {
             const grid = document.getElementById('prayerGrid');
-            const nextPrayer = getNextPrayer(data.timings);
+            const tz = data.meta && data.meta.timezone;
+            const nextPrayer = getNextPrayer(data.timings, tz);
             const tahajjudTime = calculateTahajjudTime(data.timings);
 
+            // Names and icons come from the shared prayerNames/prayerIcons
+            // tables above so there is only one place to edit them.
             const prayers = [
-                { key: 'Fajr', name: 'الفجر', icon: '🌅' },
-                { key: 'Sunrise', name: 'الشروق', icon: '☀️' },
-                { key: 'Dhuhr', name: 'الظهر', icon: '🌞' },
-                { key: 'Asr', name: 'العصر', icon: '🌇' },
-                { key: 'Maghrib', name: 'المغرب', icon: '🌆' },
-                { key: 'Isha', name: 'العشاء', icon: '🌙' },
-                { key: 'Tahajjud', name: 'قيام الليل', icon: '⭐', time: tahajjudTime, isTahajjud: true }
+                { key: 'Fajr' },
+                { key: 'Sunrise' },
+                { key: 'Dhuhr' },
+                { key: 'Asr' },
+                { key: 'Maghrib' },
+                { key: 'Isha' },
+                { key: 'Tahajjud', time: tahajjudTime, isTahajjud: true }
             ];
 
             let html = '';
             prayers.forEach(prayer => {
                 const time = prayer.time || data.timings[prayer.key];
                 const isNext = prayer.key === nextPrayer.name;
-                const remaining = isNext && !nextPrayer.tomorrow ? calculateRemainingTime(time) : '';
+                const remaining = isNext && !nextPrayer.tomorrow ? calculateRemainingTime(time, tz) : '';
                 const cardClass = prayer.isTahajjud ? 'prayer-card tahajjud' : `prayer-card ${isNext ? 'next' : ''}`;
 
                 html += `
                     <div class="${cardClass}">
-                        <div class="prayer-icon">${prayer.icon}</div>
-                        <div class="prayer-name">${prayer.name}</div>
+                        <div class="prayer-icon"><i class="bi ${prayerIcons[prayer.key]}" aria-hidden="true"></i></div>
+                        <div class="prayer-name">${prayerNames[prayer.key]}</div>
                         <div class="prayer-time">${formatTime(time)}</div>
                         ${remaining ? `<div class="prayer-remaining">بعد ${remaining}</div>` : ''}
                     </div>
@@ -643,7 +750,7 @@ let userLocation = null;
         async function loadPrayerTimes(lat, lng) {
             try {
                 document.getElementById('errorMessage').style.display = 'none';
-                document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner"><i class="bi bi-clock-history"></i></div>';
+                document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
 
                 // Get location based on method
                 if (locationMethod === 'automatic' && !userLocation && !lat && !lng) {
@@ -696,7 +803,7 @@ let userLocation = null;
         function selectAutomaticLocation() {
             locationMethod = 'automatic';
             showLocationLoading();
-            document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner"><i class="bi bi-clock-history"></i></div>';
+            document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
             loadPrayerTimes();
         }
 
@@ -737,7 +844,13 @@ let userLocation = null;
             headingUnstableReason = '';
             orientationTiltPoor = false;
             calibrationGuideRunning = false;
+            qiblaLastAnnouncedTs = 0;
+            qiblaLastAnnouncedHeading = null;
+            qiblaLastAnnouncedText = '';
             clearCalibrationGuideInterval();
+
+            const qiblaReadout = document.getElementById('qiblaLiveReadout');
+            if (qiblaReadout) qiblaReadout.textContent = '';
 
             // Clear any intervals
             if (updateInterval) {
@@ -753,8 +866,8 @@ let userLocation = null;
             // Add loading content to the location section
             const locationSection = document.getElementById('locationSection');
             locationSection.insertAdjacentHTML('beforeend', `
-                <div class="location-loading" id="locationLoading">
-                    <i class="bi bi-geo-alt-fill"></i>
+                <div class="location-loading" id="locationLoading" role="status">
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
                     <span>جاري تحديد الموقع...</span>
                 </div>
             `);
@@ -804,32 +917,58 @@ let userLocation = null;
                 userLocation = { latitude: selectedCountry.lat, longitude: selectedCountry.lng };
                 showLocationSelected(selectedCountry.name);
                 // Clear initial loading spinner and load prayer times
-                document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner"><i class="bi bi-clock-history"></i></div>';
+                document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
                 loadPrayerTimes(selectedCountry.lat, selectedCountry.lng);
             }
             // If no previous selection, show location buttons (default state)
         })();
 
         // Country selection modal functions
+        // Hiding + the "user dismissed without choosing" reset live here so they
+        // run for every exit path: the close button, the backdrop, Escape and
+        // picking a country.
+        function hideCountryModal() {
+            document.getElementById('countryModal').style.display = 'none';
+
+            // If no location method was set (user closed modal without selecting), reset to buttons
+            if (!locationMethod) {
+                resetLocation();
+            }
+        }
+
         function openCountryModal() {
             const modal = document.getElementById('countryModal');
             const searchInput = document.getElementById('countrySearchInput');
+            const panel = modal.querySelector('.country-modal-content');
             modal.style.display = 'flex';
             populateCountryList();
             if (searchInput) {
                 searchInput.value = '';
+            }
+
+            // Traps focus, locks scroll, inerts the page behind, closes on
+            // Escape and restores focus to whatever opened the dialog.
+            if (window.A11y) {
+                window.A11y.openDialog(modal, {
+                    panel: panel,
+                    initialFocus: searchInput || undefined,
+                    onClose: hideCountryModal
+                });
+            } else if (searchInput) {
                 window.setTimeout(() => searchInput.focus(), 50);
             }
         }
 
         function closeCountryModal() {
             const modal = document.getElementById('countryModal');
-            modal.style.display = 'none';
 
-            // If no location method was set (user closed modal without selecting), reset to buttons
-            if (!locationMethod) {
-                resetLocation();
+            if (window.A11y && window.A11y.isDialogOpen(modal)) {
+                // onClose (hideCountryModal) performs the hide and the reset.
+                window.A11y.closeDialog(modal);
+                return;
             }
+
+            hideCountryModal();
         }
 
         function populateCountryList() {
@@ -979,11 +1118,16 @@ let userLocation = null;
             }
 
             countries.forEach(country => {
-                const countryItem = document.createElement('div');
+                // Real <button> rather than a clickable <div>: reachable by Tab,
+                // activated by Enter/Space and announced as a control.
+                const countryItem = document.createElement('button');
+                countryItem.type = 'button';
                 countryItem.className = 'country-item';
                 countryItem.textContent = country.name;
                 if (selected && selected.name === country.name) {
                     countryItem.classList.add('active');
+                    // Communicates the current choice within the list.
+                    countryItem.setAttribute('aria-current', 'true');
                 }
                 countryItem.onclick = () => selectCountry(country);
                 countryList.appendChild(countryItem);
@@ -1006,8 +1150,16 @@ let userLocation = null;
         function selectCountry(country) {
             saveCountrySelection(country);
             closeCountryModal();
-            document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner"><i class="bi bi-clock-history"></i></div>';
+            document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
             loadPrayerTimes(country.lat, country.lng);
+
+            // closeDialog restores focus to the "يدوي" button, which
+            // showLocationSelected() has just hidden — that would drop focus to
+            // <body>. Park it on the control that replaced it instead.
+            const resetBtn = document.querySelector('.reset-location-btn');
+            if (resetBtn && resetBtn.offsetParent !== null) {
+                resetBtn.focus();
+            }
         }
 
         // Cleanup interval on page unload

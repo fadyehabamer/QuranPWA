@@ -1,51 +1,76 @@
+/* Khatma ====================================================================
+   Flat native-app language: no surface gradients (only the progress bar fill
+   and the progress ring keep theirs), one card treatment, no shadows, and the
+   habit widget matched to the copy on the home page so the two screens look
+   identical.
+   ========================================================================== */
+
+/* .app-content already supplies the gutter and max width. */
 .khatma-page-container {
-    max-width: 980px;
+    max-width: var(--container);
     margin: 0 auto;
 }
 
+/* Hero ---------------------------------------------------------------------
+   Was a radial wash stacked on a linear tint fading into the surface. Now the
+   same flat accent panel every page hero uses. */
 .khatma-hero {
-    margin-bottom: 24px;
-    border-radius: 24px;
-    border: 1px solid rgba(var(--primary-rgb), 0.22);
-    padding: 24px;
-    background:
-        radial-gradient(620px 220px at 0% 0%, rgba(var(--primary-rgb), 0.2), transparent 60%),
-        linear-gradient(150deg, rgba(var(--primary-rgb), 0.14), rgba(var(--primary-rgb), 0.04) 52%, var(--card-bg));
-    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.08);
+    margin-block-end: var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid transparent;
+    padding: var(--space-5);
+    background: var(--primary-color);
+    background-image: none;
+    color: var(--on-primary);
+    box-shadow: none;
 }
 
+[data-theme="dark"] .khatma-hero {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: #16391d;
+    background-image: none;
+    color: #e9f4ec;
+    box-shadow: none;
+}
+
+/* Chips and buttons on an accent panel are translucent overlays; a second
+   green fill on green would disappear. */
 .khatma-hero-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    border-radius: 999px;
-    background: rgba(var(--primary-rgb), 0.18);
-    border: 1px solid rgba(var(--primary-rgb), 0.34);
-    color: var(--primary-color);
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 12px;
-    margin-bottom: 10px;
+    gap: var(--space-2);
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-3);
+    margin-block-end: var(--space-3);
 }
 
 .khatma-hero h2 {
-    margin: 0 0 8px;
-    font-size: 32px;
-    font-weight: 800;
-    color: var(--text-color);
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
+    color: inherit;
 }
 
 .khatma-hero p {
-    margin: 0 0 14px;
-    font-size: 15px;
-    line-height: 1.85;
-    color: var(--text-secondary, #666);
-    max-width: 720px;
+    margin: 0 0 var(--space-5);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    color: inherit;
+    opacity: 0.86;
+    max-width: 62ch;
 }
 
 .khatma-hero-actions {
     display: flex;
-    gap: 10px;
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
@@ -53,305 +78,366 @@
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    border-radius: 12px;
-    border: 1px solid rgba(var(--primary-rgb), 0.25);
-    padding: 10px 14px;
-    background: var(--primary-color);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 700;
-    transition: transform var(--transition-fast), background var(--transition-fast);
+    justify-content: center;
+    gap: var(--space-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    min-height: var(--tap-target);
+    padding-block: var(--space-3);
+    padding-inline: var(--space-5);
+    background: rgba(255, 255, 255, 0.16);
+    color: inherit;
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    box-shadow: none;
+    transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast);
 }
 
 .khatma-hero-btn.secondary {
-    background: rgba(var(--primary-rgb), 0.14);
-    color: var(--primary-color);
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.32);
+    color: inherit;
+    box-shadow: none;
 }
 
 .khatma-hero-btn:hover {
-    transform: translateY(-1px);
-    background: var(--primary-light);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.38);
+    color: inherit;
+    box-shadow: none;
 }
 
 .khatma-hero-btn.secondary:hover {
-    background: rgba(var(--primary-rgb), 0.24);
-    color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.44);
+    color: inherit;
+    box-shadow: none;
 }
 
+/* Habit dashboard ----------------------------------------------------------
+   These selectors are duplicated byte-for-byte in index.css (the two pages
+   load different stylesheets). Values are kept in step with that copy so the
+   widget looks the same on both screens. */
 .habit-dashboard-section {
-    margin-bottom: 24px;
-    padding: 16px;
+    margin-block-end: var(--space-4);
+    padding: var(--space-5);
     border: 1px solid var(--border-color);
-    border-radius: 22px;
-    background: linear-gradient(160deg, rgba(var(--primary-rgb), 0.08), rgba(var(--primary-rgb), 0.02));
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.04);
+    border-radius: var(--radius-lg);
+    /* Was a primary-tinted gradient that fought with every card on top of it. */
+    background: var(--surface-1);
+    box-shadow: none;
 }
 
 [data-theme="dark"] .habit-dashboard-section {
-    background: linear-gradient(160deg, rgba(var(--primary-rgb), 0.18), rgba(var(--primary-rgb), 0.05));
+    background: var(--surface-1);
 }
 
 .habit-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
+    gap: var(--space-3);
+    margin-block-end: var(--space-4);
+    flex-wrap: wrap;
 }
 
 .habit-title {
-    font-size: 22px;
-    font-weight: 800;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
     color: var(--text-color);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-3);
     letter-spacing: -0.01em;
 }
 
+.habit-title i {
+    color: var(--primary-color);
+    font-size: 1.1em;
+    flex-shrink: 0;
+}
+
 .habit-streak-card {
-    border-radius: 22px;
-    padding: 20px;
-    margin-bottom: 14px;
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    margin-block-end: var(--space-4);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    border: 1px solid rgba(var(--primary-rgb), 0.2);
-    background: linear-gradient(145deg, rgba(var(--primary-rgb), 0.12), rgba(var(--primary-rgb), 0.03) 50%, var(--card-bg) 100%);
+    gap: var(--space-4);
+    border: 1px solid var(--border-color);
+    background: var(--surface-1);
+    box-shadow: none;
 }
 
 .habit-streak-main {
     display: flex;
     align-items: flex-end;
-    gap: 10px;
+    gap: var(--space-3);
 }
 
 .habit-streak-number {
-    font-size: 44px;
+    font-size: var(--text-2xl);
     line-height: 1;
-    font-weight: 800;
-    color: var(--primary-color);
+    font-weight: var(--weight-bold);
+    color: var(--text-color);
     letter-spacing: -0.02em;
+    font-feature-settings: "tnum";
 }
 
 .habit-streak-label {
-    font-size: 14px;
-    color: var(--text-secondary, #666);
-    margin-bottom: 6px;
-    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    margin-block-end: var(--space-1);
+    font-weight: var(--weight-medium);
 }
 
+/* Was `text-align: left`, which pins the text to the physical left edge and
+   does not flip with direction. */
 .habit-streak-meta {
-    text-align: left;
-    font-size: 13px;
-    color: var(--text-secondary, #666);
-    line-height: 1.7;
+    text-align: end;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    line-height: var(--leading-normal);
 }
 
 .habit-rings-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
+    gap: var(--space-3);
 }
 
 .habit-ring-card {
-    border-radius: 16px;
-    padding: 14px 10px 12px;
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
     text-align: center;
-    border: 1px solid rgba(var(--primary-rgb), 0.2);
-    background: linear-gradient(165deg, rgba(var(--primary-rgb), 0.1), rgba(var(--primary-rgb), 0.03) 60%, var(--card-bg) 100%);
+    border: 1px solid var(--border-color);
+    background: var(--surface-2);
+    box-shadow: none;
 }
 
+/* Progress ring: the conic gradient IS the fill, so it stays. */
 .habit-ring {
     --ring-percent: 0;
     width: 86px;
     height: 86px;
-    margin: 0 auto 10px;
-    border-radius: 50%;
+    margin: 0 auto var(--space-3);
+    border-radius: var(--radius-full);
     background: conic-gradient(var(--primary-color) calc(var(--ring-percent) * 1%), rgba(var(--primary-rgb), 0.18) 0%);
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     color: var(--text-color);
 }
 
+/* Punches the centre out of the ring — structural, not decorative. */
 .habit-ring::after {
     content: '';
     position: absolute;
     inset: 9px;
-    border-radius: 50%;
-    background: var(--card-bg);
+    border-radius: var(--radius-full);
+    background: var(--surface-2);
     border: 1px solid var(--border-color);
 }
 
 .habit-ring span {
     position: relative;
-    z-index: 1;
-    font-size: 13px;
-    font-weight: 800;
+    z-index: var(--z-base);
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
+    font-feature-settings: "tnum";
 }
 
 .habit-ring-name {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 2px;
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    margin-block-end: var(--space-1);
+    color: var(--text-color);
 }
 
 .habit-ring-meta {
-    font-size: 12px;
-    color: var(--text-secondary, #666);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
 }
 
+/* Khatma cards ------------------------------------------------------------- */
 .khatma-section {
-    margin-bottom: 30px;
+    margin-block-end: var(--space-4);
 }
 
 .khatma-card {
-    background: var(--card-bg);
+    background: var(--surface-1);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 4px 12px var(--shadow);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: none;
 }
 
 .khatma-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--primary-color);
-    margin-bottom: 6px;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    color: var(--text-color);
+    letter-spacing: -0.01em;
+    margin-block-end: var(--space-1);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
+}
+
+.khatma-title i {
+    color: var(--primary-color);
 }
 
 .khatma-subtitle {
-    font-size: 13px;
-    color: var(--text-secondary, #666);
-    margin-bottom: 14px;
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    margin-block-end: var(--space-4);
 }
 
 .khatma-form {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px;
-    margin-bottom: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-3);
+    margin-block-end: var(--space-3);
 }
 
 .khatma-input {
     width: 100%;
     border: 1px solid var(--border-color);
-    background: var(--bg-color);
-    border-radius: 10px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
     color: var(--text-color);
-    padding: 10px 12px;
+    min-height: var(--tap-target);
+    padding-block: var(--space-3);
+    padding-inline: var(--space-3);
     font-family: inherit;
-    font-size: 14px;
+    /* 16px minimum so iOS does not zoom the page on focus. */
+    font-size: var(--text-md);
+    transition:
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+.khatma-input:focus-visible {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: var(--focus-ring);
 }
 
 .khatma-btn {
-    border: none;
-    border-radius: 10px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
     background: var(--primary-color);
-    color: #fff;
-    padding: 10px 12px;
-    font-size: 14px;
-    font-weight: 700;
+    color: var(--on-primary);
+    min-height: var(--tap-target);
+    padding-block: var(--space-3);
+    padding-inline: var(--space-5);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast);
 }
 
 .khatma-btn:hover {
     background: var(--primary-light);
-    transform: translateY(-1px);
 }
 
 .khatma-btn.secondary {
-    background: rgba(var(--primary-rgb), 0.12);
+    background: var(--surface-2);
+    border-color: var(--border-color);
     color: var(--text-color);
+}
+
+.khatma-btn.secondary:hover {
+    background: var(--surface-3);
 }
 
 .khatma-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: var(--space-3);
+    margin-block-end: var(--space-4);
 }
 
+/* Was `--bg-color` — the page background painted on a card, which read as a
+   hole in dark mode. */
 .khatma-stat {
-    background: var(--bg-color);
+    background: var(--surface-2);
     border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 10px;
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
     text-align: center;
 }
 
 .khatma-stat-value {
-    color: var(--primary-color);
-    font-size: 19px;
-    font-weight: 800;
-    margin-bottom: 2px;
+    color: var(--text-color);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+    margin-block-end: var(--space-1);
+    font-feature-settings: "tnum";
 }
 
 .khatma-stat-label {
-    color: var(--text-secondary, #666);
-    font-size: 12px;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
 }
 
 .khatma-today-target {
-    background: rgba(var(--primary-rgb), 0.08);
-    border: 1px solid rgba(var(--primary-rgb), 0.2);
-    border-radius: 10px;
-    padding: 10px;
-    font-size: 14px;
-    margin-bottom: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    font-size: var(--text-base);
+    color: var(--text-color);
+    margin-block-end: var(--space-3);
 }
 
 .khatma-progress {
     width: 100%;
     height: 8px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     background: rgba(var(--primary-rgb), 0.12);
     overflow: hidden;
-    margin-bottom: 10px;
+    margin-block-end: var(--space-4);
 }
 
+/* Progress fill: a ramp genuinely helps read the bar, so this gradient stays. */
 .khatma-progress-bar {
     height: 100%;
     width: 0%;
+    border-radius: var(--radius-full);
     background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
-    transition: width 0.2s ease;
+    transition: width var(--transition-slow);
 }
 
 .khatma-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .khatma-read-row {
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: var(--space-2);
+    margin-block-end: var(--space-3);
 }
 
 @media (max-width: 768px) {
     .khatma-hero {
-        padding: 18px 14px;
-        border-radius: 20px;
+        padding: var(--space-5);
+        border-radius: var(--radius-lg);
     }
 
     .khatma-hero h2 {
-        font-size: 25px;
-    }
-
-    .khatma-hero p {
-        font-size: 14px;
+        font-size: var(--text-xl);
     }
 
     .khatma-hero-actions {
@@ -362,8 +448,14 @@
         justify-content: center;
     }
 
+    /* Matches the home page: the three rings stack on a phone. */
     .habit-rings-grid {
         grid-template-columns: 1fr;
+    }
+
+    .habit-dashboard-section,
+    .khatma-card {
+        padding: var(--space-4);
     }
 
     .habit-streak-card {
@@ -372,12 +464,14 @@
     }
 
     .habit-streak-number {
-        font-size: 36px;
+        font-size: var(--text-2xl);
     }
 
     .habit-streak-meta {
         width: 100%;
-        text-align: right;
+        /* Was `text-align: right` — start is the same edge under RTL but
+           flips correctly if the document direction ever changes. */
+        text-align: start;
     }
 
     .khatma-read-row {
@@ -386,5 +480,5 @@
 
     .khatma-actions {
         grid-template-columns: 1fr;
-     }
- }
+    }
+}

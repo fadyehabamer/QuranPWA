@@ -1,7 +1,12 @@
-const CACHE_NAME = 'quran-app-v16';
+const CACHE_NAME = 'quran-app-v19';
+const OFFLINE_URL = '/offline.html';
+// Long enough for a slow-but-working connection, short enough that a dead
+// one falls back to cache before the user gives up.
+const NAVIGATION_TIMEOUT_MS = 4000;
 const APP_SHELL_URLS = [
   '/',
   '/index.html',
+  '/offline.html',
   '/quran.html',
   '/khatma.html',
   '/azkar.html',
@@ -13,8 +18,15 @@ const APP_SHELL_URLS = [
   '/features.html',
   '/home-more.html',
   '/bio.html',
+  '/references.html',
+  '/css/tokens.css',
   '/css/styles.css',
+  '/css/components.css',
+  '/css/app-ui.css',
+  '/css/native.css',
   '/js/theme-preload.js',
+  '/js/a11y.js',
+  '/js/native-ui.js',
   '/css/page-styles/index.css',
   '/css/page-styles/quran.css',
   '/css/page-styles/khatma.css',
@@ -180,15 +192,33 @@ async function staleWhileRevalidate(request) {
     return networkResponse;
   }
 
-  return new Response('Offline', {
-    status: 503,
-    headers: { 'Content-Type': 'text/plain' }
+  // Empty body rather than the word "Offline", which would otherwise be
+  // injected into whatever slot the request was for (a stylesheet, a script
+  // tag, or an image).
+  return new Response('', { status: 503, statusText: 'Offline' });
+}
+
+/**
+ * Races a fetch against a timeout.
+ *
+ * Navigation was previously an unbounded network-first fetch. On a flaky or
+ * captive-portal connection — the normal case on mobile — that hangs for as
+ * long as the OS allows before any cache fallback runs, so the app appears
+ * frozen and then fails. iOS is the worst offender.
+ */
+function fetchWithTimeout(request, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    fetch(request).then(
+      response => { clearTimeout(timer); resolve(response); },
+      error => { clearTimeout(timer); reject(error); }
+    );
   });
 }
 
 async function handleNavigationRequest(request) {
   try {
-    const networkResponse = await fetch(request);
+    const networkResponse = await fetchWithTimeout(request, NAVIGATION_TIMEOUT_MS);
     await updateCache(request, networkResponse.clone());
     return networkResponse;
   } catch (_error) {
@@ -202,10 +232,22 @@ async function handleNavigationRequest(request) {
       return cachedResponse;
     }
 
-    return new Response('Offline', {
-      status: 503,
-      headers: { 'Content-Type': 'text/plain' }
-    });
+    // A plain-text 503 was being rendered raw by the browser — white text on
+    // a black page in dark mode, which is the "offline screen" users saw.
+    // Serve a real, styled, self-contained page instead.
+    const offlinePage = await caches.match(OFFLINE_URL);
+    if (offlinePage) {
+      return offlinePage;
+    }
+
+    return new Response(
+      '<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<body style="margin:0;display:grid;place-items:center;min-height:100vh;' +
+      'font-family:system-ui,sans-serif;background:#fbf8f2;color:#1a1714">' +
+      '<p>لا يوجد اتصال بالإنترنت</p></body></html>',
+      { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+    );
   }
 }
 

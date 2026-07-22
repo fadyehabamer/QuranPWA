@@ -1,5 +1,14 @@
 let deferredPrompt;
         let notifications = [];
+
+        // The two toggles render as <button role="switch">, so the visual
+        // `.active` class and `aria-checked` must always move together.
+        function setSwitchState(element, isOn) {
+            if (!element) return;
+            element.classList.toggle('active', isOn);
+            element.setAttribute('aria-checked', String(isOn));
+        }
+
         const fontSizes = ['صغير جداً', 'صغير', 'متوسط', 'كبير', 'كبير جداً', 'ضخم', 'ضخم جداً'];
         const fontSizeValues = [12, 14, 16, 18, 20, 24, 28];
         let currentFontSizeIndex = 2;
@@ -12,8 +21,8 @@ let deferredPrompt;
             const darkMode = localStorage.getItem('darkMode') === 'true';
             if (darkMode) {
                 document.documentElement.setAttribute('data-theme', 'dark');
-                document.getElementById('darkModeToggle').classList.add('active');
             }
+            setSwitchState(document.getElementById('darkModeToggle'), darkMode);
 
             // Color
             const color = localStorage.getItem('primaryColor') || '#1B5E20';
@@ -29,8 +38,8 @@ let deferredPrompt;
 
             // Notifications
             const notifEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+            setSwitchState(document.getElementById('notificationsToggle'), notifEnabled);
             if (notifEnabled) {
-                document.getElementById('notificationsToggle').classList.add('active');
                 document.getElementById('notificationSettings').style.display = 'block';
             }
 
@@ -62,7 +71,8 @@ let deferredPrompt;
 
         function toggleDarkMode() {
             const toggle = document.getElementById('darkModeToggle');
-            const isDark = toggle.classList.toggle('active');
+            const isDark = toggle.getAttribute('aria-checked') !== 'true';
+            setSwitchState(toggle, isDark);
 
             if (isDark) {
                 document.documentElement.setAttribute('data-theme', 'dark');
@@ -78,33 +88,41 @@ let deferredPrompt;
         }
 
         function changeColor(color) {
-            document.querySelectorAll('.color-option').forEach(opt => {
-                opt.classList.remove('active');
-                if (opt.getAttribute('data-color') === color) {
-                    opt.classList.add('active');
-                }
-            });
+            setActiveColorOption(color);
 
             applyColor(color);
             localStorage.setItem('primaryColor', color);
         }
 
         function applyColor(color) {
-            const lightColor = adjustColor(color, 30);
-            document.documentElement.style.setProperty('--primary-color', color);
-            document.documentElement.style.setProperty('--primary-light', lightColor);
-
-            // Update shadow colors based on theme color
-            const rgb = hexToRgb(color);
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${isDark ? 0.25 : 0.15})`;
-            const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${isDark ? 0.45 : 0.35})`;
-            document.documentElement.style.setProperty('--shadow', shadowLight);
-            document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
 
-            // Update color picker active state
+            // Delegated to the shared helper in theme-preload.js, which also
+            // derives --primary-rgb and --on-primary. Setting --primary-color
+            // alone left every rgba(var(--primary-rgb)) tint on the default
+            // green, and left a dark accent unreadable in dark mode because an
+            // inline style outranks the [data-theme="dark"] rule.
+            if (window.applyAccentColor) {
+                window.applyAccentColor(color, isDark);
+            } else {
+                document.documentElement.style.setProperty('--primary-color', color);
+                document.documentElement.style.setProperty('--primary-light', adjustColor(color, 30));
+            }
+
+            // --shadow / --shadow-heavy are complete box-shadow values, not
+            // colours. Assigning a bare rgba() here produced an invalid
+            // declaration wherever they were used, so they are left alone.
+
+            setActiveColorOption(color);
+        }
+
+        // The swatches are toggle buttons, so the selected one is exposed via
+        // aria-pressed as well as the `.active` class.
+        function setActiveColorOption(color) {
             document.querySelectorAll('.color-option').forEach(opt => {
-                opt.classList.toggle('active', opt.getAttribute('data-color') === color);
+                const isSelected = opt.getAttribute('data-color') === color;
+                opt.classList.toggle('active', isSelected);
+                opt.setAttribute('aria-pressed', String(isSelected));
             });
         }
 
@@ -201,7 +219,8 @@ let deferredPrompt;
         }
         async function toggleNotifications() {
             const toggle = document.getElementById('notificationsToggle');
-            const isEnabled = toggle.classList.toggle('active');
+            const isEnabled = toggle.getAttribute('aria-checked') !== 'true';
+            setSwitchState(toggle, isEnabled);
 
             if (isEnabled) {
                 const granted = ('Notification' in window)
@@ -213,10 +232,10 @@ let deferredPrompt;
                     localStorage.setItem('notificationsEnabled', 'true');
                     scheduleNotifications();
                 } else {
-                    toggle.classList.remove('active');
+                    setSwitchState(toggle, false);
                     showModal({
                         type: 'warning',
-                        icon: '⚠',
+                        icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
                         title: 'تنبيه',
                         message: 'يجب السماح بالإشعارات من إعدادات الجهاز'
                     });
@@ -233,17 +252,17 @@ let deferredPrompt;
 
             showModal({
                 type: 'info',
-                icon: '🔔',
+                icon: '<i class="bi bi-bell-fill"></i>',
                 title: 'إضافة تنبيه',
                 message: `
-                    <div style="text-align: right;">
-                        <label style="display: block; margin-bottom: 10px;">اختر الوقت:</label>
+                    <div style="text-align: start;">
+                        <label for="notifTime" style="display: block; margin-bottom: 10px;">اختر الوقت:</label>
                         <input type="time" id="notifTime" class="time-input" style="width: 100%;">
-                        
-                        <label style="display: block; margin: 15px 0 10px;">اختر الأيام:</label>
-                        <div class="days-selector" id="daysSelector">
+
+                        <div id="daysSelectorLabel" style="margin: 15px 0 10px;">اختر الأيام:</div>
+                        <div class="days-selector" id="daysSelector" role="group" aria-labelledby="daysSelectorLabel">
                             ${daysAr.map((day, i) => `
-                                <button class="day-btn" onclick="toggleDay(${i})">${day}</button>
+                                <button type="button" class="day-btn" aria-pressed="false" onclick="toggleDay(${i})">${day}</button>
                             `).join('')}
                         </div>
                     </div>
@@ -270,7 +289,8 @@ let deferredPrompt;
         window.toggleDay = function (dayIndex) {
             const buttons = document.querySelectorAll('#daysSelector .day-btn');
             const btn = buttons[dayIndex];
-            btn.classList.toggle('active');
+            const isSelected = btn.classList.toggle('active');
+            btn.setAttribute('aria-pressed', String(isSelected));
             btn.setAttribute('data-day', dayIndex);
         };
 
@@ -297,7 +317,7 @@ let deferredPrompt;
         function deleteNotification(index) {
             showModal({
                 type: 'warning',
-                icon: '⚠',
+                icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
                 title: 'تأكيد الحذف',
                 message: 'هل تريد حذف هذا التنبيه؟',
                 confirmText: 'حذف',
@@ -369,7 +389,8 @@ let deferredPrompt;
             const installBtn = document.getElementById('installBtn');
             if (installBtn) {
                 installBtn.style.display = 'block';
-                installBtn.textContent = '⬇️';
+                installBtn.innerHTML = '<i class="bi bi-download" aria-hidden="true"></i>';
+                installBtn.setAttribute('aria-label', 'تثبيت التطبيق');
             }
         });
 
@@ -377,7 +398,8 @@ let deferredPrompt;
         if (window.matchMedia('(display-mode: standalone)').matches) {
             const installBtn = document.getElementById('installBtn');
             if (installBtn) {
-                installBtn.textContent = '✅';
+                installBtn.innerHTML = '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>';
+                installBtn.setAttribute('aria-label', 'التطبيق مثبت بالفعل');
                 installBtn.disabled = true;
                 installBtn.style.opacity = '0.6';
             }
@@ -390,14 +412,14 @@ let deferredPrompt;
                     if (choiceResult.outcome === 'accepted') {
                         showModal({
                             type: 'success',
-                            icon: '📱',
+                            icon: '<i class="bi bi-phone-fill"></i>',
                             title: 'تم التثبيت',
                             message: 'تم تثبيت التطبيق على جهازك بنجاح'
                         });
                     } else {
                         showModal({
                             type: 'info',
-                            icon: 'ℹ️',
+                            icon: '<i class="bi bi-info-circle-fill"></i>',
                             title: 'تم الإلغاء',
                             message: 'تم إلغاء تثبيت التطبيق'
                         });
@@ -410,7 +432,7 @@ let deferredPrompt;
                 if (window.matchMedia('(display-mode: standalone)').matches) {
                     showModal({
                         type: 'info',
-                        icon: '✅',
+                        icon: '<i class="bi bi-check-circle-fill"></i>',
                         title: 'مثبت بالفعل',
                         message: 'التطبيق مثبت بالفعل على جهازك'
                     });
@@ -423,28 +445,28 @@ let deferredPrompt;
                     if (isIOS) {
                         showModal({
                             type: 'info',
-                            icon: '📱',
+                            icon: '<i class="bi bi-phone-fill"></i>',
                             title: 'تثبيت على iPhone',
                             message: 'اضغط على زر "مشاركة" (Square with Arrow) ← ثم اختر "إضافة إلى الشاشة الرئيسية" (Add to Home Screen)'
                         });
                     } else if (isMobile && isChrome) {
                         showModal({
                             type: 'info',
-                            icon: '📱',
+                            icon: '<i class="bi bi-phone-fill"></i>',
                             title: 'تثبيت يدوي',
                             message: 'اضغط على ⋮ (القائمة) في أعلى اليمين ← ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية"'
                         });
                     } else if (isMobile) {
                         showModal({
                             type: 'warning',
-                            icon: '⚠️',
+                            icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
                             title: 'تنبيه التثبيت',
                             message: 'لأفضل تجربة، يرجى استخدام متصفح Safari على iPhone أو Chrome على Android لتثبيت التطبيق.'
                         });
                     } else {
                         showModal({
                             type: 'warning',
-                            icon: '⚠️',
+                            icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
                             title: 'تثبيت الكمبيوتر',
                             message: 'يرجى استخدام متصفح Chrome أو Edge والنقر على أيقونة التثبيت في شريط العنوان.'
                         });
@@ -453,7 +475,22 @@ let deferredPrompt;
             }
         }
 
-        async function clearCache() {
+        // Destructive: wipes caches and non-preference localStorage, then
+        // reloads. It used to run straight off the button press with no
+        // confirmation step.
+        function clearCache() {
+            showModal({
+                type: 'warning',
+                icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
+                title: 'مسح ذاكرة التخزين المؤقت',
+                message: 'سيتم حذف البيانات المخزنة مؤقتاً وإعادة تحميل التطبيق. هل تريد المتابعة؟',
+                confirmText: 'مسح',
+                cancelText: 'إلغاء',
+                onConfirm: performClearCache
+            });
+        }
+
+        async function performClearCache() {
             try {
                 // Clear service worker caches
                 if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -494,7 +531,7 @@ let deferredPrompt;
 
                 showModal({
                     type: 'success',
-                    icon: '🗑️',
+                    icon: '<i class="bi bi-trash-fill"></i>',
                     title: 'تم مسح الذاكرة',
                     message: 'تم مسح جميع البيانات المخزنة مؤقتاً بنجاح'
                 });
@@ -508,7 +545,7 @@ let deferredPrompt;
                 console.error('Error clearing cache:', error);
                 showModal({
                     type: 'error',
-                    icon: '❌',
+                    icon: '<i class="bi bi-x-circle-fill"></i>',
                     title: 'خطأ',
                     message: 'حدث خطأ أثناء مسح الذاكرة'
                 });
@@ -520,7 +557,7 @@ let deferredPrompt;
                 if (!('serviceWorker' in navigator)) {
                     showModal({
                         type: 'warning',
-                        icon: '⚠️',
+                        icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
                         title: 'غير مدعوم',
                         message: 'متصفحك لا يدعم Service Worker'
                     });
@@ -530,7 +567,7 @@ let deferredPrompt;
                 if (typeof window.triggerSwUpdateCheck !== 'function') {
                     showModal({
                         type: 'warning',
-                        icon: '⚠️',
+                        icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
                         title: 'تعذر التحقق',
                         message: 'تعذر الوصول إلى خدمة التحقق من التحديثات'
                     });
@@ -539,7 +576,7 @@ let deferredPrompt;
 
                 showModal({
                     type: 'info',
-                    icon: '⏳',
+                    icon: '<i class="bi bi-hourglass-split"></i>',
                     title: 'جارٍ التحقق',
                     message: 'يتم الآن التحقق من وجود تحديثات...'
                 });
@@ -549,7 +586,7 @@ let deferredPrompt;
                 if (!result || !result.success) {
                     showModal({
                         type: 'error',
-                        icon: '❌',
+                        icon: '<i class="bi bi-x-circle-fill"></i>',
                         title: 'فشل التحقق',
                         message: 'تعذر التحقق من التحديثات حالياً، حاول مرة أخرى'
                     });
@@ -559,14 +596,14 @@ let deferredPrompt;
                 if (result.hasUpdate) {
                     showModal({
                         type: 'success',
-                        icon: '⬆️',
+                        icon: '<i class="bi bi-arrow-up-circle-fill"></i>',
                         title: 'تحديث متاح',
                         message: 'تم العثور على تحديث جديد. ستظهر لك نافذة التحديث الآن.'
                     });
                 } else {
                     showModal({
                         type: 'info',
-                        icon: '✅',
+                        icon: '<i class="bi bi-check-circle-fill"></i>',
                         title: 'أنت على أحدث إصدار',
                         message: 'لا يوجد تحديث جديد حالياً.'
                     });
@@ -575,7 +612,7 @@ let deferredPrompt;
                 console.error('Error checking updates:', error);
                 showModal({
                     type: 'error',
-                    icon: '❌',
+                    icon: '<i class="bi bi-x-circle-fill"></i>',
                     title: 'خطأ',
                     message: 'حدث خطأ أثناء التحقق من التحديثات'
                 });

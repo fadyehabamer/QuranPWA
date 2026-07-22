@@ -6,8 +6,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#f5f5f5",
-  "theme_color": "#1B5E20",
+  "background_color": "#fbf8f2",
+  "theme_color": "#fbf8f2",
   "orientation": "portrait",
   "dir": "rtl",
   "lang": "ar",
@@ -25,7 +25,10 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["lifestyle", "education"],
+  "categories": [
+    "lifestyle",
+    "education"
+  ],
   "shortcuts": [
     {
       "name": "القرآن الكريم",

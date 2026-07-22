@@ -3,41 +3,59 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>الأذكار</title>
+    <meta name="description" content="أذكار الصباح والمساء والنوم وأدعية اليوم، مع عدّاد لكل ذكر وقائمة مفضلة.">
     <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/page-styles/azkar.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
     <!-- App Header -->
         <app-sidebar current="azkar"></app-sidebar>
 
+    <!-- Bespoke header (not <app-header>): azkar.js drives #backBtn,
+         #headerTitle and #viewModeBtn at runtime. -->
     <header class="app-header glass-card">
-        <button class="menu-toggle-btn" id="backBtn" onclick="showCategories()" style="display: none;">
-            <i class="bi bi-arrow-right"></i>
+        <button class="menu-toggle-btn" id="backBtn" onclick="showCategories()" style="display: none;"
+            aria-label="رجوع">
+            <i class="bi bi-arrow-right" aria-hidden="true"></i>
         </button>
-        <button class="icon-btn menu-toggle-btn" id="menuBtn" onclick="toggleSidebar()">
-            <i class="bi bi-list"></i>
+        <!-- aria-controls="sidebar" + .menu-toggle-btn is the selector
+             syncSidebarA11y() in common.js uses to keep aria-expanded in sync. -->
+        <button class="icon-btn menu-toggle-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="القائمة"
+            aria-expanded="false" aria-controls="sidebar">
+            <i class="bi bi-list" aria-hidden="true"></i>
         </button>
         <h1 id="headerTitle">الأذكار</h1>
         <div class="header-left-buttons">
-            <button class="menu-toggle-btn view-mode-btn" id="viewModeBtn" onclick="toggleViewMode()" style="display: none;" title="تبديل طريقة العرض">
-                <i class="bi bi-view-stacked"></i>
+            <button class="menu-toggle-btn view-mode-btn" id="viewModeBtn" onclick="toggleViewMode()" style="display: none;" title="تبديل طريقة العرض" aria-label="تبديل طريقة العرض">
+                <i class="bi bi-view-stacked" aria-hidden="true"></i>
                 <span class="view-mode-label">بطاقات</span>
             </button>
             <div class="visitor-badge">
-                <i class="bi bi-people-fill"></i>
+                <i class="bi bi-people-fill" aria-hidden="true"></i>
                 <span class="count" id="visitorCount">-</span>
             </div>
         </div>
@@ -57,6 +75,7 @@
 
     <script src="js/common.js"></script>
         <script src="js/page-scripts/azkar.js"></script>
+    <script src="js/native-ui.js"></script>
 </body>
 </html>
 

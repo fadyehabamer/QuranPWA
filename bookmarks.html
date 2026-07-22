@@ -3,31 +3,44 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>المواضع المحفوظة</title>
+    <meta name="description" content="علاماتك المرجعية ومجلداتك المحفوظة من القرآن الكريم.">
+    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <script src="js/common.js"></script>
     <link rel="stylesheet" href="css/page-styles/bookmarks.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
     <app-sidebar current="bookmarks"></app-sidebar>
 
     <!-- Custom Modal -->
-    <div class="modal-overlay" id="customModal">
+    <div class="modal-overlay" id="customModal" aria-labelledby="modalTitle" aria-describedby="modalMessage">
         <div class="modal">
             <div class="modal-header">
-                <div class="modal-icon" id="modalIcon"></div>
-                <div class="modal-title" id="modalTitle">عنوان</div>
+                <div class="modal-icon" id="modalIcon" aria-hidden="true"></div>
+                <h2 class="modal-title" id="modalTitle">عنوان</h2>
             </div>
             <div class="modal-message" id="modalMessage">رسالة</div>
             <div class="modal-actions" id="modalActions"></div>
@@ -37,7 +50,7 @@
     <!-- Main Content -->
     <app-header title="المواضع المحفوظة"></app-header>
 
-    <div class="app-content">
+    <main class="app-content">
         <div class="bookmarks-container">
             <div class="bookmarks-header">
                 <div class="bookmarks-header-icon"></div>
@@ -98,6 +111,7 @@
                         </div>
                     </div>
                     <div class="control-actions">
+                        <label class="sr-only" for="newFolderInput">اسم مجلد جديد</label>
                         <input id="newFolderInput" class="control-input" type="text" placeholder="اسم مجلد جديد (مثال: حفظ ومراجعة)">
                         <button class="folder-add-btn" type="button" onclick="createFolderFromInput()">إضافة مجلد</button>
                         <button class="filters-clear-btn" type="button" onclick="clearBookmarkFilters()">مسح الفلاتر</button>
@@ -124,11 +138,12 @@
 
             <div id="bookmarksContent"></div>
         </div>
-    </div>
+    </main>
 
         <app-bottom-nav current="bookmarks"></app-bottom-nav>
 
         <script src="js/page-scripts/bookmarks.js"></script>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

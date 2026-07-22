@@ -1,271 +1,445 @@
+        /* Settings =========================================================
+           Rebuilt as a grouped list rather than a stack of boxes: each section
+           is one card, every row is the same 56px height with the same inset,
+           and there is a single divider treatment between rows instead of the
+           old mix of a 2px title rule and 1px row rules.
+           ================================================================== */
+
         .settings-container {
+            max-width: var(--container-narrow);
             margin: 0 auto;
         }
 
         .settings-section {
-            background: var(--card-bg);
+            background: var(--surface-1);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px var(--shadow);
+            border-radius: var(--radius-lg);
+            /* Rows carry their own block padding, so the card only insets. */
+            padding-block: var(--space-1) var(--space-4);
+            padding-inline: var(--space-5);
+            margin-block-end: var(--space-5);
+            box-shadow: var(--elev-2);
         }
 
+        /* Now an <h2>; the UA heading margin has to be zeroed so the section
+           spacing is unchanged. Styled as a quiet group label — small, muted
+           and clearly subordinate to the rows beneath it. */
         .settings-section-title {
-            font-size: 18px;
-            color: var(--primary-color);
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--border-color);
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+            font-weight: var(--weight-bold);
+            margin-block: var(--space-4) 0;
+            padding-block-end: var(--space-3);
+            border-block-end: 1px solid var(--border-color);
         }
 
+        /* Row --------------------------------------------------------------
+           One height, one inset, one divider. */
         .setting-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid var(--border-color);
+            gap: var(--space-4);
+            min-height: 56px;
+            padding-block: var(--space-3);
+            border-block-end: 1px solid var(--border-color);
         }
 
         .setting-item:last-child {
-            border-bottom: none;
+            border-block-end: none;
         }
 
         .setting-label {
-            font-size: var(--font-size-base);
+            font-size: var(--text-md);
+            font-weight: var(--weight-medium);
             color: var(--text-color);
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: var(--space-1);
+            min-width: 0;
         }
 
+        /* Was 14px at 0.7 opacity — muddy and below the body minimum. */
         .setting-desc {
-            font-size: 14px;
-            opacity: 0.7;
+            font-size: var(--text-base);
+            font-weight: var(--weight-normal);
+            color: var(--text-secondary);
+            opacity: 1;
+            line-height: var(--leading-snug);
         }
 
+        /* Rendered as <button role="switch">; the button UA styles have to be
+           reset so the track keeps its original look. */
         .toggle-switch {
             position: relative;
+            flex-shrink: 0;
+            appearance: none;
             width: 50px;
             height: 26px;
-            background: var(--border-color);
-            border-radius: 13px;
+            padding: 0;
+            border: none;
+            background: var(--surface-3);
+            border-radius: var(--radius-full);
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background-color var(--transition-normal);
         }
 
-        .toggle-switch.active {
+        /* 50x26 is below the 44px tap target, so widen the hit area without
+           changing the painted track. */
+        .toggle-switch::before {
+            content: "";
+            position: absolute;
+            inset: 50% auto auto 50%;
+            width: var(--tap-target);
+            height: var(--tap-target);
+            transform: translate(50%, -50%);
+        }
+
+        .toggle-switch.active,
+        .toggle-switch[aria-checked="true"] {
             background: var(--primary-color);
         }
 
         .toggle-slider {
             position: absolute;
-            top: 3px;
-            right: 3px;
+            inset-block-start: 3px;
+            inset-inline-start: 3px;
             width: 20px;
             height: 20px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s;
+            background: var(--surface-1);
+            border-radius: var(--radius-full);
+            box-shadow: var(--elev-1);
+            transition: transform var(--transition-normal);
         }
 
-        .toggle-switch.active .toggle-slider {
+        /* Knob travels toward the inline-end edge in both writing directions. */
+        .toggle-switch.active .toggle-slider,
+        .toggle-switch[aria-checked="true"] .toggle-slider {
             transform: translateX(-24px);
         }
 
+        :dir(ltr) .toggle-switch.active .toggle-slider,
+        :dir(ltr) .toggle-switch[aria-checked="true"] .toggle-slider {
+            transform: translateX(24px);
+        }
+
+        /* Accent picker ----------------------------------------------------- */
         .color-picker-container {
             display: flex;
-            gap: 10px;
+            gap: var(--space-3);
             flex-wrap: wrap;
-            margin: 20px 0;
+            padding-block: var(--space-4);
+            border-block-end: 1px solid var(--border-color);
+        }
+
+        .settings-section > .color-picker-container:last-child {
+            border-block-end: none;
         }
 
         .color-option {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            width: var(--tap-target);
+            height: var(--tap-target);
+            padding: 0;
+            border-radius: var(--radius-full);
             cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px var(--shadow);
+            border: 2px solid transparent;
+            transition:
+                transform var(--transition-fast),
+                box-shadow var(--transition-fast),
+                border-color var(--transition-fast);
+            box-shadow: var(--elev-2);
         }
 
+        /* Was `scale(1.05)` / `scale(1.1)`; selection is now shown with a ring
+           so the swatches never change size or jostle each other. */
         .color-option:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px var(--shadow-heavy);
+            transform: translateY(-2px);
+            box-shadow: var(--elev-4);
         }
 
-        .color-option.active {
-            border-color: var(--text-color);
-            transform: scale(1.1);
-            box-shadow: 0 4px 16px var(--shadow-heavy);
+        .color-option.active,
+        .color-option[aria-pressed="true"] {
+            border-color: var(--surface-1);
+            transform: none;
+            box-shadow: var(--elev-3), 0 0 0 2px var(--text-color);
         }
 
+        /* The swatch is a solid fill, so the ring needs to sit clear of it. */
+        .color-option:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 3px;
+        }
+
+        /* Row controls ------------------------------------------------------ */
         .font-size-controls {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: var(--space-3);
+            flex-shrink: 0;
         }
 
         .font-size-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--primary-color);
-            background: var(--card-bg);
+            width: var(--tap-target);
+            height: var(--tap-target);
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(var(--primary-rgb), 0.3);
+            background: rgba(var(--primary-rgb), 0.08);
             color: var(--primary-color);
-            font-size: 20px;
-            font-weight: bold;
+            font-size: var(--text-lg);
+            font-weight: var(--weight-bold);
             cursor: pointer;
-            transition: all 0.2s;
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast);
         }
 
         .font-size-btn:hover {
             background: var(--primary-color);
-            color: white;
+            border-color: var(--primary-color);
+            color: var(--on-primary);
+        }
+
+        .font-size-btn--danger {
+            background: var(--danger-surface);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .font-size-btn--danger:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: var(--on-primary);
+            filter: none;
+        }
+
+        /* Replaces the ~200 characters of inline style that used to sit on
+           #ramadanStartSelect; the look now comes from the `.select`
+           component and this only constrains the width. */
+        .ramadan-start-select {
+            width: auto;
+            max-width: 100%;
+            /* font-size stays at the component's 16px so iOS does not zoom. */
         }
 
         .font-size-display {
-            font-size: var(--font-size-base);
-            color: var(--text-color);
-            min-width: 60px;
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            color: var(--text-secondary);
+            min-width: 64px;
             text-align: center;
         }
 
+        /* Notifications ----------------------------------------------------- */
         .notification-time-picker {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
+            gap: var(--space-3);
+            margin-block-start: var(--space-3);
         }
 
         .time-input {
-            padding: 10px;
+            min-height: var(--tap-target);
+            padding-block: var(--space-3);
+            padding-inline: var(--space-3);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            background: var(--surface-2);
             color: var(--text-color);
-            font-size: var(--font-size-base);
+            /* 16px minimum so iOS does not zoom the page on focus. */
+            font-size: var(--text-md);
             font-family: inherit;
+            transition:
+                border-color var(--transition-fast),
+                box-shadow var(--transition-fast);
+        }
+
+        .time-input:focus-visible {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: var(--focus-ring);
         }
 
         .days-selector {
             display: flex;
-            gap: 8px;
+            gap: var(--space-2);
             flex-wrap: wrap;
-            margin-top: 10px;
+            margin-block-start: var(--space-3);
         }
 
         .day-btn {
-            padding: 8px 12px;
-            border: 2px solid var(--border-color);
-            border-radius: 20px;
-            background: var(--card-bg);
-            color: var(--text-color);
-            font-size: 14px;
+            min-height: 36px;
+            padding-block: var(--space-2);
+            padding-inline: var(--space-3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-full);
+            background: var(--surface-2);
+            color: var(--text-secondary);
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
             cursor: pointer;
-            transition: all 0.2s;
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast);
+        }
+
+        .day-btn:hover {
+            border-color: rgba(var(--primary-rgb), 0.45);
+            color: var(--text-color);
         }
 
         .day-btn.active {
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
             border-color: var(--primary-color);
-        }
-
-        .save-btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            background: var(--primary-color);
-            color: white;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 20px;
-            font-family: 'cairo', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .save-btn:hover {
-            background: var(--primary-light);
         }
 
         .notification-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-top: 15px;
+            gap: var(--space-3);
+            margin-block-start: var(--space-4);
         }
 
+        /* Was `--bg-color` — the page background painted inside a card, which
+           made the row disappear entirely in dark mode. */
         .notification-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
-            background: var(--bg-color);
-            border-radius: 8px;
+            gap: var(--space-3);
+            min-height: 56px;
+            padding-block: var(--space-3);
+            padding-inline: var(--space-4);
+            background: var(--surface-2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
         }
 
         .notification-info {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: var(--space-1);
+            min-width: 0;
         }
 
         .notification-time {
-            font-size: var(--font-size-base);
+            font-size: var(--text-md);
             color: var(--text-color);
-            font-weight: 600;
+            font-weight: var(--weight-semibold);
+            font-feature-settings: "tnum";
         }
 
         .notification-days {
-            font-size: 14px;
-            opacity: 0.7;
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+            opacity: 1;
         }
 
         .delete-notification-btn {
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
+            background: var(--danger-surface);
+            color: var(--danger);
+            border: 1px solid transparent;
+            min-height: var(--tap-target);
+            padding-block: var(--space-2);
+            padding-inline: var(--space-4);
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 14px;
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            flex-shrink: 0;
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast);
+        }
+
+        .delete-notification-btn:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: var(--on-primary);
         }
 
         .add-notification-btn {
             width: 100%;
-            padding: 12px;
-            border: 2px dashed var(--primary-color);
-            border-radius: 10px;
-            background: transparent;
+            min-height: var(--tap-target);
+            padding-block: var(--space-3);
+            padding-inline: var(--space-4);
+            border: 1px dashed rgba(var(--primary-rgb), 0.5);
+            border-radius: var(--radius-md);
+            background: rgba(var(--primary-rgb), 0.05);
             color: var(--primary-color);
-            font-size: var(--font-size-base);
-            font-weight: 600;
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
             cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 10px;
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast);
+            margin-block-start: var(--space-3);
         }
 
         .add-notification-btn:hover {
             background: var(--primary-color);
-            color: white;
+            border-color: var(--primary-color);
+            border-style: solid;
+            color: var(--on-primary);
         }
 
+        /* Type preview ------------------------------------------------------ */
         .preview-text {
             font-size: var(--font-size-ayah);
-            line-height: 2;
+            line-height: var(--leading-quran);
             text-align: center;
-            padding: 20px;
-            background: var(--bg-color);
-            border-radius: 8px;
-            margin-top: 15px;
+            padding: var(--space-5);
+            background: var(--surface-2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-color);
+            margin-block-start: var(--space-4);
         }
-    
+
+        /* Save -------------------------------------------------------------- */
+        .save-btn {
+            width: 100%;
+            min-height: 52px;
+            padding-block: var(--space-4);
+            padding-inline: var(--space-5);
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--primary-color);
+            color: var(--on-primary);
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            cursor: pointer;
+            transition:
+                background-color var(--transition-fast),
+                box-shadow var(--transition-fast);
+            margin-block-start: var(--space-6);
+            font-family: 'cairo', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            box-shadow: var(--elev-2);
+        }
+
+        .save-btn:hover {
+            background: var(--primary-light);
+            box-shadow: var(--elev-4);
+        }
+
+        @media (max-width: 768px) {
+            .settings-section {
+                padding-inline: var(--space-4);
+            }
+
+            .setting-item {
+                gap: var(--space-3);
+            }
+        }

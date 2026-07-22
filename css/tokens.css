@@ -1,0 +1,317 @@
+/* ==========================================================================
+   Design tokens — single source of truth for the QuranPWA design system.
+   Load this BEFORE styles.css and any page stylesheet.
+
+   Scales here replace ~38 ad-hoc spacing values, 43 font sizes, 26 radii,
+   48 shadows and 17 z-index values that had accumulated across the app.
+   ========================================================================== */
+
+:root {
+  /* ---- Brand ------------------------------------------------------------
+     The green/gold identity is unchanged; it is only organised into ramps so
+     surfaces, borders and states derive from one hue instead of one-off hex. */
+  --green-50: #eef6ef;
+  --green-100: #d6e9d8;
+  --green-200: #aed3b2;
+  --green-300: #7fb886;
+  --green-400: #4f9d5a;
+  --green-500: #2e7d32;
+  --green-600: #1b5e20;
+  --green-700: #154a19;
+  --green-800: #0f3512;
+  --green-900: #0a230c;
+
+  --gold-300: #f9d423;
+  --gold-400: #e9a908;
+  --gold-500: #d4820a;
+  --gold-600: #a86207;
+
+  /* Semantic colour roles. Page CSS should reference these, never raw hex.
+
+     Green is an ACCENT, not a surface. It belongs on actions, active state
+     and small marks — never on large panels. The app previously painted it
+     across roughly a third of every screen, which is what made each page
+     read as the same green block regardless of its content. */
+  --primary-color: var(--green-600);
+  --primary-light: var(--green-500);
+  --primary-dark: var(--green-700);
+  --primary-rgb: 27, 94, 32;
+  --secondary-color: var(--gold-500);
+  --accent-color: var(--gold-300);
+
+  --on-primary: #ffffff;
+  --on-accent: #241a02;
+
+  /* Warm paper canvas. A slightly warm, low-chroma base makes long Arabic
+     reading easier on the eye than a cool white and gives the app a
+     recognisable character of its own. */
+  --bg-color: #fbf8f2;
+  --bg-subtle: #f5f1e8;
+  --surface-1: #ffffff;
+  --surface-2: #f7f4ed;
+  --surface-3: #efeae0;
+
+  /* Warm ink rather than near-black; measured 17.85:1 on card. */
+  --text-color: #1a1714;
+  --text-secondary: #5a5348;
+  /* Measured 4.97:1 against the darkest surface it sits on. */
+  --text-muted: #6e675a;
+
+  --border-color: rgba(26, 23, 20, 0.1);
+  --border-strong: rgba(26, 23, 20, 0.2);
+
+  /* Status */
+  --success: #1b7f3b;
+  --success-surface: #e7f4ec;
+  /* Measured 4.34:1 on the paper canvas at #a8660a; #9c5f09 gives 4.89. */
+  --warning: #9c5f09;
+  --warning-surface: #fdf1e0;
+  --danger: #b3261e;
+  --danger-surface: #fdecea;
+  --info: #1f5f8b;
+  --info-surface: #e8f1f8;
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(26, 23, 20, 0.08);
+  --glass-blur: 16px;
+
+  /* Legacy alias still referenced by styles.css and quran.css. */
+  --card-bg: var(--surface-1);
+
+  /* ---- Spacing (4px base) ----------------------------------------------
+     Covers ~88% of previous usage; the rest were one-off values. */
+  --space-0: 0;
+  --space-1: 0.25rem;  /*  4px */
+  --space-2: 0.5rem;   /*  8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+
+  /* ---- Type -------------------------------------------------------------
+     Fluid so small phones and desktops both read comfortably without the
+     four competing mobile breakpoints the app used before. */
+  /* IBM Plex Sans Arabic has far more character than Cairo at UI sizes and a
+     wider usable weight range, which is what makes a real heading/body
+     hierarchy possible. Cairo stays as the first fallback so nothing loses
+     its shape if the new face fails to load. */
+  --font-ui: "IBM Plex Sans Arabic", "Cairo", system-ui, -apple-system, sans-serif;
+  --font-quran: "Amiri", "Traditional Arabic", serif;
+
+  /* Bigger jumps between steps. The old ramp moved 1-2px at a time, so
+     headings and body text looked nearly identical and no hierarchy read. */
+  --text-2xs: 0.6875rem; /* 11px — badges only */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.8125rem;  /* 13px */
+  --text-base: 0.9375rem;/* 15px */
+  --text-md: 1rem;       /* 16px — minimum body size on mobile */
+  --text-lg: clamp(1.125rem, 1.05rem + 0.36vw, 1.3125rem);
+  --text-xl: clamp(1.375rem, 1.25rem + 0.6vw, 1.75rem);
+  --text-2xl: clamp(1.75rem, 1.5rem + 1.1vw, 2.375rem);
+  --text-3xl: clamp(2.25rem, 1.85rem + 1.9vw, 3.25rem);
+  --text-4xl: clamp(2.75rem, 2.1rem + 3.2vw, 4.25rem);
+
+  /* Arabic needs more leading than Latin — descenders and diacritics stack. */
+  --leading-tight: 1.35;
+  --leading-snug: 1.55;
+  --leading-normal: 1.7;
+  --leading-relaxed: 1.9;
+  --leading-quran: 2.1;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* User-adjustable reading sizes (settings page writes these). */
+  --font-size-base: 1rem;
+  --font-size-ayah: 1.5rem;
+  --font-size-header: 1.25rem;
+  --font-weight: var(--weight-normal);
+
+  /* Comfortable measure for long-form Arabic reading. */
+  --measure: 68ch;
+
+  /* ---- Radius -----------------------------------------------------------
+     Matched to values actually in use (10/12/16/20) rather than the old
+     8/12/24 tokens that nothing referenced. */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 999px;
+
+  /* ---- Elevation --------------------------------------------------------
+     Complete shadows. The previous `--shadow` token was a full shadow but was
+     used in the *colour* slot ("0 4px 12px var(--shadow)") at 33 sites, which
+     is invalid CSS — those shadows silently never rendered. */
+  --elev-1: 0 1px 2px rgba(16, 32, 24, 0.06), 0 1px 3px rgba(16, 32, 24, 0.05);
+  --elev-2: 0 2px 6px rgba(16, 32, 24, 0.07), 0 4px 12px rgba(16, 32, 24, 0.05);
+  --elev-3: 0 6px 16px rgba(16, 32, 24, 0.09), 0 2px 6px rgba(16, 32, 24, 0.05);
+  --elev-4: 0 12px 28px rgba(16, 32, 24, 0.12), 0 4px 10px rgba(16, 32, 24, 0.06);
+  --elev-5: 0 24px 48px rgba(16, 32, 24, 0.16), 0 8px 16px rgba(16, 32, 24, 0.08);
+  --elev-primary: 0 8px 24px rgba(var(--primary-rgb), 0.28);
+
+  /* Back-compat aliases so untouched page CSS keeps rendering. */
+  --shadow: var(--elev-2);
+  --shadow-heavy: var(--elev-4);
+
+  /* ---- Z-index ----------------------------------------------------------
+     One ordered scale replacing 17 ad-hoc values (95…100, 1000, 1099, 1200,
+     1301, 1999, 2000, 3000) that ordered themselves by accident. */
+  --z-below: -1;
+  --z-base: 1;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-header: 200;
+  --z-nav: 300;
+  --z-overlay: 400;
+  --z-drawer: 500;
+  --z-modal: 600;
+  --z-popover: 700;
+  --z-toast: 800;
+
+  /* ---- Motion -----------------------------------------------------------
+     0.2s was the most-used duration in the app yet had no token. */
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+
+  --transition-fast: var(--duration-fast) var(--ease-out);
+  --transition-normal: var(--duration-normal) var(--ease-out);
+  --transition-slow: var(--duration-slow) var(--ease-in-out);
+
+  /* ---- Layout -----------------------------------------------------------
+     One container width instead of the mix the pages each invented. */
+  --container: 1120px;
+  --container-narrow: 760px;
+  --header-height: 60px;
+  --bottom-nav-height: 64px;
+  --sidebar-width: 300px;
+
+  /* Minimum comfortable hit area — WCAG 2.5.5 / platform guidance. */
+  --tap-target: 44px;
+
+  /* Safe areas for notched devices and the iOS home indicator. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-inline-start: env(safe-area-inset-right, 0px); /* RTL: inline-start is on the right */
+  --safe-inline-end: env(safe-area-inset-left, 0px);
+
+  /* Focus ring — the app previously had exactly one focus style and seven
+     `outline: none` rules that removed it with no replacement. */
+  --focus-ring: 0 0 0 3px rgba(var(--primary-rgb), 0.45);
+  --focus-ring-offset: 2px;
+}
+
+/* ==========================================================================
+   Dark theme
+   ========================================================================== */
+
+[data-theme="dark"] {
+  --primary-color: #6bc46f;
+  --primary-light: #8bd48e;
+  --primary-dark: #4c9e51;
+  --primary-rgb: 107, 196, 111;
+  --secondary-color: var(--gold-300);
+  --accent-color: #fff176;
+
+  --on-primary: #0a1c0d;
+  --on-accent: #241a02;
+
+  /* Warm dark rather than a cold near-black, so it reads as the same product
+     as the paper light theme instead of a different app. */
+  --bg-color: #14120f;
+  --bg-subtle: #191612;
+  --surface-1: #201c18;
+  --surface-2: #282320;
+  --surface-3: #322c27;
+
+  --text-color: #f2eee7;
+  --text-secondary: #b8afa2;
+  --text-muted: #978e80;
+
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
+
+  --success: #62c67f;
+  --success-surface: #16301f;
+  --warning: #e0a33f;
+  --warning-surface: #33240d;
+  --danger: #f2837a;
+  --danger-surface: #351815;
+  --info: #6db4e0;
+  --info-surface: #12252f;
+
+  --glass-bg: rgba(26, 23, 19, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --card-bg: var(--surface-1);
+
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --elev-2: 0 2px 6px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --elev-3: 0 6px 16px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --elev-4: 0 12px 28px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.4);
+  --elev-5: 0 24px 48px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.45);
+  --elev-primary: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --focus-ring: 0 0 0 3px rgba(var(--primary-rgb), 0.55);
+}
+
+/* Keep the OS chrome (status bar / address bar) in step with the theme.
+   The `theme-color` meta tag is hardcoded per page and cannot follow the
+   user's accent choice, so JS updates it at runtime instead. */
+
+/* ==========================================================================
+   Motion preferences
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 1ms;
+    --duration-fast: 1ms;
+    --duration-normal: 1ms;
+    --duration-slow: 1ms;
+    --duration-slower: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   High contrast
+   ========================================================================== */
+
+@media (prefers-contrast: more) {
+  :root {
+    --border-color: rgba(20, 32, 26, 0.35);
+    --border-strong: rgba(20, 32, 26, 0.6);
+    --text-secondary: #33403a;
+    --glass-bg: var(--surface-1);
+  }
+
+  [data-theme="dark"] {
+    --border-color: rgba(255, 255, 255, 0.35);
+    --border-strong: rgba(255, 255, 255, 0.6);
+    --text-secondary: #d6e0da;
+    --glass-bg: var(--surface-1);
+  }
+}

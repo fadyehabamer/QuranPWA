@@ -1,29 +1,43 @@
+        /* Bio ==============================================================
+           Flat native-app language: one card (surface, hairline border,
+           --radius-lg, no shadow), the 4px spacing ramp, no gradients, and
+           named transition properties instead of `all`.
+           ================================================================== */
+
+        /* .app-content already supplies the gutter; only the reading measure
+           is narrowed here. */
         .bio-container {
-            max-width: 800px;
+            max-width: var(--container-narrow);
             margin: 0 auto;
-            padding: 24px;
+            padding: 0;
         }
 
         .bio-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 4px 12px var(--shadow);
+            background: var(--surface-1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            box-shadow: none;
             text-align: center;
         }
 
         .bio-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
+            width: 96px;
+            height: 96px;
+            border-radius: var(--radius-full);
+            /* Was a two-stop green ramp; the identity mark is a flat accent. */
             background: var(--primary-color);
-            color: white;
+            background-image: none;
+            color: var(--on-primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
-            margin: 0 auto 24px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            font-size: var(--text-3xl);
+            margin: 0 auto var(--space-5);
+            /* Was a hand-rolled `0 4px 16px rgba(0,0,0,0.2)` that stayed at
+               light-mode strength on the dark theme. Depth now comes from
+               hierarchy, not from a shadow. */
+            box-shadow: none;
             overflow: hidden;
         }
 
@@ -34,126 +48,155 @@
         }
 
         .bio-name {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 8px;
+            font-size: var(--text-xl);
+            font-weight: var(--weight-bold);
+            line-height: var(--leading-tight);
+            letter-spacing: -0.02em;
+            color: var(--text-color);
+            margin-block-end: var(--space-2);
         }
 
         .bio-title {
-            font-size: 18px;
-            color: var(--text-color);
-            opacity: 0.8;
-            margin-bottom: 24px;
-            font-weight: 500;
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+            margin-block-end: var(--space-5);
+            font-weight: var(--weight-medium);
         }
 
         .bio-description {
-            font-size: 16px;
-            line-height: 1.8;
-            color: var(--text-color);
-            margin-bottom: 32px;
-            text-align: justify;
+            font-size: var(--text-base);
+            line-height: var(--leading-normal);
+            color: var(--text-secondary);
+            margin-block-end: var(--space-6);
+            text-align: start;
             display: none;
         }
 
         .bio-buttons {
             display: flex;
-            gap: 16px;
+            gap: var(--space-3);
             justify-content: center;
-            margin-bottom: 32px;
+            margin-block-end: var(--space-6);
             flex-wrap: wrap;
         }
 
         .bio-btn {
-            padding: 12px 28px;
-            border-radius: 10px;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
+            min-height: var(--tap-target);
+            padding-block: var(--space-3);
+            padding-inline: var(--space-6);
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
             cursor: pointer;
-            transition: all 0.3s;
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast);
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
         }
 
         .bio-btn-primary {
             background: var(--primary-color);
-            color: white;
+            color: var(--on-primary);
+            box-shadow: none;
         }
 
+        /* Was `opacity: 0.9`, which dimmed the label along with the fill. */
         .bio-btn-primary:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
+            background: var(--primary-light);
         }
 
         .bio-btn-secondary {
-            background: var(--card-bg);
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
+            background: var(--surface-2);
+            color: var(--text-color);
+            border-color: var(--border-color);
         }
 
         .bio-btn-secondary:hover {
-            background: var(--primary-color);
-            color: white;
+            background: var(--surface-3);
+            color: var(--text-color);
+            border-color: var(--border-strong);
         }
 
         .bio-social {
             display: flex;
-            gap: 16px;
+            gap: var(--space-3);
             justify-content: center;
-            margin-bottom: 24px;
+            margin-block-end: var(--space-6);
             flex-wrap: wrap;
         }
 
         .social-link {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
+            width: var(--tap-target);
+            height: var(--tap-target);
+            border-radius: var(--radius-full);
+            background: var(--surface-2);
+            border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: var(--text-lg);
             text-decoration: none;
-            transition: all 0.3s;
-            color: var(--text-color);
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast);
+            color: var(--text-secondary);
         }
 
         .social-link:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-            transform: translateY(-2px);
+            background: var(--surface-3);
+            color: var(--primary-color);
+            border-color: var(--border-strong);
         }
 
         .bio-contact {
-            padding-top: 24px;
-            border-top: 1px solid var(--border-color);
+            padding-block-start: var(--space-5);
+            border-block-start: 1px solid var(--border-color);
         }
 
         .contact-item {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            margin: 16px 0;
-            font-size: 16px;
-            color: var(--text-color);
+            gap: var(--space-3);
+            min-height: var(--tap-target);
+            margin-block: var(--space-2);
+            font-size: var(--text-base);
+            color: var(--text-secondary);
             direction: ltr;
         }
 
         .contact-icon {
-            font-size: 24px;
+            font-size: var(--text-lg);
+            color: var(--primary-color);
         }
 
         .contact-link {
             color: var(--primary-color);
+            font-weight: var(--weight-medium);
             text-decoration: none;
         }
 
         .contact-link:hover {
             text-decoration: underline;
         }
-    
+
+        @media (max-width: 768px) {
+            .bio-card {
+                padding: var(--space-5);
+            }
+
+            .bio-buttons {
+                flex-direction: column;
+            }
+
+            .bio-btn {
+                width: 100%;
+            }
+        }

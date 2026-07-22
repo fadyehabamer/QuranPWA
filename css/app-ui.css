@@ -1,0 +1,911 @@
+/* ==========================================================================
+   App UI — the shared visual language.
+
+   Loaded LAST, after the per-page stylesheets, because those 8,600 lines each
+   invented their own card, button, icon and spacing treatment. This file is
+   what makes the app look like one product instead of thirteen pages.
+
+   Principles
+   1. No gradients on surfaces. Flat fills read as native chrome; gradients
+      read as web decoration and were the loudest thing on every screen.
+   2. One card: solid surface, hairline border, one radius, minimal shadow.
+   3. One icon treatment: a tinted rounded tile at a fixed size.
+   4. One row: 56px minimum, hairline divider, optional chevron.
+   5. Hierarchy comes from weight and colour, not from boxes inside boxes.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Page canvas
+   -------------------------------------------------------------------------- */
+
+body {
+  background: var(--bg-subtle);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The blurred colour blobs behind the page read as web-decoration. */
+.background-ornament {
+  display: none;
+}
+
+.app-content {
+  padding-block: var(--space-4) var(--space-8);
+  padding-inline: var(--space-4);
+}
+
+/* --------------------------------------------------------------------------
+   Surfaces — every card in the app resolves to this one treatment.
+   -------------------------------------------------------------------------- */
+
+.glass-card,
+.card,
+.dashboard-card,
+.khatma-core-feature,
+.prayer-widget,
+.verse-card,
+.hadith-card,
+.resume-card,
+.feature-card,
+.khatma-card,
+.khatma-section,
+.smart-dashboard-section,
+.mood-support-section,
+.quick-actions,
+.habit-streak-card,
+.habit-ring-card,
+.setting-group,
+.ref-card,
+.bio-card,
+.stats-section,
+.category-card,
+.folder-overview-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  /* Neutralises the translucency + blur the glass treatment applied. */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Card-inside-a-card doubles the border and the padding. When a card sits
+   inside a section group it becomes a plain row separated by a hairline —
+   the standard grouped-list pattern. */
+.glass-card .glass-card,
+.quick-actions .tool-btn {
+  box-shadow: none;
+}
+
+.smart-dashboard-section .dashboard-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding-inline: 0;
+  padding-block: var(--space-4);
+}
+
+.smart-dashboard-section .dashboard-card + .dashboard-card {
+  border-block-start: 1px solid var(--border-color);
+}
+
+.smart-dashboard-section .dashboard-grid {
+  gap: 0;
+}
+
+/* Back to real tiles once there is room for them side by side. */
+@media (min-width: 620px) {
+  .smart-dashboard-section .dashboard-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .smart-dashboard-section .dashboard-card + .dashboard-card {
+    border-block-start: 1px solid var(--border-color);
+  }
+
+  .smart-dashboard-section .dashboard-grid {
+    gap: var(--space-3);
+  }
+}
+
+/* The header element carries both `app-header` and `glass-card`. The card
+   rule above lands later in the cascade at equal specificity, so the flush
+   chrome has to be restated here or the header regains card corners. */
+.app-header.glass-card,
+.app-header {
+  background: var(--glass-bg);
+  border: none;
+  border-block-end: 1px solid var(--border-color);
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+}
+
+/* --------------------------------------------------------------------------
+   Section rhythm and headings
+   -------------------------------------------------------------------------- */
+
+.app-content > section,
+.app-content > div > section,
+.home-container > section,
+.home-container > div {
+  margin-block-end: var(--space-4);
+}
+
+/* Section label above a group, in the native "grouped list header" style. */
+.dashboard-header,
+.quick-actions-title,
+.feature-section-title,
+.ref-section-title,
+.history-title,
+.setting-section-title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  color: var(--text-color);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* --------------------------------------------------------------------------
+   Icon tiles — one treatment everywhere.
+
+   Icons were previously bare glyphs at sizes from 12px to 80px, in whatever
+   colour the surrounding rule happened to set.
+   -------------------------------------------------------------------------- */
+
+.feature-icon,
+.resume-icon,
+.dashboard-card-icon,
+.tool-btn > i,
+.ref-card-icon,
+.category-card-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: rgba(var(--primary-rgb), 0.12);
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  line-height: 1;
+  margin: 0;
+}
+
+/* Bootstrap Icons inside a tile must not inherit the tile's box sizing. */
+.feature-icon > i,
+.resume-icon > i,
+.dashboard-card-icon > i,
+.ref-card-icon > i,
+.category-card-icon > i {
+  font-size: inherit;
+  line-height: 1;
+}
+
+/* Inline icons that sit next to a heading stay glyph-sized. */
+.dashboard-header > i,
+.quick-actions-title > i,
+.pw-title > i,
+.verse-label > i,
+.hadith-label > i {
+  color: var(--primary-color);
+  font-size: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   Rows — grouped-list pattern used for prayer times, settings, bookmarks,
+   surah lists and category lists.
+   -------------------------------------------------------------------------- */
+
+.pw-item,
+.setting-item,
+.surah-item,
+.bookmark-item,
+.country-item,
+.reciter-item,
+.category-item,
+.sidebar-nav-item {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-sm);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+/* Active / next item: background + weight, never colour alone. */
+.pw-item.active,
+.surah-item.active,
+.category-item.active {
+  background: rgba(var(--primary-rgb), 0.12);
+  color: var(--primary-color);
+  font-weight: var(--weight-semibold);
+}
+
+/* --------------------------------------------------------------------------
+   Buttons — collapses 17 bespoke button classes onto one look.
+   -------------------------------------------------------------------------- */
+
+.khatma-btn,
+.action-btn,
+.tool-btn,
+.hero-cta,
+.dashboard-link,
+.khatma-core-feature-link,
+.detect-location-btn,
+.empty-state-btn,
+.feature-open-link,
+.mood-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  /* Gradient fills are replaced by a flat accent. */
+  background-image: none;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.khatma-btn,
+.detect-location-btn,
+.mood-submit-btn,
+.khatma-core-feature-link {
+  background-color: var(--primary-color);
+  color: var(--on-primary);
+}
+
+.khatma-btn:hover,
+.detect-location-btn:hover,
+.mood-submit-btn:hover,
+.khatma-core-feature-link:hover {
+  background-color: var(--primary-light);
+}
+
+.khatma-btn.secondary,
+.action-btn.secondary,
+.dashboard-link,
+.feature-open-link {
+  background-color: var(--surface-2);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+.khatma-btn.secondary:hover,
+.action-btn.secondary:hover,
+.dashboard-link:hover,
+.feature-open-link:hover {
+  background-color: var(--surface-3);
+}
+
+/* Chips */
+.mood-chip,
+.dhikr-chip,
+.hero-badge,
+.khatma-core-feature-badge,
+.verse-ref,
+.feature-badge {
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  background-image: none;
+}
+
+.mood-chip,
+.dhikr-chip {
+  background-color: var(--surface-2);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding-inline: var(--space-4);
+}
+
+.mood-chip[aria-pressed="true"],
+.dhikr-chip[aria-pressed="true"],
+.dhikr-chip.active {
+  background-color: rgba(var(--primary-rgb), 0.14);
+  border-color: rgba(var(--primary-rgb), 0.4);
+  color: var(--primary-color);
+  font-weight: var(--weight-semibold);
+}
+
+/* --------------------------------------------------------------------------
+   Scripture — the reason the app exists, so it gets the most care.
+   -------------------------------------------------------------------------- */
+
+.daily-verse-content,
+.ayah-text,
+.verse-text,
+.zikr-text {
+  font-family: var(--font-quran);
+  font-size: var(--font-size-ayah);
+  line-height: var(--leading-quran);
+  color: var(--text-color);
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.hadith-text {
+  line-height: var(--leading-relaxed);
+  color: var(--text-color);
+}
+
+.verse-card,
+.hadith-card {
+  padding: var(--space-6) var(--space-5);
+}
+
+/* The decorative quote glyph and the coloured edge stripe are replaced by a
+   single accent rule, which is quieter and works in both themes. */
+.verse-card::before,
+.hadith-card::before {
+  content: none;
+}
+
+.verse-card {
+  border-block-start: 3px solid var(--primary-color);
+}
+
+.hadith-card {
+  border-block-start: 3px solid var(--secondary-color);
+}
+
+.verse-label,
+.hadith-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+  margin-block-end: var(--space-4);
+}
+
+.verse-ref {
+  display: inline-block;
+  margin-block-start: var(--space-4);
+  padding: var(--space-1) var(--space-4);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* --------------------------------------------------------------------------
+   Grids
+   -------------------------------------------------------------------------- */
+
+.features-grid,
+.quick-tools,
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+
+/* The dashboard cards hold sentence-length Arabic status text ("جاري تحديد
+   الصلاة القادمة"), which cannot fit a 150px column. One per row on phones. */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 620px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+@media (min-width: 640px) {
+  .features-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+/* Feature cards read as a tile: icon, title, description, in that order. */
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-5);
+}
+
+.feature-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color);
+  margin: 0;
+}
+
+.feature-description {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: var(--leading-snug);
+  margin: 0;
+}
+
+/* Dashboard status cards: label + icon on one row, then value, then meta. */
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  text-align: start;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.dashboard-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.dashboard-card-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+/* These hold status sentences, not numerals, so they must wrap rather than
+   run past the card edge — the display size was clipping the text. */
+.dashboard-card-value {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color);
+  line-height: var(--leading-snug);
+  overflow-wrap: anywhere;
+}
+
+/* Genuine numeric readouts keep the display size.
+   `.hero-metric-value` is deliberately excluded — it sits on the green hero
+   and must inherit the hero's own foreground, not the page text colour. */
+.stat-number,
+.habit-streak-number {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--text-color);
+  line-height: 1.15;
+  font-feature-settings: "tnum";
+}
+
+.dashboard-card-meta,
+.stat-label,
+.habit-streak-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-snug);
+}
+
+/* The icon tile inside a dashboard card is secondary chrome, so it is
+   smaller than the standalone tiles used in feature grids. */
+.dashboard-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   Page heroes — one treatment for all of them.
+
+   Every page had built its own accent panel with a different stack of radial
+   and linear gradients: .hub-hero, .more-hero, .khatma-hero, .resume-card,
+   .next-prayer-highlight. They now share the home hero's flat panel, which is
+   what makes the pages read as one app.
+   -------------------------------------------------------------------------- */
+
+/* Green is an accent, not a surface. These panels were large solid green
+   blocks — roughly a third of the pixels on every screen — which is what made
+   each page read as the same green slab. They are now paper surfaces that
+   carry green only as a thin edge mark. */
+.hub-hero,
+.more-hero,
+.khatma-hero,
+.next-prayer-highlight,
+.resume-card {
+  background: var(--surface-1);
+  background-image: none;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-inline-start: 3px solid var(--primary-color);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  padding: var(--space-5);
+}
+
+[data-theme="dark"] .hub-hero,
+[data-theme="dark"] .more-hero,
+[data-theme="dark"] .khatma-hero,
+[data-theme="dark"] .next-prayer-highlight,
+[data-theme="dark"] .resume-card {
+  background: var(--surface-1);
+  background-image: none;
+  color: var(--text-color);
+  border-color: var(--border-color);
+  border-inline-start-color: var(--primary-color);
+}
+
+/* Headings stay ink; supporting copy drops to secondary. */
+.hub-hero :is(h1, h2, h3),
+.more-hero :is(h1, h2, h3),
+.khatma-hero :is(h1, h2, h3),
+.next-prayer-highlight :is(h1, h2, h3),
+.resume-card :is(h1, h2, h3) {
+  color: var(--text-color);
+}
+
+.hub-hero p,
+.more-hero p,
+.khatma-hero p,
+.next-prayer-highlight p,
+.resume-card .resume-details {
+  color: var(--text-secondary);
+}
+
+/* Decorative blobs layered on top of those panels. */
+.hub-hero::before,
+.more-hero::before,
+.khatma-hero::before,
+.next-prayer-highlight::before,
+.resume-card::before,
+.verse-card::after,
+.hadith-card::after {
+  content: none;
+}
+
+/* Stat chips inside a hero. These were white-on-green; now that the panel is
+   paper, their local white foreground rendered white-on-white (1:1). The
+   `--hub-*` locals the page CSS defines are re-pointed at real tokens. */
+.hub-hero,
+.more-hero,
+.khatma-hero {
+  --hub-fg: var(--text-color);
+  --hub-fg-muted: var(--text-secondary);
+  --hub-chip-bg: var(--surface-2);
+  --hub-chip-border: var(--border-color);
+}
+
+.hub-hero .hub-stat,
+.hub-hero .hub-metric,
+.more-hero .stat-item {
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-color);
+}
+
+.hub-hero .hub-stat :is(span, div, strong),
+.hub-hero .hub-metric :is(span, div, strong),
+.more-hero .stat-item :is(span, div, strong) {
+  color: inherit;
+}
+
+.hub-hero .hub-stat-label,
+.hub-hero .hub-metric-label,
+.more-hero .stat-label {
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   Remaining decorative gradients.
+
+   Progress fills and the skeleton sweep keep theirs — a fill genuinely
+   benefits from a ramp. Everything else becomes a flat fill.
+   -------------------------------------------------------------------------- */
+
+.pw-header,
+.khatma-title,
+.dashboard-card-head,
+.habit-header,
+.habit-dashboard-section,
+.bio-header,
+.ref-card,
+.sidebar-logo,
+.modal .modal-icon,
+.khatma-core-feature,
+.verse-card,
+.hadith-card,
+.counter-display,
+.qibla-compass,
+.daily-verse-info {
+  background-image: none;
+}
+
+/* Primary action surfaces: flat accent, not a two-stop ramp. */
+.tap-button,
+.quick-tap-fab,
+.bio-avatar {
+  background: var(--primary-color);
+  background-image: none;
+  color: var(--on-primary);
+}
+
+.tap-button:active {
+  background: var(--primary-dark);
+}
+
+/* --------------------------------------------------------------------------
+   Radius consistency — page CSS used 10/12/14/16/18/20/22/24/28px, which is
+   why cards looked mismatched from screen to screen.
+   -------------------------------------------------------------------------- */
+
+.hub-section,
+.feature-card,
+.ref-card,
+.setting-group,
+.bio-card,
+.category-card,
+.zikr-card,
+.khatma-card,
+.folder-card,
+.bookmark-card {
+  border-radius: var(--radius-lg);
+}
+
+/* Search fields sit on their own above a list. */
+.search-box,
+.feature-search-wrap,
+.surah-search-wrap {
+  border-radius: var(--radius-sm);
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+select,
+textarea {
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
+}
+
+/* --------------------------------------------------------------------------
+   Modal — matches the panel treatment used elsewhere.
+   -------------------------------------------------------------------------- */
+
+.modal {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--elev-5);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: var(--space-6);
+}
+
+.modal .modal-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  background: rgba(var(--primary-rgb), 0.12);
+  color: var(--primary-color);
+  font-size: 1.4rem;
+}
+
+.modal .modal-icon.warning { background: var(--warning-surface); color: var(--warning); }
+.modal .modal-icon.error   { background: var(--danger-surface);  color: var(--danger); }
+.modal .modal-icon.success { background: var(--success-surface); color: var(--success); }
+
+.modal .modal-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--text-color);
+}
+
+.modal .modal-message {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+
+.modal .modal-btn {
+  min-height: var(--tap-target);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  background-image: none;
+}
+
+.modal .modal-btn-primary {
+  background-color: var(--primary-color);
+  color: var(--on-primary);
+}
+
+.modal .modal-btn-secondary {
+  background-color: var(--surface-2);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+/* --------------------------------------------------------------------------
+   Motion — one entrance, not five staggered ones.
+   The delay-1..5 classes made the page assemble itself piece by piece on
+   every visit, which reads as slow.
+   -------------------------------------------------------------------------- */
+
+.delay-1, .delay-2, .delay-3, .delay-4, .delay-5 {
+  animation-delay: 0s;
+}
+
+.animate-fade-up,
+.animate-scale-in,
+.animate-fade-in {
+  animation-duration: var(--duration-slow);
+}
+
+/* --------------------------------------------------------------------------
+   Settings specifics
+   -------------------------------------------------------------------------- */
+
+/* The accent swatches rendered as 56px discs, which dominated the group.
+   44px keeps them tappable while reading as a control row. */
+.color-option {
+  width: var(--tap-target);
+  height: var(--tap-target);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  box-shadow: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.color-option[aria-pressed="true"],
+.color-option.active,
+.color-option.selected {
+  /* Ring sits outside the fill so the colour stays fully visible. */
+  border-color: var(--surface-1);
+  outline: 2px solid var(--text-color);
+  outline-offset: 1px;
+}
+
+.color-options,
+.color-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+}
+
+/* Stepper controls next to a setting label. */
+.font-size-btn {
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  color: var(--text-color);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.font-size-btn:hover {
+  background: var(--surface-3);
+}
+
+.font-size-btn--danger {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-surface);
+}
+
+/* Grouped-list rows: label + description on one side, control on the other. */
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.setting-label {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-color);
+}
+
+.setting-description {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-snug);
+}
+
+/* Section label sits above its group, native grouped-list style. */
+.setting-group {
+  padding: 0 var(--space-4);
+}
+
+.setting-item + .setting-item {
+  border-block-start: 1px solid var(--border-color);
+}
+
+/* --------------------------------------------------------------------------
+   Navigation drawer rows — same icon + label structure as the tab bar, so
+   the two navigations read as one system.
+   -------------------------------------------------------------------------- */
+
+.sidebar-nav-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  flex-shrink: 0;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
+}
+
+.sidebar-nav-item:hover .sidebar-nav-icon {
+  color: var(--text-secondary);
+}
+
+.sidebar-nav-item.active .sidebar-nav-icon {
+  color: var(--primary-color);
+}
+
+/* --------------------------------------------------------------------------
+   Dark-mode foreground on accent surfaces.
+
+   In dark mode `--primary-color` is a LIGHT green (#5cb860). Page CSS that
+   sets `color: white` on a primary-filled control measures 2.48:1 there —
+   well under the 4.5 minimum. `--on-primary` is near-black in dark mode and
+   measures 6.9:1.
+
+   These need the `[data-theme="dark"]` prefix because the page stylesheets
+   set their own dark overrides at that same specificity; a bare class
+   selector here would lose to them.
+   -------------------------------------------------------------------------- */
+
+[data-theme="dark"] .tap-button,
+[data-theme="dark"] .quick-tap-fab,
+[data-theme="dark"] .khatma-btn,
+[data-theme="dark"] .detect-location-btn,
+[data-theme="dark"] .mood-submit-btn,
+[data-theme="dark"] .khatma-core-feature-link,
+[data-theme="dark"] .modal .modal-btn-primary,
+[data-theme="dark"] .save-settings-btn,
+[data-theme="dark"] .radio-play-btn,
+[data-theme="dark"] .radio-fab {
+  background: var(--primary-color);
+  background-image: none;
+  color: var(--on-primary);
+}
+
+/* Same problem for descendants that hardcode their own light colour. */
+[data-theme="dark"] .tap-button :is(span, div, i, strong),
+[data-theme="dark"] .khatma-btn :is(span, div, i),
+[data-theme="dark"] .save-settings-btn :is(span, div, i) {
+  color: inherit;
+}
+
+/* index.css sets its own chip padding, which resolved to 42px tall — just
+   under the minimum. app-ui.css loads last, so the floor is restated here. */
+.mood-chip {
+  min-height: var(--tap-target);
+  min-width: var(--tap-target);
+}

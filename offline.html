@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>لا يوجد اتصال - القرآن الكريم</title>
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+    <!-- Deliberately self-contained: this page is served by the service worker
+         when the network is unavailable, so it cannot depend on any other
+         file being cached. Styles are inlined and there are no fonts, icons
+         or scripts to fetch. -->
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #fbf8f2;
+            --surface: #ffffff;
+            --text: #1a1714;
+            --muted: #5a5348;
+            --line: rgba(26, 23, 20, 0.1);
+            --accent: #1b5e20;
+            --on-accent: #ffffff;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #14120f;
+                --surface: #201c18;
+                --text: #f2eee7;
+                --muted: #b8afa2;
+                --line: rgba(255, 255, 255, 0.1);
+                --accent: #6bc46f;
+                --on-accent: #0a1c0d;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100dvh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "IBM Plex Sans Arabic", "Cairo", system-ui, -apple-system, sans-serif;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .panel {
+            width: 100%;
+            max-width: 380px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 32px 24px;
+        }
+
+        .glyph {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--accent) 12%, transparent);
+            color: var(--accent);
+        }
+
+        svg { width: 30px; height: 30px; fill: currentColor; }
+
+        h1 { font-size: 1.375rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+        p { color: var(--muted); font-size: 0.9375rem; margin-bottom: 24px; }
+
+        .actions { display: grid; gap: 10px; }
+
+        a, button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 0 20px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font: inherit;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .primary { background: var(--accent); color: var(--on-accent); }
+        .secondary { background: transparent; color: var(--text); border-color: var(--line); }
+    </style>
+</head>
+
+<body>
+    <main class="panel">
+        <div class="glyph" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 3C7 3 2.7 5.6.4 9.5l1.7 1c2-3.3 5.6-5.5 9.9-5.5s7.9 2.2 9.9 5.5l1.7-1C21.3 5.6 17 3 12 3z" opacity=".45"/>
+                <path d="M12 9c-2.8 0-5.3 1.4-6.8 3.5l1.6 1.2A6.6 6.6 0 0 1 12 11c2.2 0 4.1 1.1 5.2 2.7l1.6-1.2A8.2 8.2 0 0 0 12 9z" opacity=".7"/>
+                <circle cx="12" cy="18.5" r="2"/>
+            </svg>
+        </div>
+
+        <h1>لا يوجد اتصال بالإنترنت</h1>
+        <p>الصفحات التي فتحتها من قبل ما زالت متاحة دون اتصال. تحقق من الشبكة ثم أعد المحاولة.</p>
+
+        <div class="actions">
+            <button class="primary" onclick="location.reload()">إعادة المحاولة</button>
+            <a class="secondary" href="/index.html">الصفحة الرئيسية</a>
+        </div>
+    </main>
+
+    <script>
+        // Recover automatically the moment connectivity returns.
+        window.addEventListener('online', function () { location.reload(); });
+    </script>
+</body>
+
+</html>

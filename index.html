@@ -3,12 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>القرآن الكريم - الصفحة الرئيسية</title>
+    <meta name="description" content="تطبيق القرآن الكريم الشامل: قراءة وتلاوة، أذكار، مسبحة، مواقيت الصلاة، ومتابعة الختمة.">
     <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
     <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,12 +18,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/page-styles/index.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
+    <!-- Authoritative layer for the home screen. Loaded last so its native
+         mobile layout (prayer hero, quick grid, inspiration, mood) wins over
+         the legacy home rules still living in index.css. -->
+    <link rel="stylesheet" href="css/page-styles/home.css">
 </head>
 
 <body>
@@ -34,202 +45,136 @@
     <!-- Main Content -->
     <main class="app-content">
         <div class="home-container">
-            <!-- Hero Section -->
-            <div class="hero-section animate-scale-in">
-                <div class="hero-badge"><i class="bi bi-stars"></i> نسخة حديثة بتجربة قراءة أجمل</div>
-                <div class="hero-icon-shell">
-                    <div class="hero-icon" style="animation: float 4s ease-in-out infinite;">📖</div>
-                </div>
-                <h1 class="hero-title">القرآن الكريم</h1>
-                <p class="hero-subtitle">تطبيق القرآن الكريم الشامل</p>
-                <p class="hero-description">كل ما تحتاجه يوميا في مكان واحد: قراءة، أذكار، مسبحة، مواقيت الصلاة، ومتابعة
-                    تقدمك بأسلوب عصري واضح.</p>
-
-                <div class="hero-metrics">
-                    <div class="hero-metric">
-                        <span class="hero-metric-value">114</span>
-                        <span class="hero-metric-label">سورة</span>
+            <!-- ============================================================
+                 1. Prayer hero — dynamic time-of-day sky. common.js keys off
+                    #homePrayerWidget to populate it; it sets data-phase, the
+                    next-prayer focus, the timeline fill and the five chips.
+                 ============================================================ -->
+            <section class="prayer-hero animate-fade-up" id="homePrayerWidget" data-phase="night"
+                aria-label="مواقيت الصلاة">
+                <div class="prayer-hero-top">
+                    <div class="ph-location">
+                        <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                        <span id="pwLocation">جاري تحديد الموقع…</span>
                     </div>
-                    <div class="hero-metric">
-                        <span class="hero-metric-value">6236</span>
-                        <span class="hero-metric-label">آية</span>
-                    </div>
-                    <div class="hero-metric">
-                        <span class="hero-metric-value">30</span>
-                        <span class="hero-metric-label">جزء</span>
+                    <div class="ph-actions">
+                        <a class="ph-icon-btn" href="prayer-times.html" aria-label="كل المواقيت والتفاصيل">
+                            <i class="bi bi-clock-history" aria-hidden="true"></i>
+                        </a>
+                        <a class="ph-icon-btn" href="settings.html" aria-label="الإعدادات">
+                            <i class="bi bi-sliders" aria-hidden="true"></i>
+                        </a>
                     </div>
                 </div>
 
-                <div class="hero-cta-row">
-                    <a href="quran.html" class="hero-cta"><i class="bi bi-book-fill"></i> ابدأ القراءة</a>
-                    <a href="home-more.html" class="hero-cta secondary"><i class="bi bi-grid-fill"></i> أدوات إضافية</a>
-                </div>
-            </div>
-
-            <!-- Smart Home Dashboard -->
-            <section class="smart-dashboard-section animate-fade-up delay-1" id="smartDashboardSection">
-                <div class="dashboard-header">
-                    <div class="dashboard-title"><i class="bi bi-grid-1x2-fill"></i> لوحة اليوم</div>
-                    <a class="dashboard-link" href="bookmarks.html">إدارة المحفوظات</a>
+                <div class="prayer-hero-main">
+                    <span class="ph-next-label">الصلاة القادمة</span>
+                    <span class="ph-next-headline">
+                        <span class="ph-next-name" id="phNextName">—</span>
+                        <span class="ph-next-time" id="phNextTime">--:--</span>
+                    </span>
+                    <span class="ph-countdown" id="phCountdown">جارٍ حساب الوقت المتبقي…</span>
                 </div>
 
-                <div class="dashboard-grid">
-                    <button class="dashboard-card" id="dashboardContinueCard" onclick="resumeReading()"
-                        style="display:none;">
-                        <div class="dashboard-card-head">
-                            <span class="dashboard-card-label">متابعة القراءة</span>
-                            <span class="dashboard-card-icon"><i class="bi bi-book-half"></i></span>
-                        </div>
-                        <div class="dashboard-card-value" id="dashboardContinueValue">آخر موضع قراءة</div>
-                        <div class="dashboard-card-meta">اضغط للمتابعة مباشرة</div>
-                    </button>
-
-                    <div class="dashboard-card" id="dashboardPrayerCard">
-                        <div class="dashboard-card-head">
-                            <span class="dashboard-card-label">الصلاة القادمة</span>
-                            <span class="dashboard-card-icon"><i class="bi bi-clock-history"></i></span>
-                        </div>
-                        <div class="dashboard-card-value" id="dashboardPrayerValue">جاري التحميل...</div>
-                        <div class="dashboard-card-meta" id="dashboardPrayerMeta">من ويدجت المواقيت</div>
+                <div class="ph-timeline" aria-hidden="true">
+                    <div class="ph-track">
+                        <span class="ph-fill" id="phFill"></span>
                     </div>
+                </div>
 
-                    <div class="dashboard-card" id="dashboardBookmarkCard">
-                        <div class="dashboard-card-head">
-                            <span class="dashboard-card-label">آخر سورة محفوظة</span>
-                            <span class="dashboard-card-icon"><i class="bi bi-journal-bookmark-fill"></i></span>
-                        </div>
-                        <div class="dashboard-card-value" id="dashboardLastBookmarkValue">لا يوجد موضع محفوظ</div>
-                        <div class="dashboard-card-meta" id="dashboardLastBookmarkMeta">ابدأ القراءة ثم احفظ الموضع
-                        </div>
-                    </div>
-
+                <div class="prayer-hero-row" id="pwBody">
+                    <!-- Five prayer chips rendered by common.js -->
                 </div>
             </section>
 
-            <section class="khatma-core-feature glass-card animate-fade-up delay-2" id="khatmaCoreFeature">
-                <div class="khatma-core-feature-head">
-                    <div class="khatma-core-feature-title">
-                        <i class="bi bi-journal-check"></i>
-                        <span>مركز الختمة والاستمرارية</span>
+            <!-- ============================================================
+                 2. Quick actions — continue reading + Khatma progress
+                 ============================================================ -->
+            <div class="home-quick-grid animate-fade-up delay-1">
+                <button type="button" class="quick-card" id="homeContinueCard"
+                    onclick="resumeReadingOrStart()">
+                    <div class="quick-card-head">
+                        <span class="quick-card-icon"><i class="bi bi-book-half" aria-hidden="true"></i></span>
+                        <span class="quick-card-label">متابعة القراءة</span>
                     </div>
-                    <div class="khatma-core-feature-badge">ميزة أساسية</div>
-                </div>
-                <p class="khatma-core-feature-text">خطة ختمة يومية تلقائية، متابعة التقدم، وحلقات الاستمرارية في صفحة
-                    مستقلة تساعدك تركز على الهدف.</p>
-                <a href="khatma.html" class="khatma-core-feature-link">
-                    <span>فتح مركز الختمة</span>
-                    <i class="bi bi-arrow-left-short"></i>
+                    <div class="quick-card-body">
+                        <div class="quick-card-value" id="homeContinueValue">ابدأ من سورة الفاتحة</div>
+                        <span class="quick-card-cta">واصل الآن <i class="bi bi-arrow-left-short" aria-hidden="true"></i></span>
+                    </div>
+                </button>
+
+                <a href="khatma.html" class="quick-card gold" id="homeKhatmaCard">
+                    <div class="quick-card-head">
+                        <span class="quick-card-icon"><i class="bi bi-journal-check" aria-hidden="true"></i></span>
+                        <span class="quick-card-label">مركز الختمة</span>
+                    </div>
+                    <div class="quick-progress">
+                        <div class="quick-progress-track">
+                            <span class="quick-progress-fill" id="homeKhatmaFill"></span>
+                        </div>
+                        <div class="quick-progress-meta">
+                            <span id="homeKhatmaMeta">خطة الختمة اليومية</span>
+                            <span class="quick-progress-percent" id="homeKhatmaPercent">0%</span>
+                        </div>
+                    </div>
                 </a>
+            </div>
+
+            <!-- ============================================================
+                 3. Daily inspiration — verse of the day + hadith
+                 ============================================================ -->
+            <section class="inspiration-card animate-fade-up delay-2" aria-label="آية اليوم">
+                <div class="inspiration-label"><i class="bi bi-stars" aria-hidden="true"></i> آية اليوم</div>
+                <p class="verse-arabic" id="dailyVerseText">جارٍ التحميل…</p>
+                <div class="verse-ref" id="dailyVerseInfo"></div>
+                <div class="inspiration-actions">
+                    <button type="button" class="inspiration-btn" id="verseSaveBtn" onclick="saveDailyVerse(this)">
+                        <i class="bi bi-bookmark" aria-hidden="true"></i> حفظ
+                    </button>
+                    <button type="button" class="inspiration-btn" id="verseListenBtn" onclick="listenDailyVerse(this)">
+                        <i class="bi bi-volume-up" aria-hidden="true"></i> استماع
+                    </button>
+                    <button type="button" class="inspiration-btn" onclick="shareDailyVerse()">
+                        <i class="bi bi-share" aria-hidden="true"></i> مشاركة
+                    </button>
+                </div>
             </section>
 
-            <!-- Prayer Times Widget -->
-            <div class="prayer-widget glass-card animate-fade-up delay-1" id="homePrayerWidget">
-                <div class="pw-header">
-                    <div class="pw-title">
-                        <i class="bi bi-clock-fill"></i>
-                        <span>مواقيت الصلاة</span>
-                    </div>
-                    <div class="pw-location" id="pwLocation">جاري تحديد الموقع...</div>
-                </div>
-                <div class="pw-body" id="pwBody">
-                    <!-- Loaded via JS -->
-                </div>
-                <div class="pw-footer" id="pwNextPrayer">
-                    --:--
-                </div>
-            </div>
+            <section class="inspiration-card gold animate-fade-up delay-2" aria-label="حديث اليوم">
+                <div class="inspiration-label"><i class="bi bi-chat-quote-fill" aria-hidden="true"></i> حديث اليوم</div>
+                <p class="hadith-text" id="dailyHadith">جارٍ التحميل…</p>
+            </section>
 
-            <!-- Resume Reading Section -->
-            <div class="resume-reading-section animate-fade-up delay-2" id="resumeReadingSection"
-                style="display: none;">
-                <div class="resume-card glass-card" onclick="resumeReading()">
-                    <div class="resume-icon">
-                        <i class="bi bi-book-half"></i>
-                    </div>
-                    <div class="resume-content">
-                        <div class="resume-label">متابعة القراءة</div>
-                        <div class="resume-details" id="resumeDetails">البقرة - صفحة 5</div>
-                    </div>
-                    <div class="resume-arrow">
-                        <i class="bi bi-chevron-left"></i>
-                    </div>
+            <!-- ============================================================
+                 4. Quranic emotional support — mood pills + prompt
+                 ============================================================ -->
+            <section class="mood-widget animate-fade-up delay-3" aria-label="دعم نفسي بالقرآن">
+                <div class="mood-widget-title"><i class="bi bi-heart-pulse" aria-hidden="true"></i> كيف تشعر اليوم؟</div>
+                <p class="mood-widget-subtitle">اختر شعورك أو اكتبه بكلماتك، لنقترح لك آيات تبعث الطمأنينة.</p>
+
+                <div class="mood-pills" role="group" aria-label="اختيار الشعور">
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أنا حزين', this)"><i class="bi bi-cloud-drizzle" aria-hidden="true"></i> حزين</button>
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بالقلق', this)"><i class="bi bi-activity" aria-hidden="true"></i> قلق</button>
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بضغط شديد', this)"><i class="bi bi-lightning-charge" aria-hidden="true"></i> توتر</button>
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أنا غاضب', this)"><i class="bi bi-fire" aria-hidden="true"></i> غضب</button>
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بالذنب', this)"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> ذنب</button>
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أعيش حالة فقد وحزن', this)"><i class="bi bi-heartbreak" aria-hidden="true"></i> فقد</button>
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أنا منهك ومطفي', this)"><i class="bi bi-battery-half" aria-hidden="true"></i> احتراق</button>
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بالوحدة', this)"><i class="bi bi-person" aria-hidden="true"></i> وحدة</button>
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أحتاج أمل', this)"><i class="bi bi-brightness-high" aria-hidden="true"></i> أمل</button>
+                    <button type="button" class="mood-chip" onclick="applyMoodQuick('أحتاج شكر وامتنان', this)"><i class="bi bi-stars" aria-hidden="true"></i> امتنان</button>
                 </div>
-            </div>
 
-            <!-- Daily Verse Section -->
-            <div class="daily-verse-section animate-fade-up delay-3" id="dailyVerseSection">
-                <div class="verse-card glass-card">
-                    <div class="verse-label">آية اليوم</div>
-                    <div class="daily-verse-content" id="dailyVerseText">
-                        جاري التحميل...
-                    </div>
-                    <div class="verse-ref" id="dailyVerseInfo"></div>
-                </div>
-            </div>
-
-            <!-- Daily Hadith Section -->
-            <div class="hadith-section animate-fade-up delay-3">
-                <div class="hadith-card glass-card">
-                    <div class="hadith-label">
-                        <i class="bi bi-chat-quote-fill"></i>
-                        <span>حديث اليوم</span>
-                    </div>
-                    <div class="hadith-text" id="dailyHadith">
-                        جاري التحميل...
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mood Support -->
-            <div class="mood-support-section animate-fade-up delay-3">
-                <div class="mood-support-card glass-card">
-                    <div class="mood-title"><i class="bi bi-heart-pulse"></i> دعم نفسي بالقرآن</div>
-                    <div class="mood-subtitle">اكتب شعورك، وسنقترح آيات مناسبة مع رسالة قصيرة تبعث الطمأنينة.</div>
-
+                <div class="mood-prompt">
+                    <label class="sr-only" for="moodInput">اكتب شعورك</label>
                     <textarea id="moodInput" class="mood-input"
-                        placeholder="مثال: أشعر بالحزن والقلق هذه الأيام..."></textarea>
-
-                    <div class="mood-chips">
-                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أنا حزين')">حزين</button>
-                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بالقلق')">قلق</button>
-                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بضغط شديد')">توتر</button>
-                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أنا غاضب')">غضب</button>
-                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بالذنب')">ذنب</button>
-                        <button type="button" class="mood-chip"
-                            onclick="applyMoodQuick('أعيش حالة فقد وحزن')">فقد</button>
-                        <button type="button" class="mood-chip"
-                            onclick="applyMoodQuick('أنا منهك ومطفي')">احتراق</button>
-                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أشعر بالوحدة')">وحدة</button>
-                        <button type="button" class="mood-chip" onclick="applyMoodQuick('أحتاج أمل')">أمل</button>
-                        <button type="button" class="mood-chip"
-                            onclick="applyMoodQuick('أحتاج شكر وامتنان')">امتنان</button>
-                    </div>
-
-                    <button id="moodGenerateBtn" type="button" class="mood-generate-btn"
-                        onclick="generateMoodSupport()">ولّد آيات مناسبة</button>
-                    <div id="moodStatus" class="mood-status" aria-live="polite"></div>
-                    <div id="moodResult" class="mood-result" aria-live="polite"></div>
+                        placeholder="اكتب شعورك بكلماتك…"></textarea>
                 </div>
-            </div>
 
-            <section class="home-clean-actions glass-card animate-fade-up delay-3">
-                <h2>الصفحة أصبحت أنظف</h2>
-                <p>نقلنا الأقسام الثانوية (روابط الأقسام، الأدوات السريعة، الإحصاءات، وأزرار البدء) إلى صفحة مستقلة حتى
-                    تركز هنا على القراءة اليومية والمتابعة.</p>
-                <div class="action-buttons">
-                    <a href="khatma.html" class="action-btn">
-                        <i class="bi bi-journal-check"></i>
-                        <span>مركز الختمة والاستمرارية</span>
-                    </a>
-                    <a href="home-more.html" class="action-btn">
-                        <i class="bi bi-grid-1x2-fill"></i>
-                        <span>فتح الأدوات الإضافية</span>
-                    </a>
-                    <a href="features.html" class="action-btn secondary">
-                        <i class="bi bi-stars"></i>
-                        <span>استعراض كل الميزات</span>
-                    </a>
-                </div>
+                <button id="moodGenerateBtn" type="button" class="mood-generate-btn"
+                    onclick="generateMoodSupport()"><i class="bi bi-stars" aria-hidden="true"></i> ولّد آيات مناسبة</button>
+                <div id="moodStatus" class="mood-status" aria-live="polite"></div>
+                <div id="moodResult" class="mood-result" aria-live="polite"></div>
             </section>
         </div>
     </main>
@@ -239,6 +184,7 @@
 
     <script src="js/common.js"></script>
     <script src="js/page-scripts/index.js"></script>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

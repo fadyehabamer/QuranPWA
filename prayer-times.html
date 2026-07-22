@@ -3,20 +3,32 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>مواقيت الصلاة</title>
+    <meta name="description" content="مواقيت الصلاة حسب موقعك مع الوقت المتبقي للصلاة القادمة وبوصلة اتجاه القبلة.">
     <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/page-styles/prayer-times.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
@@ -31,26 +43,26 @@
             <!-- Location Section -->
             <div class="location-section" id="locationSection">
                 <div class="location-text">
-                    <i class="bi bi-geo-alt-fill"></i>
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
                     اختر طريقة تحديد الموقع
                 </div>
                 <div class="location-buttons" id="locationButtons">
                     <button class="location-btn" onclick="selectAutomaticLocation()">
-                        <i class="bi bi-crosshair"></i>
+                        <i class="bi bi-crosshair" aria-hidden="true"></i>
                         تلقائي
                     </button>
                     <button class="location-btn secondary" onclick="selectManualLocation()">
-                        <i class="bi bi-geo-alt"></i>
+                        <i class="bi bi-geo-alt" aria-hidden="true"></i>
                         يدوي
                     </button>
                 </div>
                 <div class="location-selected" id="locationSelected" style="display: none;">
                     <div class="location-info">
-                        <i class="bi bi-geo-alt-fill"></i>
+                        <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
                         <span id="locationText">تم تحديد الموقع</span>
                     </div>
                     <button class="reset-location-btn" onclick="resetLocation()">
-                        <i class="bi bi-arrow-clockwise"></i>
+                        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
                         تغيير
                     </button>
                 </div>
@@ -58,7 +70,7 @@
 
             <!-- Next Prayer Highlight -->
             <div class="next-prayer-highlight" id="nextPrayerSection" style="display: none;">
-                <div class="next-prayer-title">الصلاة القادمة</div>
+                <h2 class="next-prayer-title">الصلاة القادمة</h2>
                 <div class="next-prayer-time" id="nextPrayerName"></div>
                 <div class="next-prayer-remaining" id="nextPrayerRemaining"></div>
                 <div class="tahajjud-info" id="tahajjudInfo">
@@ -74,17 +86,28 @@
 
             <!-- Qibla Compass -->
             <div class="qibla-section" id="qiblaSection" style="display: none;">
-                <div class="qibla-title"><i class="bi bi-compass"></i> اتجاه القبلة</div>
+                <h2 class="qibla-title"><i class="bi bi-compass" aria-hidden="true"></i> اتجاه القبلة</h2>
                 <div class="qibla-subtitle">يُرجى توجيه الهاتف أفقيًا لتحسين دقة البوصلة</div>
-                <div class="qibla-compass-wrap">
+                <!-- The compass is a purely visual instrument; the accessible
+                     equivalent is #qiblaMeta plus the throttled live readout
+                     below, so the dial itself is hidden from assistive tech. -->
+                <div class="qibla-compass-wrap" aria-hidden="true">
                     <div class="qibla-compass" id="qiblaCompass">
                         <div class="qibla-north">N</div>
+                        <!-- ☪ is kept as a meaningful cultural marker for the
+                             qibla, but the "اتجاه القبلة" heading above already
+                             names it, so it is not announced twice. -->
                         <div class="qibla-marker">☪</div>
                         <div class="qibla-needle" id="qiblaNeedle"></div>
                         <div class="qibla-center-dot"></div>
                     </div>
                 </div>
                 <div class="qibla-meta" id="qiblaMeta">جاري حساب اتجاه القبلة...</div>
+                <!-- Throttled screen-reader readout of the live bearing. The
+                     visible #qiblaMeta repaints up to ~12x/second, which would
+                     be unusable as a live region, so announcements are rate
+                     limited in updateQiblaLiveReadout(). -->
+                <p class="sr-only" id="qiblaLiveReadout" aria-live="polite" aria-atomic="true"></p>
                 <div class="qibla-calibration" id="qiblaCalibrationHint">
                     <div class="qibla-eight-track" aria-hidden="true">
                         <div class="qibla-phone-dot"></div>
@@ -101,19 +124,20 @@
                         onclick="startQiblaCalibrationGuide()">إعادة المعايرة</button>
                     <button type="button" class="location-btn secondary qibla-toggle-btn" id="qiblaCalibrationToggleBtn"
                         onclick="toggleQiblaCalibrationHint()">
-                        <i class="bi bi-sliders"></i> اعادة المعايرة
+                        <i class="bi bi-sliders" aria-hidden="true"></i> اعادة المعايرة
                     </button>
                 </div>
                 <button class="location-btn secondary qibla-permission-btn" id="qiblaPermissionBtn"
                     onclick="requestQiblaPermission()" style="display: none;">
-                    <i class="bi bi-phone"></i>
+                    <i class="bi bi-phone" aria-hidden="true"></i>
                     تفعيل مستشعر البوصلة
                 </button>
             </div>
 
             <!-- Error Message -->
-            <div class="error-message" id="errorMessage" style="display: none;">
-                <i class="bi bi-exclamation-triangle-fill" style="font-size: 24px; margin-bottom: 10px;"></i>
+            <div class="error-message" id="errorMessage" role="alert" style="display: none;">
+                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"
+                    style="font-size: 24px; margin-bottom: 10px;"></i>
                 <div>حدث خطأ في تحميل مواقيت الصلاة</div>
                 <button class="retry-btn" onclick="loadPrayerTimes()">إعادة المحاولة</button>
             </div>
@@ -121,12 +145,13 @@
     </main>
 
     <!-- Country Selection Modal -->
-    <div class="modal-overlay" id="countryModal" onclick="closeCountryModal()">
+    <div class="modal-overlay" id="countryModal" role="dialog" aria-labelledby="countryModalTitle"
+        onclick="closeCountryModal()">
         <div class="country-modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h3>اختر الدولة</h3>
-                <button class="modal-close-btn" onclick="closeCountryModal()">
-                    <i class="bi bi-x-lg"></i>
+                <h2 id="countryModalTitle">اختر الدولة</h2>
+                <button class="modal-close-btn" onclick="closeCountryModal()" aria-label="إغلاق">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="country-search-wrap">
@@ -144,6 +169,7 @@
 
     <script src="js/common.js"></script>
     <script src="js/page-scripts/prayer-times.js"></script>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

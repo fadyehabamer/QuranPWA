@@ -3,20 +3,32 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>الإعدادات</title>
-    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <meta name="description" content="إعدادات المظهر والخط والتنبيهات والتخزين.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="stylesheet" href="css/page-styles/settings.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
@@ -36,46 +48,47 @@
 
     <app-header title="الإعدادات" no-settings></app-header>
 
-    <div class="app-content settings-container">
+    <main class="app-content settings-container">
         <!-- Theme Settings -->
         <div class="settings-section">
-            <div class="settings-section-title">المظهر</div>
+            <h2 class="settings-section-title">المظهر</h2>
 
             <div class="setting-item">
-                <div class="setting-label">
+                <div class="setting-label" id="darkModeLabel">
                     <span>الوضع الليلي</span>
                     <span class="setting-desc">تفعيل الوضع الداكن</span>
                 </div>
-                <div class="toggle-switch" id="darkModeToggle" onclick="toggleDarkMode()">
-                    <div class="toggle-slider"></div>
-                </div>
+                <button type="button" class="toggle-switch" id="darkModeToggle" role="switch" aria-checked="false"
+                    aria-label="الوضع الليلي" onclick="toggleDarkMode()">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </button>
             </div>
 
             <div class="setting-item">
-                <div class="setting-label">
+                <div class="setting-label" id="colorPickerLabel">
                     <span>اللون الأساسي</span>
                     <span class="setting-desc">اختر لون التطبيق المفضل</span>
                 </div>
             </div>
-            <div class="color-picker-container">
-                <div class="color-option active" data-color="#1B5E20" style="background: #1B5E20;"
-                    onclick="changeColor('#1B5E20')"></div>
-                <div class="color-option" data-color="#2196F3" style="background: #2196F3;"
-                    onclick="changeColor('#2196F3')"></div>
-                <div class="color-option" data-color="#9C27B0" style="background: #9C27B0;"
-                    onclick="changeColor('#9C27B0')"></div>
-                <div class="color-option" data-color="#FF5722" style="background: #FF5722;"
-                    onclick="changeColor('#FF5722')"></div>
-                <div class="color-option" data-color="#795548" style="background: #795548;"
-                    onclick="changeColor('#795548')"></div>
-                <div class="color-option" data-color="#607D8B" style="background: #607D8B;"
-                    onclick="changeColor('#607D8B')"></div>
+            <div class="color-picker-container" role="group" aria-labelledby="colorPickerLabel">
+                <button type="button" class="color-option active" data-color="#1B5E20" style="background: #1B5E20;"
+                    aria-label="أخضر" aria-pressed="true" onclick="changeColor('#1B5E20')"></button>
+                <button type="button" class="color-option" data-color="#2196F3" style="background: #2196F3;"
+                    aria-label="أزرق" aria-pressed="false" onclick="changeColor('#2196F3')"></button>
+                <button type="button" class="color-option" data-color="#9C27B0" style="background: #9C27B0;"
+                    aria-label="بنفسجي" aria-pressed="false" onclick="changeColor('#9C27B0')"></button>
+                <button type="button" class="color-option" data-color="#FF5722" style="background: #FF5722;"
+                    aria-label="برتقالي" aria-pressed="false" onclick="changeColor('#FF5722')"></button>
+                <button type="button" class="color-option" data-color="#795548" style="background: #795548;"
+                    aria-label="بني" aria-pressed="false" onclick="changeColor('#795548')"></button>
+                <button type="button" class="color-option" data-color="#607D8B" style="background: #607D8B;"
+                    aria-label="رمادي مزرق" aria-pressed="false" onclick="changeColor('#607D8B')"></button>
             </div>
         </div>
 
         <!-- Font Settings -->
         <div class="settings-section">
-            <div class="settings-section-title">الخط</div>
+            <h2 class="settings-section-title">الخط</h2>
 
             <div class="setting-item">
                 <div class="setting-label">
@@ -83,9 +96,11 @@
                     <span class="setting-desc">تكبير أو تصغير النص</span>
                 </div>
                 <div class="font-size-controls">
-                    <button class="font-size-btn" onclick="decreaseFontSize()">-</button>
-                    <div class="font-size-display" id="fontSizeDisplay">متوسط</div>
-                    <button class="font-size-btn" onclick="increaseFontSize()">+</button>
+                    <button type="button" class="font-size-btn" aria-label="تصغير حجم الخط"
+                        onclick="decreaseFontSize()">-</button>
+                    <div class="font-size-display" id="fontSizeDisplay" aria-live="polite">متوسط</div>
+                    <button type="button" class="font-size-btn" aria-label="تكبير حجم الخط"
+                        onclick="increaseFontSize()">+</button>
                 </div>
             </div>
 
@@ -95,9 +110,11 @@
                     <span class="setting-desc">تغيير عرض وسمك الحروف</span>
                 </div>
                 <div class="font-size-controls">
-                    <button class="font-size-btn" onclick="decreaseFontWeight()">-</button>
-                    <div class="font-size-display" id="fontWeightDisplay">عادي</div>
-                    <button class="font-size-btn" onclick="increaseFontWeight()">+</button>
+                    <button type="button" class="font-size-btn" aria-label="تقليل سماكة الخط"
+                        onclick="decreaseFontWeight()">-</button>
+                    <div class="font-size-display" id="fontWeightDisplay" aria-live="polite">عادي</div>
+                    <button type="button" class="font-size-btn" aria-label="زيادة سماكة الخط"
+                        onclick="increaseFontWeight()">+</button>
                 </div>
             </div>
 
@@ -108,16 +125,18 @@
 
         <!-- Notification Settings -->
         <div class="settings-section">
-            <div class="settings-section-title">التنبيهات</div>
+            <h2 class="settings-section-title">التنبيهات</h2>
 
             <div class="setting-item">
                 <div class="setting-label">
                     <span>تفعيل التنبيهات</span>
                     <span class="setting-desc">تلقي تذكيرات للقراءة والأذكار</span>
                 </div>
-                <div class="toggle-switch" id="notificationsToggle" onclick="toggleNotifications()">
-                    <div class="toggle-slider"></div>
-                </div>
+                <button type="button" class="toggle-switch" id="notificationsToggle" role="switch" aria-checked="false"
+                    aria-label="تفعيل التنبيهات" aria-controls="notificationSettings"
+                    onclick="toggleNotifications()">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </button>
             </div>
 
             <div id="notificationSettings" style="display: none;">
@@ -128,15 +147,16 @@
 
         <!-- Ramadan Settings -->
         <div class="settings-section" id="ramadanSettingsSection">
-            <div class="settings-section-title">إعدادات رمضان</div>
+            <h2 class="settings-section-title">إعدادات رمضان</h2>
             <div class="setting-item">
                 <div class="setting-label">
-                    <span>بداية شهر رمضان</span>
-                    <span class="setting-desc">اختر بداية شهر رمضان لضبط العداد</span>
+                    <span id="ramadanStartLabel">بداية شهر رمضان</span>
+                    <span class="setting-desc" id="ramadanStartDesc">اختر بداية شهر رمضان لضبط العداد</span>
                 </div>
                 <div>
-                    <select id="ramadanStartSelect" onchange="changeRamadanStart()"
-                        style="padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); font-family: inherit; font-size: 14px;">
+                    <select id="ramadanStartSelect" class="select ramadan-start-select"
+                        aria-labelledby="ramadanStartLabel" aria-describedby="ramadanStartDesc"
+                        onchange="changeRamadanStart()">
                         <option value="2026-02-18">18 فبراير (السعودية ودول أخرى)</option>
                         <option value="2026-02-19">19 فبراير (مصر ودول أخرى)</option>
                     </select>
@@ -146,7 +166,7 @@
 
         <!-- App Info -->
         <div class="settings-section">
-            <div class="settings-section-title">حول التطبيق</div>
+            <h2 class="settings-section-title">حول التطبيق</h2>
 
             <div class="setting-item">
                 <div class="setting-label">
@@ -160,7 +180,8 @@
                     <span>تثبيت التطبيق</span>
                     <span class="setting-desc">تثبيت على الشاشة الرئيسية للوصول السريع</span>
                 </div>
-                <button class="font-size-btn" onclick="installApp()" id="installBtn"><i class="bi bi-download"></i></button>
+                <button type="button" class="font-size-btn" onclick="installApp()" id="installBtn"
+                    aria-label="تثبيت التطبيق"><i class="bi bi-download" aria-hidden="true"></i></button>
             </div>
 
             <div class="setting-item">
@@ -168,7 +189,8 @@
                     <span>التحقق من التحديثات</span>
                     <span class="setting-desc">التحقق يدوياً من وجود إصدار جديد للتطبيق</span>
                 </div>
-                <button class="font-size-btn" onclick="checkForUpdates()"><i class="bi bi-arrow-clockwise"></i></button>
+                <button type="button" class="font-size-btn" onclick="checkForUpdates()"
+                    aria-label="التحقق من التحديثات"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
             </div>
 
             <div class="setting-item">
@@ -176,19 +198,20 @@
                     <span>مسح ذاكرة التخزين المؤقت</span>
                     <span class="setting-desc">حذف البيانات المخزنة مؤقتاً لتوفير المساحة</span>
                 </div>
-                <button class="font-size-btn" onclick="clearCache()"
-                    style="background: #f44336; color: white; border-color: #f44336;"><i class="bi bi-trash-fill"></i></button>
+                <button type="button" class="font-size-btn font-size-btn--danger" onclick="clearCache()"
+                    aria-label="مسح ذاكرة التخزين المؤقت"><i class="bi bi-trash-fill" aria-hidden="true"></i></button>
             </div>
         </div>
 
-        <button class="save-btn" onclick="saveSettings()"><i class="bi bi-floppy-fill" aria-hidden="true"></i><span>حفظ الإعدادات</span></button>
-    </div>
+        <button type="button" class="save-btn" onclick="saveSettings()"><i class="bi bi-floppy-fill" aria-hidden="true"></i><span>حفظ الإعدادات</span></button>
+    </main>
 
     <!-- Bottom Navigation -->
         <app-bottom-nav current="settings"></app-bottom-nav>
 
     <script src="js/common.js"></script>
         <script src="js/page-scripts/settings.js"></script>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

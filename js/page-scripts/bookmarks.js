@@ -126,10 +126,10 @@ const surahInfo = [
             if (allBookmarks.length === 0) {
                 content.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon"><i class="bi bi-bookmark" style="font-size: 80px;"></i></div>
+                        <div class="empty-state-icon"><i class="bi bi-bookmark" aria-hidden="true" style="font-size: 80px;"></i></div>
                         <h3 class="empty-state-title">لا توجد مواضع محفوظة</h3>
                         <p class="empty-state-desc">لم تقم بحفظ أي موضع بعد.<br>اذهب إلى أي سورة واضغط على "حفظ الموضع" لحفظ مكان قراءتك.</p>
-                        <a href="quran.html" class="empty-state-btn"><i class="bi bi-book-fill"></i> ابدأ القراءة</a>
+                        <a href="quran.html" class="empty-state-btn"><i class="bi bi-book-fill" aria-hidden="true"></i> ابدأ القراءة</a>
                     </div>
                 `;
                 if (stats) stats.style.display = 'none';
@@ -203,11 +203,11 @@ const surahInfo = [
 
                                 <div class="bookmark-details">
                                     <div class="bookmark-detail-item">
-                                        <span>📄</span>
+                                        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
                                         <span>صفحة ${(bookmark.page || 0) + 1}</span>
                                     </div>
                                     <div class="bookmark-detail-item">
-                                        <span>•</span>
+                                        <span aria-hidden="true">•</span>
                                         <span>${surah.type || ''}</span>
                                     </div>
                                 </div>
@@ -217,11 +217,11 @@ const surahInfo = [
                                 ${noteHtml}
 
                                 <div class="bookmark-actions">
-                                    <button class="bookmark-btn bookmark-btn-primary" onclick="loadBookmark('${encodedId}')">
-                                        <i class="bi bi-book-fill"></i> متابعة القراءة
+                                    <button class="bookmark-btn bookmark-btn-primary" type="button" onclick="loadBookmark('${encodedId}')">
+                                        <i class="bi bi-book-fill" aria-hidden="true"></i> متابعة القراءة
                                     </button>
-                                    <button class="bookmark-btn bookmark-btn-delete" onclick="deleteBookmark('${encodedId}')">
-                                        <i class="bi bi-trash-fill"></i>
+                                    <button class="bookmark-btn bookmark-btn-delete" type="button" aria-label="حذف" onclick="deleteBookmark('${encodedId}')">
+                                        <i class="bi bi-trash-fill" aria-hidden="true"></i>
                                     </button>
                                 </div>
 
@@ -240,8 +240,8 @@ const surahInfo = [
                                             <textarea id="note_${controlId}" class="control-input">${escapeHtml(bookmark.note || '')}</textarea>
                                         </div>
                                     </div>
-                                    <button class="bookmark-btn bookmark-btn-secondary" onclick="saveBookmarkMeta('${encodedId}')">
-                                        <i class="bi bi-floppy-fill"></i> حفظ التعديلات
+                                    <button class="bookmark-btn bookmark-btn-secondary" type="button" onclick="saveBookmarkMeta('${encodedId}')">
+                                        <i class="bi bi-floppy-fill" aria-hidden="true"></i> حفظ التعديلات
                                     </button>
                                 </div>
                             </div>
@@ -587,7 +587,7 @@ const surahInfo = [
                     <div class="recent-item">
                         <div class="recent-item-title">${surahName} - صفحة ${(bookmark.page || 0) + 1}</div>
                         <div class="recent-item-meta">${visitTime}</div>
-                        <button class="recent-item-btn" onclick="loadBookmark('${encodedId}')">فتح</button>
+                        <button class="recent-item-btn" type="button" aria-label="فتح ${surahName} - صفحة ${(bookmark.page || 0) + 1}" onclick="loadBookmark('${encodedId}')">فتح</button>
                     </div>
                 `;
             }).join('');
@@ -742,27 +742,44 @@ const surahInfo = [
             let actionsHTML = '';
             if (cancelText && onConfirm) {
                 actionsHTML = `
-                    <button class="modal-btn modal-btn-secondary" onclick="hideModal()">${cancelText}</button>
-                    <button class="modal-btn modal-btn-primary" onclick="confirmModalAction()">${confirmText}</button>
+                    <button class="modal-btn modal-btn-secondary" type="button" onclick="hideModal()">${cancelText}</button>
+                    <button class="modal-btn modal-btn-primary" type="button" onclick="confirmModalAction()">${confirmText}</button>
                 `;
             } else {
-                actionsHTML = `<button class="modal-btn modal-btn-primary" onclick="hideModal()">${confirmText}</button>`;
+                actionsHTML = `<button class="modal-btn modal-btn-primary" type="button" onclick="hideModal()">${confirmText}</button>`;
             }
             modalActions.innerHTML = actionsHTML;
 
             modal.classList.add('active');
+
+            if (window.A11y && !window.A11y.isDialogOpen(modal)) {
+                window.A11y.openDialog(modal, {
+                    panel: modal.querySelector('.modal'),
+                    onClose: function () {
+                        modal.classList.remove('active');
+                        currentModalConfirm = null;
+                    }
+                });
+            }
         }
 
         function confirmModalAction() {
+            // Capture first: hideModal() clears currentModalConfirm via the dialog onClose hook.
+            const confirmCallback = currentModalConfirm;
             hideModal();
-            if (currentModalConfirm) {
-                currentModalConfirm();
-                currentModalConfirm = null;
+            currentModalConfirm = null;
+            if (confirmCallback) {
+                confirmCallback();
             }
         }
 
         function hideModal() {
-            document.getElementById('customModal').classList.remove('active');
+            const modal = document.getElementById('customModal');
+            if (window.A11y && window.A11y.isDialogOpen(modal)) {
+                window.A11y.closeDialog(modal);
+                return;
+            }
+            modal.classList.remove('active');
         }
 // Load theme settings
         function loadThemeSettings() {

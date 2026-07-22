@@ -355,7 +355,7 @@ function undoLastIncrement() {
 function reset() {
     showModal({
         type: 'warning',
-        icon: '⚠',
+        icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
         title: 'تأكيد',
         message: 'هل تريد إعادة تعيين العداد؟',
         confirmText: 'نعم',
@@ -410,9 +410,13 @@ function setCustomTarget() {
     persistCurrentState();
 }
 
+// The chips are <button aria-pressed>, so the selection has to be exposed to
+// assistive tech as well as painted.
 function setActiveDhikrChip(value) {
     document.querySelectorAll('.dhikr-chip').forEach((chip) => {
-        chip.classList.toggle('active', chip.dataset.dhikr === value);
+        const isSelected = chip.dataset.dhikr === value;
+        chip.classList.toggle('active', isSelected);
+        chip.setAttribute('aria-pressed', String(isSelected));
     });
 }
 
@@ -421,12 +425,7 @@ function selectDhikr(value, element) {
     selectedDhikrKey = value;
     selectedDhikrLabel = config.label;
 
-    if (element) {
-        document.querySelectorAll('.dhikr-chip').forEach((chip) => chip.classList.remove('active'));
-        element.classList.add('active');
-    } else {
-        setActiveDhikrChip(value);
-    }
+    setActiveDhikrChip(value);
 
     if (value !== 'custom') {
         target = config.target;
@@ -452,9 +451,10 @@ function updateAutoToggleButton() {
     if (!autoButton) return;
 
     autoButton.classList.toggle('active', autoCountEnabled);
+    autoButton.setAttribute('aria-pressed', String(autoCountEnabled));
     autoButton.innerHTML = autoCountEnabled
-        ? '<i class="bi bi-pause-fill"></i> إيقاف تلقائي'
-        : '<i class="bi bi-cpu"></i> تلقائي';
+        ? '<i class="bi bi-pause-fill" aria-hidden="true"></i> إيقاف تلقائي'
+        : '<i class="bi bi-cpu" aria-hidden="true"></i> تلقائي';
 
     if (tapButton) {
         tapButton.classList.toggle('auto-running', autoCountEnabled);
@@ -501,25 +501,36 @@ function toggleSoundMenu() {
     const selector = document.getElementById('soundSelector');
     if (!selector) return;
 
-    selector.classList.toggle('show');
+    const isOpen = selector.classList.toggle('show');
 
-    if (selector.classList.contains('show') && !soundEnabled) {
+    const toggle = document.getElementById('soundToggle');
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', String(isOpen));
+    }
+
+    if (isOpen && !soundEnabled) {
         toggleSound();
     }
+}
+
+// The speaker glyph is a Bootstrap Icon, so on/off swaps the class rather
+// than the text content.
+function setSoundIcon(isOn) {
+    const icon = document.getElementById('soundIcon');
+    if (!icon) return;
+    icon.className = isOn ? 'bi bi-volume-up-fill' : 'bi bi-volume-mute-fill';
+    icon.setAttribute('aria-hidden', 'true');
 }
 
 function toggleSound() {
     soundEnabled = !soundEnabled;
     const toggle = document.getElementById('soundToggle');
-    const icon = document.getElementById('soundIcon');
 
     if (toggle) {
         toggle.classList.toggle('active', soundEnabled);
     }
 
-    if (icon) {
-        icon.textContent = soundEnabled ? '🔊' : '🔇';
-    }
+    setSoundIcon(soundEnabled);
 
     localStorage.setItem('masbahaSound', String(soundEnabled));
 }
@@ -533,6 +544,11 @@ function changeSound(value) {
     if (selector) {
         selector.classList.remove('show');
     }
+
+    const toggle = document.getElementById('soundToggle');
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', 'false');
+    }
 }
 
 function toggleVibration() {
@@ -541,6 +557,7 @@ function toggleVibration() {
 
     if (toggle) {
         toggle.classList.toggle('active', vibrationEnabled);
+        toggle.setAttribute('aria-pressed', String(vibrationEnabled));
     }
 
     localStorage.setItem('masbahaVibration', String(vibrationEnabled));
@@ -550,7 +567,7 @@ function saveCount() {
     if (count === 0) {
         showModal({
             type: 'info',
-            icon: 'ℹ',
+            icon: '<i class="bi bi-info-circle-fill"></i>',
             title: 'تنبيه',
             message: 'العداد فارغ، لا يوجد شيء للحفظ'
         });
@@ -595,7 +612,7 @@ function renderHistory() {
     if (!list) return;
 
     if (history.length === 0) {
-        list.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">لا يوجد سجل بعد</div>';
+        list.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">لا يوجد سجل بعد</div>';
         if (clearButton) clearButton.style.display = 'none';
         return;
     }
@@ -610,7 +627,7 @@ function renderHistory() {
         html += `
 <div class="history-item">
     <div class="history-info">
-        <div class="history-icon">
+        <div class="history-icon" aria-hidden="true">
             <i class="bi bi-check-lg"></i>
         </div>
         <div class="history-details">
@@ -620,8 +637,8 @@ function renderHistory() {
         </div>
     </div>
     <div class="history-actions">
-        <button class="delete-btn" onclick="deleteHistoryItem(${index})">
-            <i class="bi bi-trash"></i>
+        <button type="button" class="delete-btn" aria-label="حذف" onclick="deleteHistoryItem(${index})">
+            <i class="bi bi-trash" aria-hidden="true"></i>
         </button>
     </div>
 </div>`;
@@ -633,7 +650,7 @@ function renderHistory() {
 function deleteHistoryItem(index) {
     showModal({
         type: 'warning',
-        icon: '🗑',
+        icon: '<i class="bi bi-trash"></i>',
         title: 'حذف',
         message: 'هل أنت متأكد من حذف هذا السجل؟',
         confirmText: 'حذف',
@@ -649,7 +666,7 @@ function deleteHistoryItem(index) {
 function clearHistory() {
     showModal({
         type: 'warning',
-        icon: '🗑',
+        icon: '<i class="bi bi-trash"></i>',
         title: 'مسح الكل',
         message: 'هل أنت متأكد من مسح كل السجل؟',
         confirmText: 'مسح',
@@ -685,9 +702,8 @@ function loadData() {
     }
 
     const soundToggle = document.getElementById('soundToggle');
-    const soundIcon = document.getElementById('soundIcon');
     if (soundToggle) soundToggle.classList.toggle('active', soundEnabled);
-    if (soundIcon) soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
+    setSoundIcon(soundEnabled);
 
     const savedSoundType = localStorage.getItem('masbahaSoundType');
     if (savedSoundType) {
@@ -707,6 +723,7 @@ function loadData() {
     const vibrationToggle = document.getElementById('vibrationToggle');
     if (vibrationToggle) {
         vibrationToggle.classList.toggle('active', vibrationEnabled);
+        vibrationToggle.setAttribute('aria-pressed', String(vibrationEnabled));
     }
 
     const savedLifetime = localStorage.getItem('masbahaLifetime');
@@ -738,7 +755,32 @@ function loadData() {
     updateAutoToggleButton();
 }
 
+// Space/Backspace are page-level shortcuts, but they must never be stolen
+// from a control that already owns them: preventDefault() with no target
+// check made Space unable to activate any focused button and Backspace unable
+// to delete a character in #customTargetInput.
 document.addEventListener('keydown', (event) => {
+    const target = event.target;
+    const tagName = target && target.tagName;
+
+    if (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') {
+        return;
+    }
+
+    if (target && target.isContentEditable) {
+        return;
+    }
+
+    // A focused button/link owns Space (and Enter) for its own activation.
+    if (tagName === 'BUTTON' || tagName === 'A' || (target && target.getAttribute && target.getAttribute('role') === 'button')) {
+        return;
+    }
+
+    // Do not count taps behind an open dialog.
+    if (document.querySelector('.modal-overlay.active')) {
+        return;
+    }
+
     if (event.code === 'Space') {
         event.preventDefault();
         increment();
@@ -757,6 +799,7 @@ document.addEventListener('click', (event) => {
 
     if (!selector.contains(event.target) && !toggle.contains(event.target)) {
         selector.classList.remove('show');
+        toggle.setAttribute('aria-expanded', 'false');
     }
 });
 

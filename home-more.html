@@ -3,18 +3,32 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>أدوات إضافية - القرآن الكريم</title>
+    <meta name="description" content="افتح أقسام التطبيق، بدّل المظهر وحجم الخط، وراجع مواضعك المحفوظة من مكان واحد.">
     <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/page-styles/home-more.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
@@ -25,60 +39,60 @@
     <main class="app-content">
         <div class="home-more-container">
             <section class="more-hero glass-card animate-scale-in">
-                <h2>محتوى إضافي</h2>
-                <p>هذه مساحة عامة لعرض أدوات ومحتوى إضافي بشكل منظم وواضح، مع إمكانية التوسع مستقبلا حسب الحاجة.</p>
-                <a href="/"><i class="bi bi-arrow-right"></i> العودة إلى الرئيسية النظيفة</a>
+                <h2>كل الأقسام في مكان واحد</h2>
+                <p>افتح القرآن أو الأذكار أو المسبحة أو مواقيت الصلاة، وبدّل المظهر والخط أو راجع محفوظاتك من الأدوات السريعة.</p>
+                <a href="/"><i class="bi bi-arrow-right" aria-hidden="true"></i> العودة إلى الصفحة الرئيسية</a>
             </section>
 
             <div class="features-grid">
                 <a href="quran.html" class="feature-card glass-card animate-fade-up delay-1">
-                    <div class="feature-icon">📚</div>
+                    <div class="feature-icon"><i class="bi bi-book-fill" aria-hidden="true"></i></div>
                     <h3 class="feature-title">القرآن الكريم</h3>
                     <p class="feature-description">اقرأ القرآن الكريم مع إمكانية حفظ موضع القراءة والاستماع للتلاوة</p>
                 </a>
 
                 <a href="azkar.html" class="feature-card glass-card animate-fade-up delay-2">
-                    <div class="feature-icon">🌙</div>
+                    <div class="feature-icon"><i class="bi bi-moon-stars-fill" aria-hidden="true"></i></div>
                     <h3 class="feature-title">الأذكار</h3>
                     <p class="feature-description">أذكار الصباح والمساء وأذكار متنوعة لكل المناسبات</p>
                 </a>
 
                 <a href="masbaha.html" class="feature-card glass-card animate-fade-up delay-3">
-                    <div class="feature-icon">📿</div>
+                    <div class="feature-icon"><i class="bi bi-record-circle" aria-hidden="true"></i></div>
                     <h3 class="feature-title">المسبحة الإلكترونية</h3>
                     <p class="feature-description">سبّح بسهولة مع عداد رقمي وأهداف قابلة للتخصيص</p>
                 </a>
 
                 <a href="prayer-times.html" class="feature-card glass-card animate-fade-up delay-1">
-                    <div class="feature-icon">🕌</div>
+                    <div class="feature-icon"><i class="bi bi-building" aria-hidden="true"></i></div>
                     <h3 class="feature-title">مواقيت الصلاة</h3>
                     <p class="feature-description">مواقيت الصلاة الدقيقة حسب موقعك مع الوقت المتبقي للصلاة القادمة</p>
                 </a>
 
                 <a href="settings.html" class="feature-card glass-card animate-fade-up delay-2">
-                    <div class="feature-icon">⚙️</div>
+                    <div class="feature-icon"><i class="bi bi-gear-fill" aria-hidden="true"></i></div>
                     <h3 class="feature-title">الإعدادات</h3>
                     <p class="feature-description">خصص تجربتك مع الوضع الليلي والألوان وحجم الخط</p>
                 </a>
 
                 <a href="features.html" class="feature-card glass-card animate-fade-up delay-3">
-                    <div class="feature-icon">🧩</div>
+                    <div class="feature-icon"><i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i></div>
                     <h3 class="feature-title">كل الميزات</h3>
-                    <p class="feature-description">صفحة تجمع كل إمكانيات التطبيق مع روابط مباشرة لكل قسم</p>
+                    <p class="feature-description">ابحث في ميزات التطبيق كلها وافتح أي صفحة مباشرة</p>
                 </a>
             </div>
 
             <div class="quick-tools animate-fade-up delay-2">
                 <button class="tool-btn" onclick="toggleTheme()">
-                    <i class="bi bi-circle-half"></i>
+                    <i class="bi bi-circle-half" aria-hidden="true"></i>
                     <span class="tool-label">المظهر</span>
                 </button>
                 <button class="tool-btn" onclick="location.href='settings.html'">
-                    <i class="bi bi-type"></i>
+                    <i class="bi bi-type" aria-hidden="true"></i>
                     <span class="tool-label">الخط</span>
                 </button>
                 <button class="tool-btn" onclick="location.href='bookmarks.html'">
-                    <i class="bi bi-bookmark-fill"></i>
+                    <i class="bi bi-bookmark-fill" aria-hidden="true"></i>
                     <span class="tool-label">المحفوظات</span>
                 </button>
             </div>
@@ -104,11 +118,11 @@
                 <h2 class="quick-actions-title">ابدأ الآن</h2>
                 <div class="action-buttons">
                     <a href="quran.html" class="action-btn">
-                        <i class="bi bi-book-fill"></i>
+                        <i class="bi bi-book-fill" aria-hidden="true"></i>
                         <span>ابدأ القراءة</span>
                     </a>
                     <a href="azkar.html" class="action-btn secondary">
-                        <i class="bi bi-moon-stars-fill"></i>
+                        <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
                         <span>أذكار اليوم</span>
                     </a>
                 </div>
@@ -120,6 +134,7 @@
 
     <script src="js/common.js"></script>
         <script src="js/page-scripts/home-more.js"></script>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

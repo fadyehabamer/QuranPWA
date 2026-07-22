@@ -118,14 +118,18 @@ function updateViewModeButton() {
     const icon = btn.querySelector('i');
     const label = btn.querySelector('.view-mode-label');
 
+    // The visible label is hidden below 420px, so the accessible name has to
+    // be carried by aria-label as well as the tooltip.
     if (currentViewMode === 'swipe') {
         icon.className = 'bi bi-list-ul';
         label.textContent = 'قائمة';
         btn.title = 'عرض القائمة';
+        btn.setAttribute('aria-label', 'عرض القائمة');
     } else {
         icon.className = 'bi bi-view-stacked';
         label.textContent = 'بطاقات';
         btn.title = 'عرض البطاقات';
+        btn.setAttribute('aria-label', 'عرض البطاقات');
     }
 }
 
@@ -157,23 +161,26 @@ function renderCategories() {
 
     let html = '';
 
-    html += `<div class="category-item" onclick="showFavorites()">
-        <div class="category-info">
-            <div class="category-icon"><i class="bi bi-heart-fill"></i></div>
-            <div class="category-name">المفضلة</div>
-        </div>
-        <div class="category-count">${favorites.length}</div>
-    </div>`;
+    // Real <button>s rather than clickable <div>s: keyboard reachable and
+    // announced as controls. The count is folded into the accessible name so
+    // it is not read as a stray number.
+    html += `<button type="button" class="category-item" onclick="showFavorites()">
+        <span class="category-info">
+            <span class="category-icon"><i class="bi bi-heart-fill" aria-hidden="true"></i></span>
+            <span class="category-name">المفضلة</span>
+        </span>
+        <span class="category-count">${favorites.length}</span>
+    </button>`;
 
     for (const [key, category] of Object.entries(azkarData)) {
         const icon = getCategoryIcon(category.name);
-        html += `<div class="category-item" onclick="showCategory('${key}')">
-            <div class="category-info">
-                <div class="category-icon"><i class="bi ${icon}"></i></div>
-                <div class="category-name">${category.name}</div>
-            </div>
-            <div class="category-count">${category.azkar.length}</div>
-        </div>`;
+        html += `<button type="button" class="category-item" onclick="showCategory('${key}')">
+            <span class="category-info">
+                <span class="category-icon"><i class="bi ${icon}" aria-hidden="true"></i></span>
+                <span class="category-name">${category.name}</span>
+            </span>
+            <span class="category-count">${category.azkar.length}</span>
+        </button>`;
     }
 
     list.innerHTML = html;
@@ -193,12 +200,14 @@ function renderCategoryCard(categoryKey, zikr, index) {
             ${description ? `<div class="zikr-desc">${description}</div>` : ''}
         </div>
         <div class="zikr-actions">
-            <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${categoryKey}', ${index})">
-                <i class="bi bi-heart${isFav ? '-fill' : ''}"></i>
+            <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${categoryKey}', ${index})"
+                aria-pressed="${isFav}" aria-label="${isFav ? 'إزالة من المفضلة' : 'أضف إلى المفضلة'}">
+                <i class="bi bi-heart${isFav ? '-fill' : ''}" aria-hidden="true"></i>
             </button>
             <div class="zikr-repeat">${zikr.repeat}</div>
-            <button class="zikr-counter-btn ${isCompleted ? 'completed' : ''}" onclick="incrementZikr('${categoryKey}', ${index}, ${targetCount})">
-                ${isCompleted ? '✓' : `${currentCount}/${targetCount}`}
+            <button class="zikr-counter-btn ${isCompleted ? 'completed' : ''}" onclick="incrementZikr('${categoryKey}', ${index}, ${targetCount})"
+                aria-label="${isCompleted ? 'اكتمل، اضغط لإعادة العد' : `العدّاد ${currentCount} من ${targetCount}`}">
+                ${isCompleted ? '<i class="bi bi-check-lg" aria-hidden="true"></i>' : `${currentCount}/${targetCount}`}
             </button>
         </div>
     </div>`;
@@ -212,8 +221,9 @@ function renderFavoriteCard(zikr, index) {
             ${description ? `<div class="zikr-desc">${description}</div>` : ''}
         </div>
         <div class="zikr-actions">
-            <button class="favorite-btn active" onclick="removeFromFavorites(${index})">
-                <i class="bi bi-heart-fill"></i>
+            <button class="favorite-btn active" onclick="removeFromFavorites(${index})" aria-pressed="true"
+                aria-label="إزالة من المفضلة">
+                <i class="bi bi-heart-fill" aria-hidden="true"></i>
             </button>
             <div class="zikr-repeat">${zikr.repeat || getCountDescription(zikr.count)}</div>
         </div>
@@ -267,7 +277,7 @@ function renderFavoritesList() {
     const list = document.getElementById('azkarList');
 
     if (favorites.length === 0) {
-        list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-color);"><i class="bi bi-heart" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 16px;"></i>لا توجد أذكار مفضلة<br><small style="opacity: 0.6;">اضغط على ❤️ لإضافة ذكر للمفضلة</small></div>';
+        list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-color);"><i class="bi bi-heart" aria-hidden="true" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 16px;"></i>لا توجد أذكار مفضلة<br><small style="opacity: 0.6;">اضغط على أيقونة القلب <i class="bi bi-heart-fill" aria-hidden="true"></i> لإضافة ذكر للمفضلة</small></div>';
         return;
     }
 
@@ -284,7 +294,7 @@ function renderFavoritesSwipe() {
     const total = favorites.length;
 
     if (total === 0) {
-        list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-color);"><i class="bi bi-heart" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 16px;"></i>لا توجد أذكار مفضلة<br><small style="opacity: 0.6;">اضغط على ❤️ لإضافة ذكر للمفضلة</small></div>';
+        list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-color);"><i class="bi bi-heart" aria-hidden="true" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 16px;"></i>لا توجد أذكار مفضلة<br><small style="opacity: 0.6;">اضغط على أيقونة القلب <i class="bi bi-heart-fill" aria-hidden="true"></i> لإضافة ذكر للمفضلة</small></div>';
         return;
     }
 
@@ -400,6 +410,7 @@ function incrementZikr(categoryKey, index, target) {
         saveUserData();
         if (btn) {
             btn.textContent = `0/${target}`;
+            btn.setAttribute('aria-label', `العدّاد 0 من ${target}`);
             btn.classList.remove('completed');
         }
         return;
@@ -415,11 +426,13 @@ function incrementZikr(categoryKey, index, target) {
 
     if (btn) {
         if (current >= target) {
-            btn.textContent = '✓';
+            btn.innerHTML = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
+            btn.setAttribute('aria-label', 'اكتمل، اضغط لإعادة العد');
             btn.classList.add('completed');
             if (navigator.vibrate) navigator.vibrate(50);
         } else {
             btn.textContent = `${current}/${target}`;
+            btn.setAttribute('aria-label', `العدّاد ${current} من ${target}`);
         }
     }
 }
@@ -435,6 +448,8 @@ function toggleFavorite(categoryKey, index) {
         favorites.push(zikr);
         if (btn && icon) {
             btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+            btn.setAttribute('aria-label', 'إزالة من المفضلة');
             icon.classList.remove('bi-heart');
             icon.classList.add('bi-heart-fill');
         }
@@ -442,6 +457,8 @@ function toggleFavorite(categoryKey, index) {
         favorites.splice(favIndex, 1);
         if (btn && icon) {
             btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+            btn.setAttribute('aria-label', 'أضف إلى المفضلة');
             icon.classList.remove('bi-heart-fill');
             icon.classList.add('bi-heart');
         }

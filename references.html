@@ -3,20 +3,33 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>المصادر والمراجع</title>
+    <meta name="description" content="مصادر البيانات وواجهات البرمجة المستخدمة في التطبيق.">
+    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <script src="js/common.js" defer></script>
     <link rel="stylesheet" href="css/page-styles/references.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
@@ -25,7 +38,7 @@
     <!-- Main Content -->
     <app-header title="المصادر والمراجع"></app-header>
 
-    <div class="app-content">
+    <main class="app-content">
         <div class="ref-container">
             <div class="ref-intro">
                 <h2>الواجهات البرمجية والمصادر المستخدمة</h2>
@@ -38,44 +51,44 @@
 
             <!-- القرآن: نصوص وصوت وصور -->
             <div class="ref-section">
-                <div class="ref-section-title">
-                    <i class="bi bi-book-fill"></i>
+                <h3 class="ref-section-title">
+                    <i class="bi bi-book-fill" aria-hidden="true"></i>
                     <span>القرآن الكريم — النصوص والتلاوات وصور المصحف</span>
-                </div>
+                </h3>
                 <div class="ref-grid">
                     <div class="ref-card">
-                        <div class="ref-card-name">AlQuran Cloud API</div>
-                        <div class="ref-card-url">https://api.alquran.cloud/v1/</div>
+                        <div class="ref-card-name"><span lang="en" dir="ltr">AlQuran Cloud API</span></div>
+                        <div class="ref-card-url"><span lang="en" dir="ltr">https://api.alquran.cloud/v1/</span></div>
                         <p class="ref-card-desc">
                             المصدر الرئيسي لنصوص القرآن الكريم بالرسم العثماني، والتفسير الميسر،
                             وبيانات التلاوات الصوتية. تُستخدم في «آية اليوم» وصفحة القرآن والتفسير.
                         </p>
                         <a class="ref-card-link" href="https://alquran.cloud/api" target="_blank" rel="noopener">
-                            <i class="bi bi-box-arrow-up-left"></i> زيارة المصدر
+                            <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i> زيارة المصدر
                         </a>
                     </div>
 
                     <div class="ref-card">
-                        <div class="ref-card-name">AlQuran Cloud — وسائط الصوت</div>
-                        <div class="ref-card-url">https://cdn.alquran.cloud/media/audio/</div>
+                        <div class="ref-card-name"><span lang="en" dir="ltr">AlQuran Cloud</span> — وسائط الصوت</div>
+                        <div class="ref-card-url"><span lang="en" dir="ltr">https://cdn.alquran.cloud/media/audio/</span></div>
                         <p class="ref-card-desc">
                             شبكة توصيل المحتوى الخاصة بملفات تلاوة الآيات (آية بآية) المستخدمة في
                             مشغّل الصوت ووضع الحفظ والتسميع داخل صفحة القرآن.
                         </p>
                         <a class="ref-card-link" href="https://alquran.cloud/cdn" target="_blank" rel="noopener">
-                            <i class="bi bi-box-arrow-up-left"></i> زيارة المصدر
+                            <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i> زيارة المصدر
                         </a>
                     </div>
 
                     <div class="ref-card">
                         <div class="ref-card-name">مجمع الملك سعود — صور المصحف</div>
-                        <div class="ref-card-url">https://quran.ksu.edu.sa/png_big/</div>
+                        <div class="ref-card-url"><span lang="en" dir="ltr">https://quran.ksu.edu.sa/png_big/</span></div>
                         <p class="ref-card-desc">
                             صور صفحات المصحف الشريف عالية الدقة (1–604) المستخدمة في «وضع المصحف»،
                             من مشروع جامعة الملك سعود لعلوم القرآن.
                         </p>
                         <a class="ref-card-link" href="https://quran.ksu.edu.sa/" target="_blank" rel="noopener">
-                            <i class="bi bi-box-arrow-up-left"></i> زيارة المصدر
+                            <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i> زيارة المصدر
                         </a>
                     </div>
                 </div>
@@ -83,32 +96,32 @@
 
             <!-- مواقيت الصلاة والموقع -->
             <div class="ref-section">
-                <div class="ref-section-title">
-                    <i class="bi bi-clock-fill"></i>
+                <h3 class="ref-section-title">
+                    <i class="bi bi-clock-fill" aria-hidden="true"></i>
                     <span>مواقيت الصلاة وتحديد الموقع</span>
-                </div>
+                </h3>
                 <div class="ref-grid">
                     <div class="ref-card">
-                        <div class="ref-card-name">Aladhan API</div>
-                        <div class="ref-card-url">https://api.aladhan.com/v1/</div>
+                        <div class="ref-card-name"><span lang="en" dir="ltr">Aladhan API</span></div>
+                        <div class="ref-card-url"><span lang="en" dir="ltr">https://api.aladhan.com/v1/</span></div>
                         <p class="ref-card-desc">
                             حساب مواقيت الصلاة اليومية بدقة بناءً على الموقع الجغرافي والتاريخ،
                             مع دعم طرق الحساب المختلفة (أم القرى وغيرها).
                         </p>
                         <a class="ref-card-link" href="https://aladhan.com/prayer-times-api" target="_blank" rel="noopener">
-                            <i class="bi bi-box-arrow-up-left"></i> زيارة المصدر
+                            <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i> زيارة المصدر
                         </a>
                     </div>
 
                     <div class="ref-card">
-                        <div class="ref-card-name">Nominatim — OpenStreetMap</div>
-                        <div class="ref-card-url">https://nominatim.openstreetmap.org/</div>
+                        <div class="ref-card-name"><span lang="en" dir="ltr">Nominatim — OpenStreetMap</span></div>
+                        <div class="ref-card-url"><span lang="en" dir="ltr">https://nominatim.openstreetmap.org/</span></div>
                         <p class="ref-card-desc">
-                            تحويل الإحداثيات الجغرافية إلى اسم المدينة (Reverse Geocoding) لعرض
+                            تحويل الإحداثيات الجغرافية إلى اسم المدينة (<span lang="en" dir="ltr">Reverse Geocoding</span>) لعرض
                             موقع المستخدم في صفحة مواقيت الصلاة.
                         </p>
                         <a class="ref-card-link" href="https://www.openstreetmap.org/" target="_blank" rel="noopener">
-                            <i class="bi bi-box-arrow-up-left"></i> زيارة المصدر
+                            <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i> زيارة المصدر
                         </a>
                     </div>
                 </div>
@@ -116,32 +129,32 @@
 
             <!-- البث الإذاعي -->
             <div class="ref-section">
-                <div class="ref-section-title">
-                    <i class="bi bi-broadcast"></i>
+                <h3 class="ref-section-title">
+                    <i class="bi bi-broadcast" aria-hidden="true"></i>
                     <span>البث الإذاعي (الراديو)</span>
-                </div>
+                </h3>
                 <div class="ref-grid">
                     <div class="ref-card">
-                        <div class="ref-card-name">إذاعة القرآن الكريم — Radiojar</div>
-                        <div class="ref-card-url">https://n02.radiojar.com/</div>
+                        <div class="ref-card-name">إذاعة القرآن الكريم — <span lang="en" dir="ltr">Radiojar</span></div>
+                        <div class="ref-card-url"><span lang="en" dir="ltr">https://n02.radiojar.com/</span></div>
                         <p class="ref-card-desc">
-                            بث حي لإذاعة القرآن الكريم عبر منصة Radiojar، مستخدم في مشغّل الراديو
+                            بث حي لإذاعة القرآن الكريم عبر منصة <span lang="en" dir="ltr">Radiojar</span>، مستخدم في مشغّل الراديو
                             المدمج داخل التطبيق.
                         </p>
                         <a class="ref-card-link" href="https://www.radiojar.com/" target="_blank" rel="noopener">
-                            <i class="bi bi-box-arrow-up-left"></i> زيارة المصدر
+                            <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i> زيارة المصدر
                         </a>
                     </div>
 
                     <div class="ref-card">
                         <div class="ref-card-name">قرآنجو — إذاعات قرآنية</div>
-                        <div class="ref-card-url">https://qurango.net/radio/</div>
+                        <div class="ref-card-url"><span lang="en" dir="ltr">https://qurango.net/radio/</span></div>
                         <p class="ref-card-desc">
                             روابط بث قنوات «المنوعة» و«نور» القرآنية من موقع قرآنجو، المتاحة ضمن
                             قائمة محطات مشغّل الراديو.
                         </p>
                         <a class="ref-card-link" href="https://qurango.net/" target="_blank" rel="noopener">
-                            <i class="bi bi-box-arrow-up-left"></i> زيارة المصدر
+                            <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i> زيارة المصدر
                         </a>
                     </div>
                 </div>
@@ -149,32 +162,32 @@
 
             <!-- الخطوط والأيقونات -->
             <div class="ref-section">
-                <div class="ref-section-title">
-                    <i class="bi bi-fonts"></i>
+                <h3 class="ref-section-title">
+                    <i class="bi bi-fonts" aria-hidden="true"></i>
                     <span>الخطوط والأيقونات</span>
-                </div>
+                </h3>
                 <div class="ref-grid">
                     <div class="ref-card">
-                        <div class="ref-card-name">Google Fonts — Amiri &amp; Cairo</div>
-                        <div class="ref-card-url">https://fonts.googleapis.com/</div>
+                        <div class="ref-card-name"><span lang="en" dir="ltr">Google Fonts — Amiri &amp; Cairo</span></div>
+                        <div class="ref-card-url"><span lang="en" dir="ltr">https://fonts.googleapis.com/</span></div>
                         <p class="ref-card-desc">
-                            خط «أميري» للنصوص القرآنية والعربية الكلاسيكية، وخط «Cairo» لواجهة
+                            خط «أميري» للنصوص القرآنية والعربية الكلاسيكية، وخط «<span lang="en" dir="ltr">Cairo</span>» لواجهة
                             الاستخدام، من خدمة خطوط جوجل المجانية.
                         </p>
                         <a class="ref-card-link" href="https://fonts.google.com/" target="_blank" rel="noopener">
-                            <i class="bi bi-box-arrow-up-left"></i> زيارة المصدر
+                            <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i> زيارة المصدر
                         </a>
                     </div>
 
                     <div class="ref-card">
-                        <div class="ref-card-name">Bootstrap Icons — jsDelivr</div>
-                        <div class="ref-card-url">https://cdn.jsdelivr.net/npm/bootstrap-icons/</div>
+                        <div class="ref-card-name"><span lang="en" dir="ltr">Bootstrap Icons — jsDelivr</span></div>
+                        <div class="ref-card-url"><span lang="en" dir="ltr">https://cdn.jsdelivr.net/npm/bootstrap-icons/</span></div>
                         <p class="ref-card-desc">
-                            حزمة الأيقونات المتجهة (Bootstrap Icons) المستخدمة في كامل واجهة
-                            التطبيق، عبر شبكة jsDelivr.
+                            حزمة الأيقونات المتجهة (<span lang="en" dir="ltr">Bootstrap Icons</span>) المستخدمة في كامل واجهة
+                            التطبيق، عبر شبكة <span lang="en" dir="ltr">jsDelivr</span>.
                         </p>
                         <a class="ref-card-link" href="https://icons.getbootstrap.com/" target="_blank" rel="noopener">
-                            <i class="bi bi-box-arrow-up-left"></i> زيارة المصدر
+                            <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i> زيارة المصدر
                         </a>
                     </div>
                 </div>
@@ -185,9 +198,10 @@
                 خدمة كتاب الله تعالى. جزى الله القائمين عليها خير الجزاء.
             </div>
         </div>
-    </div>
+    </main>
 
     <app-bottom-nav current="references"></app-bottom-nav>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

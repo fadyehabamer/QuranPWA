@@ -6,8 +6,19 @@ function showModal(options) {
     const message = document.getElementById('modalMessage');
     const actions = document.getElementById('modalActions');
 
-    // Set icon
+    // Wire up dialog semantics once. The markup ships as a plain div, so the
+    // role/labelling has to be applied here rather than in each page.
+    const panel = modal.querySelector('.modal') || modal;
+    if (title && !title.id) title.id = 'modalTitle';
+    if (message && !message.id) message.id = 'modalMessage';
+    panel.setAttribute('role', 'document');
+    modal.setAttribute('aria-labelledby', 'modalTitle');
+    modal.setAttribute('aria-describedby', 'modalMessage');
+
+    // Set icon. It is decorative — the title carries the meaning — so it is
+    // hidden from assistive tech instead of being read as "check mark".
     icon.className = `modal-icon ${options.type || 'info'}`;
+    icon.setAttribute('aria-hidden', 'true');
     if (options.icon && options.icon.includes('<')) {
         icon.innerHTML = options.icon;
     } else {
@@ -52,10 +63,27 @@ function showModal(options) {
     }
 
     modal.classList.add('active');
+
+    // Trap focus, lock scroll, close on Escape and restore focus on close.
+    if (window.A11y) {
+        window.A11y.openDialog(modal, {
+            panel: panel,
+            closeOnEscape: options.dismissible !== false,
+            onClose: function () {
+                modal.classList.remove('active');
+            }
+        });
+    }
 }
 
 function hideModal() {
     const modal = document.getElementById('customModal');
+    if (!modal) return;
+    if (window.A11y && window.A11y.isDialogOpen(modal)) {
+        // closeDialog runs onClose, which removes the class and restores focus.
+        window.A11y.closeDialog(modal);
+        return;
+    }
     modal.classList.remove('active');
 }
 
@@ -985,102 +1013,106 @@ function loadVisitorCount() {
         const style = document.createElement('style');
         style.id = RADIO_STYLE_ID;
         style.textContent = `
+        /* Uses the shared design tokens so the player matches the rest of the
+           app. It previously carried its own gradients, hardcoded hex
+           fallbacks and shadow values, which is why it looked unrelated. */
         .radio-fab {
             position: fixed;
-            bottom: 135px;
-            left: 20px;
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color, #1B5E20), var(--primary-light, #2E7D32));
-            color: #fff;
+            /* Sits clear of the tab bar and the home indicator. */
+            inset-block-end: calc(var(--bottom-nav-height) + var(--safe-bottom) + var(--space-4));
+            inset-inline-end: var(--space-4);
+            width: var(--tap-target);
+            height: var(--tap-target);
+            border-radius: var(--radius-full);
+            background: var(--primary-color);
+            color: var(--on-primary);
             border: none;
-            font-size: 22px;
+            font-size: 1.15rem;
             cursor: pointer;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-            z-index: 1100;
+            box-shadow: var(--elev-4);
+            z-index: var(--z-raised);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s;
+            transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
         }
-        .radio-fab:hover { transform: scale(1.1); }
+        .radio-fab:hover { background: var(--primary-light); box-shadow: var(--elev-5); }
         .radio-panel {
             position: fixed;
-            bottom: 200px;
-            left: 20px;
-            width: 290px;
-            background: var(--card-bg, #fff);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-            z-index: 1099;
+            inset-block-end: calc(var(--bottom-nav-height) + var(--safe-bottom) + var(--space-4) + var(--tap-target) + var(--space-2));
+            inset-inline-end: var(--space-4);
+            width: min(300px, calc(100vw - var(--space-8)));
+            background: var(--surface-1);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--elev-5);
+            z-index: var(--z-popover);
             overflow: hidden;
             display: none;
             flex-direction: column;
-            border: 1px solid var(--border-color, #e8e8e8);
-            font-family: 'Cairo', sans-serif;
-        }
-        [data-theme="dark"] .radio-panel {
-            background: rgba(24, 24, 24, 0.96);
-            border-color: var(--border-color, #333);
+            border: 1px solid var(--border-color);
+            font-family: var(--font-ui);
         }
         .radio-panel.open { display: flex; }
         .radio-panel-header {
-            background: linear-gradient(135deg, var(--primary-color, #1B5E20), var(--primary-light, #2E7D32));
-            color: #fff;
-            padding: 12px 14px;
-            font-weight: 700;
-            font-size: 15px;
+            background: var(--surface-2);
+            color: var(--text-color);
+            padding: var(--space-3) var(--space-4);
+            font-weight: var(--weight-semibold);
+            font-size: var(--text-base);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--space-2);
+            border-block-end: 1px solid var(--border-color);
         }
         .radio-now {
-            padding: 10px 14px 6px;
-            font-size: 13px;
-            color: var(--text-secondary, #666);
+            padding: var(--space-3) var(--space-4);
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            border-bottom: 1px solid var(--border-color, #e8e8e8);
+            border-block-end: 1px solid var(--border-color);
         }
-        .radio-now strong { color: var(--text-color, #1a1a1a); font-size: 14px; }
+        .radio-now strong { color: var(--text-color); font-size: var(--text-base); }
         .radio-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border-color, #e8e8e8);
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            border-block-end: 1px solid var(--border-color);
         }
         .radio-play-btn {
-            width: 40px; height: 40px;
-            border-radius: 50%;
+            width: var(--tap-target); height: var(--tap-target);
+            border-radius: var(--radius-full);
             border: none;
-            background: var(--primary-color, #1B5E20);
-            color: #fff;
-            font-size: 18px;
+            background: var(--primary-color);
+            color: var(--on-primary);
+            font-size: 1.05rem;
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
+            transition: background-color var(--transition-fast);
         }
-        .radio-volume { flex: 1; accent-color: var(--primary-color, #1B5E20); }
-        .radio-stations { list-style: none; max-height: 190px; overflow-y: auto; padding: 6px 0; }
+        .radio-play-btn:hover { background: var(--primary-light); }
+        .radio-volume { flex: 1; accent-color: var(--primary-color); }
+        .radio-stations { list-style: none; max-height: 200px; overflow-y: auto; padding: var(--space-1) 0; }
         .radio-stations li {
-            padding: 9px 14px;
-            font-size: 13px;
+            padding: var(--space-3) var(--space-4);
+            min-height: var(--tap-target);
+            font-size: var(--text-base);
             cursor: pointer;
-            color: var(--text-color, #1a1a1a);
-            transition: background 0.15s;
-            display: flex; align-items: center; gap: 8px;
+            color: var(--text-color);
+            transition: background-color var(--transition-fast);
+            display: flex; align-items: center; gap: var(--space-2);
         }
-        .radio-stations li:hover { background: var(--bg-color, #f8f9fa); }
-        .radio-stations li.active { background: rgba(27,94,32,0.1); font-weight: 600; color: var(--primary-color, #1B5E20); }
+        .radio-stations li:hover { background: var(--surface-2); }
+        .radio-stations li.active { background: rgba(var(--primary-rgb), 0.12); font-weight: var(--weight-semibold); color: var(--primary-color); }
         .radio-stations li .rdot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: var(--border-color, #e8e8e8); flex-shrink: 0;
+            width: 8px; height: 8px; border-radius: var(--radius-full);
+            background: var(--border-strong); flex-shrink: 0;
         }
-        .radio-stations li.active .rdot { background: var(--primary-color, #1B5E20); animation: rdotPulse 1.2s ease infinite; }
-        .radio-loading { text-align: center; padding: 16px; color: var(--text-secondary, #666); font-size: 13px; }
+        .radio-stations li.active .rdot { background: var(--primary-color); animation: rdotPulse 1.2s ease infinite; }
+        .radio-loading { text-align: center; padding: var(--space-4); color: var(--text-secondary); font-size: var(--text-base); }
         @keyframes rdotPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:0.5} }
         @keyframes radio-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .radio-fab.loading i { display: inline-block; animation: radio-spin 2s linear infinite; }
@@ -1280,19 +1312,23 @@ function loadVisitorCount() {
 })();
 
 // Shared Navigation Components
+// `icon` is used by the navigation drawer, `bottomIcon` by the tab bar.
+// Only the six tab-bar entries used to carry an icon, so the drawer rendered
+// as an unlabelled wall of text while the tab bar had icons — the two navs
+// looked like they belonged to different apps.
 const APP_NAV_ITEMS = [
-    { key: 'home', href: '/', label: 'الرئيسية', bottomLabel: 'الرئيسية', bottomIcon: 'bi-house-fill' },
-    { key: 'quran', href: 'quran.html', label: 'القرآن الكريم', bottomLabel: 'القرآن', bottomIcon: 'bi-book-fill' },
-    { key: 'khatma', href: 'khatma.html', label: 'مركز الختمة' },
-    { key: 'bookmarks', href: 'bookmarks.html', label: 'المواضع المحفوظة' },
-    { key: 'azkar', href: 'azkar.html', label: 'الأذكار', bottomLabel: 'الأذكار', bottomIcon: 'bi-moon-stars-fill' },
-    { key: 'masbaha', href: 'masbaha.html', label: 'المسبحة', bottomLabel: 'المسبحة', bottomIcon: 'bi-circle-fill' },
-    { key: 'sunan', href: 'sunan.html', label: 'سنن النبي' },
-    { key: 'prayer', href: 'prayer-times.html', label: 'مواقيت الصلاة', bottomLabel: 'الصلاة', bottomIcon: 'bi-clock-fill' },
-    { key: 'features', href: 'features.html', label: 'كل الميزات', bottomLabel: 'الميزات', bottomIcon: 'bi-grid-fill' },
-    { key: 'bio', href: 'bio.html', label: 'عن المطور' },
-    { key: 'references', href: 'references.html', label: 'المصادر والمراجع' },
-    { key: 'settings', href: 'settings.html', label: 'الإعدادات' }
+    { key: 'home', href: '/', label: 'الرئيسية', icon: 'bi-house-fill', bottomLabel: 'الرئيسية', bottomIcon: 'bi-house-fill' },
+    { key: 'quran', href: 'quran.html', label: 'القرآن الكريم', icon: 'bi-book-fill', bottomLabel: 'القرآن', bottomIcon: 'bi-book-fill' },
+    { key: 'khatma', href: 'khatma.html', label: 'مركز الختمة', icon: 'bi-journal-check' },
+    { key: 'bookmarks', href: 'bookmarks.html', label: 'المواضع المحفوظة', icon: 'bi-bookmark-fill' },
+    { key: 'azkar', href: 'azkar.html', label: 'الأذكار', icon: 'bi-moon-stars-fill', bottomLabel: 'الأذكار', bottomIcon: 'bi-moon-stars-fill' },
+    { key: 'masbaha', href: 'masbaha.html', label: 'المسبحة', icon: 'bi-circle-fill', bottomLabel: 'المسبحة', bottomIcon: 'bi-circle-fill' },
+    { key: 'sunan', href: 'sunan.html', label: 'سنن النبي', icon: 'bi-stars' },
+    { key: 'prayer', href: 'prayer-times.html', label: 'مواقيت الصلاة', icon: 'bi-clock-fill', bottomLabel: 'الصلاة', bottomIcon: 'bi-clock-fill' },
+    { key: 'features', href: 'features.html', label: 'كل الميزات', icon: 'bi-grid-fill', bottomLabel: 'الميزات', bottomIcon: 'bi-grid-fill' },
+    { key: 'bio', href: 'bio.html', label: 'عن المطور', icon: 'bi-person-fill' },
+    { key: 'references', href: 'references.html', label: 'المصادر والمراجع', icon: 'bi-link-45deg' },
+    { key: 'settings', href: 'settings.html', label: 'الإعدادات', icon: 'bi-gear-fill' }
 ];
 
 const APP_BOTTOM_NAV_KEYS = ['home', 'quran', 'azkar', 'masbaha', 'prayer', 'features'];
@@ -1342,21 +1378,31 @@ function getBottomActiveKey(currentKey) {
 
 function buildSidebarMarkup(currentKey) {
     const linksMarkup = APP_NAV_ITEMS.map(item => {
-        const activeClass = item.key === currentKey ? ' active' : '';
+        const isActive = item.key === currentKey;
+        const activeClass = isActive ? ' active' : '';
+        // aria-current marks the active page for screen readers; the green
+        // highlight alone conveyed it only visually.
+        const current = isActive ? ' aria-current="page"' : '';
+        const icon = item.icon
+            ? `<i class="bi ${item.icon} sidebar-nav-icon" aria-hidden="true"></i>`
+            : '';
         return `
-            <a href="${item.href}" class="sidebar-nav-item${activeClass}" onclick="closeSidebar()">
+            <a href="${item.href}" class="sidebar-nav-item${activeClass}"${current} onclick="closeSidebar()">
+                ${icon}
                 <div class="sidebar-nav-label">${item.label}</div>
             </a>`;
     }).join('');
 
     return `
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
-        <aside class="desktop-sidebar" id="sidebar">
+        <aside class="desktop-sidebar" id="sidebar" aria-label="القائمة الرئيسية">
             <div class="sidebar-logo">
-                <button class="sidebar-close-btn" onclick="toggleSidebar(false)">×</button>
+                <button class="sidebar-close-btn" onclick="toggleSidebar(false)" aria-label="إغلاق القائمة">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
                 <div class="sidebar-logo-text">القرآن الكريم</div>
             </div>
-            <nav class="sidebar-nav">${linksMarkup}
+            <nav class="sidebar-nav" aria-label="أقسام التطبيق">${linksMarkup}
             </nav>
             <div class="sidebar-footer">
                 <div class="sidebar-version">الإصدار 2.0</div>
@@ -1370,31 +1416,52 @@ function buildBottomNavMarkup(currentKey) {
     const linksMarkup = APP_NAV_ITEMS
         .filter(item => APP_BOTTOM_NAV_KEYS.includes(item.key))
         .map(item => {
-            const activeClass = item.key === activeBottomKey ? ' active' : '';
+            const isActive = item.key === activeBottomKey;
+            const activeClass = isActive ? ' active' : '';
+            const current = isActive ? ' aria-current="page"' : '';
             return `
-                <a href="${item.href}" class="nav-item${activeClass}">
-                    <i class="bi ${item.bottomIcon} nav-icon"></i>
+                <a href="${item.href}" class="nav-item${activeClass}"${current}>
+                    <i class="bi ${item.bottomIcon} nav-icon" aria-hidden="true"></i>
                     <span class="nav-label">${item.bottomLabel}</span>
                 </a>`;
         }).join('');
 
-    return `<nav class="bottom-nav">${linksMarkup}
+    // Labelled so it is distinguishable from the sidebar nav, which is the
+    // other navigation landmark on every page.
+    return `<nav class="bottom-nav" aria-label="التنقل السريع">${linksMarkup}
     </nav>`;
 }
 
 function buildHeaderMarkup(opts) {
     const headingId = opts.headingId ? ` id="${opts.headingId}"` : '';
     const backBtn = opts.showBack
-        ? `<button class="header-back-btn" onclick="window.location.href='${opts.backHref}'" aria-label="رجوع"><i class="bi bi-arrow-right"></i></button>`
+        ? `<button class="header-back-btn" onclick="window.location.href='${opts.backHref}'" aria-label="رجوع"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>`
         : '';
     const settingsBtn = opts.showSettings
-        ? `<button class="settings-btn" onclick="window.location.href='settings.html'" aria-label="الإعدادات"><i class="bi bi-gear-fill"></i></button>`
+        ? `<button class="settings-btn" onclick="window.location.href='settings.html'" aria-label="الإعدادات"><i class="bi bi-gear-fill" aria-hidden="true"></i></button>`
         : '';
 
     return `
-        <button class="menu-toggle-btn" onclick="toggleSidebar()" aria-label="القائمة"><i class="bi bi-list"></i></button>
+        <button class="menu-toggle-btn" onclick="toggleSidebar()" aria-label="القائمة" aria-expanded="false" aria-controls="sidebar"><i class="bi bi-list" aria-hidden="true"></i></button>
         <h1${headingId}>${opts.title || ''}</h1>
         <div class="header-left-buttons">${backBtn}${settingsBtn}</div>`;
+}
+
+// The drawer is hidden only by a transform, so without inerting it its 12
+// links stay in the tab order and the accessibility tree on every page even
+// while closed. It is an overlay drawer at every breakpoint — there is no
+// width at which it becomes a permanent region — so the toggle is always
+// needed and it is always modal when open.
+function syncSidebarA11y(isOpen) {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    sidebar.inert = !isOpen;
+    sidebar.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+
+    document.querySelectorAll('.menu-toggle-btn[aria-controls="sidebar"]').forEach(btn => {
+        btn.setAttribute('aria-expanded', String(isOpen));
+    });
 }
 
 function toggleSidebar(forceOpen) {
@@ -1408,6 +1475,25 @@ function toggleSidebar(forceOpen) {
 
     sidebar.classList.toggle('active', shouldOpen);
     overlay.classList.toggle('active', shouldOpen);
+
+    syncSidebarA11y(shouldOpen);
+
+    // It overlays the page at every width, so it is modal whenever it is open:
+    // trap focus, close on Escape, restore focus to the toggle on close.
+    if (window.A11y) {
+        if (shouldOpen) {
+            window.A11y.openDialog(sidebar, {
+                panel: sidebar,
+                onClose: function () {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    syncSidebarA11y(false);
+                }
+            });
+        } else if (window.A11y.isDialogOpen(sidebar)) {
+            window.A11y.closeDialog(sidebar);
+        }
+    }
 }
 
 function closeSidebar() {
@@ -1423,6 +1509,8 @@ if (window.customElements && !customElements.get('app-sidebar')) {
             const requestedKey = this.getAttribute('current');
             const currentKey = resolveNavActiveKey(requestedKey);
             this.innerHTML = buildSidebarMarkup(currentKey);
+            // Starts closed on mobile, so start inert there.
+            syncSidebarA11y(false);
         }
     }
 
@@ -1446,6 +1534,9 @@ if (window.customElements && !customElements.get('app-sidebar')) {
         connectedCallback() {
             const isHome = this.hasAttribute('home');
             this.classList.add('app-header', 'glass-card');
+            // A custom element has no implicit role, so without this there is
+            // no banner landmark on the 11 pages that use <app-header>.
+            this.setAttribute('role', 'banner');
             this.innerHTML = buildHeaderMarkup({
                 title: this.getAttribute('title') || '',
                 headingId: this.getAttribute('heading-id') || '',
@@ -1461,16 +1552,92 @@ if (window.customElements && !customElements.get('app-sidebar')) {
     customElements.define('app-header', AppHeader);
 }
 
+/* ==========================================================================
+   App shell accessibility bootstrap
+   ========================================================================== */
+
+(function initAppShellA11y() {
+    function ensureSkipLink() {
+        if (document.querySelector('.skip-link')) return;
+
+        // Find the page's main region. Four pages use a plain div for it, so
+        // promote whatever carries .app-content to a real <main>.
+        let main = document.querySelector('main');
+        if (!main) {
+            const candidate = document.querySelector('.app-content');
+            if (candidate) {
+                candidate.setAttribute('role', 'main');
+                main = candidate;
+            }
+        }
+        if (!main) return;
+
+        if (!main.id) main.id = 'main-content';
+        // Lets the skip target receive focus without adding it to the tab order.
+        if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+
+        const link = document.createElement('a');
+        link.className = 'skip-link';
+        link.href = '#' + main.id;
+        link.textContent = 'تخطي إلى المحتوى';
+        link.addEventListener('click', function (event) {
+            event.preventDefault();
+            main.focus();
+            main.scrollIntoView();
+        });
+        document.body.insertBefore(link, document.body.firstChild);
+    }
+
+    // The theme-color meta is hardcoded to #1B5E20 on every page, so the OS
+    // chrome desynced whenever the user picked a different accent.
+    function syncThemeColor() {
+        let meta = document.querySelector('meta[name="theme-color"]');
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.name = 'theme-color';
+            document.head.appendChild(meta);
+        }
+        const styles = getComputedStyle(document.documentElement);
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const color = (isDark ? styles.getPropertyValue('--bg-color') : styles.getPropertyValue('--primary-color')).trim();
+        if (color) meta.setAttribute('content', color);
+    }
+
+    function onReady() {
+        ensureSkipLink();
+        syncThemeColor();
+        syncSidebarA11y(false);
+
+        // Keep the OS chrome in step with theme and accent changes.
+        new MutationObserver(syncThemeColor).observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme', 'style']
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', onReady);
+    } else {
+        onReady();
+    }
+})();
+
 // Theme & Settings Management
 function toggleTheme() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     if (isDark) {
         document.documentElement.removeAttribute('data-theme');
+        document.documentElement.style.colorScheme = 'light';
         localStorage.setItem('darkMode', 'false');
     } else {
         document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.style.colorScheme = 'dark';
         localStorage.setItem('darkMode', 'true');
     }
+
+    // A custom accent is tuned against the active theme (dark accents get
+    // lifted in dark mode), so it has to be re-derived on every switch.
+    if (window.syncAppTheme) window.syncAppTheme();
 }
 
 function initTheme() {
@@ -1479,11 +1646,11 @@ function initTheme() {
         document.documentElement.setAttribute('data-theme', 'dark');
     }
 
-    // Apply primary color if set
+    // Apply the saved accent through the shared helper so --primary-rgb and
+    // --on-primary are derived too, rather than setting the hue alone.
     const primaryColor = localStorage.getItem('primaryColor');
-    if (primaryColor) {
-        document.documentElement.style.setProperty('--primary-color', primaryColor);
-        // Also update RGB for transparency if needed
+    if (primaryColor && window.applyAccentColor) {
+        window.applyAccentColor(primaryColor, darkMode);
     }
 }
 
@@ -1950,6 +2117,66 @@ function getNextPrayer(timings) {
     return { ...prayers[0], tomorrow: true };
 }
 
+// Time-of-day phase for the prayer hero's sky gradient. Values match the
+// data-phase selectors in css/page-styles/home.css.
+function prayerPhaseForHour(hour) {
+    if (hour < 4) return 'night';
+    if (hour < 6) return 'dawn';
+    if (hour < 11) return 'morning';
+    if (hour < 15) return 'noon';
+    if (hour < 17) return 'afternoon';
+    if (hour < 19) return 'sunset';
+    return 'night';
+}
+
+function formatRemainingMinutes(mins) {
+    const total = Math.max(0, Math.round(mins));
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    if (h > 0) return `متبقٍّ ${h} س و ${m} د`;
+    return `متبقٍّ ${m} د`;
+}
+
+// Resolves the prayer we are heading toward, the one we just left, and how far
+// through that window we are now — so the hero can draw a timeline and an
+// accurate countdown that wraps correctly across midnight.
+function getPrayerWindow(timings) {
+    const order = [
+        { key: 'Fajr', label: 'الفجر' },
+        { key: 'Dhuhr', label: 'الظهر' },
+        { key: 'Asr', label: 'العصر' },
+        { key: 'Maghrib', label: 'المغرب' },
+        { key: 'Isha', label: 'العشاء' }
+    ];
+    const toMin = (t) => {
+        const [h, m] = String(t).split(':').map(Number);
+        return h * 60 + m;
+    };
+    const now = new Date();
+    const cur = now.getHours() * 60 + now.getMinutes();
+    const times = order.map(p => ({ ...p, min: toMin(timings[p.key]) }));
+
+    let nextIdx = times.findIndex(p => p.min > cur);
+    let next, nextMin, prevMin;
+
+    if (nextIdx === -1) {
+        // Past Isha: next is tomorrow's Fajr, previous window is today's Isha.
+        next = { ...times[0], tomorrow: true };
+        nextMin = times[0].min + 1440;
+        prevMin = times[times.length - 1].min;
+        nextIdx = 0;
+    } else {
+        next = times[nextIdx];
+        nextMin = next.min;
+        prevMin = nextIdx === 0 ? times[times.length - 1].min - 1440 : times[nextIdx - 1].min;
+    }
+
+    const span = Math.max(1, nextMin - prevMin);
+    const fraction = Math.min(1, Math.max(0, (cur - prevMin) / span));
+    const remainingMin = Math.max(0, nextMin - cur);
+    return { next, fraction, remainingMin };
+}
+
 function initHadith() {
     const HADITHS = [
         "قال رسول الله صلى الله عليه وسلم: (خيركم من تعلم القرآن وعلمه)",
@@ -1968,7 +2195,6 @@ function initHadith() {
 async function initHomePrayerWidget() {
     const body = document.getElementById('pwBody');
     const locationEl = document.getElementById('pwLocation');
-    const nextEl = document.getElementById('pwNextPrayer');
     const SHARED_COUNTRY_STORAGE_KEY = 'preferredManualCountryV1';
     const LEGACY_COUNTRY_STORAGE_KEY = 'selectedCountry';
 
@@ -1980,7 +2206,7 @@ async function initHomePrayerWidget() {
         }
         if (body) {
             body.innerHTML = `
-                <div class="detect-location-container">
+                <div class="detect-location-container" style="grid-column:1/-1">
                     <button class="detect-location-btn" onclick="requestUserLocation()">
                         <i class="bi bi-geo-alt-fill"></i>
                         تحديد الموقع تلقائياً
@@ -2041,14 +2267,29 @@ async function initHomePrayerWidget() {
 
             if (data.code === 200) {
                 const timings = data.data.timings;
-                locationEl.textContent = localStorage.getItem('locationText') || 'موقعك المكتشف';
+                if (locationEl) {
+                    locationEl.textContent = localStorage.getItem('locationText') || 'موقعك المكتشف';
+                }
 
-                const next = getNextPrayer(timings);
-                const remaining = calculateRemainingTime(next.time);
+                const win = getPrayerWindow(timings);
 
+                // Hero sky + next-prayer focus.
+                const hero = document.getElementById('homePrayerWidget');
+                if (hero) hero.setAttribute('data-phase', prayerPhaseForHour(new Date().getHours()));
+
+                const nameEl = document.getElementById('phNextName');
+                const timeEl = document.getElementById('phNextTime');
+                const countdownEl = document.getElementById('phCountdown');
+                const fillEl = document.getElementById('phFill');
+                if (nameEl) nameEl.textContent = win.next.label;
+                if (timeEl) timeEl.textContent = formatTime(timings[win.next.key]);
+                if (countdownEl) countdownEl.textContent = formatRemainingMinutes(win.remainingMin);
+                if (fillEl) fillEl.style.width = `${Math.round(win.fraction * 100)}%`;
+
+                // Five prayer chips.
                 let html = '';
                 Object.keys(prayerNames).forEach(key => {
-                    const isActive = next.name === key;
+                    const isActive = win.next.key === key;
                     html += `
                         <div class="pw-item ${isActive ? 'active' : ''}">
                             <div class="pw-name">${prayerNames[key]}</div>
@@ -2056,11 +2297,12 @@ async function initHomePrayerWidget() {
                         </div>
                     `;
                 });
-                body.innerHTML = html;
-                nextEl.innerHTML = `الصلاة القادمة: <strong>${next.label}</strong> خلال ${remaining}`;
+                if (body) body.innerHTML = html;
             }
         } catch (e) {
-            body.innerHTML = '<p style="font-size:12px;opacity:0.5">فشل تحميل المواقيت</p>';
+            if (body) {
+                body.innerHTML = '<p style="grid-column:1/-1;font-size:12px;color:rgba(255,255,255,0.72);text-align:center;margin:0">فشل تحميل المواقيت</p>';
+            }
         }
     }
 }
@@ -2111,8 +2353,8 @@ async function requestUserLocation() {
                 : 'يرجى تفعيل صلاحية الموقع من إعدادات المتصفح';
 
             body.innerHTML = `
-                <div class="detect-location-container">
-                    <p style="font-size:12px;color:var(--text-color);opacity:0.6;margin-bottom:10px;text-align:center">${deniedHint}</p>
+                <div class="detect-location-container" style="flex-direction:column;grid-column:1/-1">
+                    <p style="font-size:12px;color:rgba(255,255,255,0.82);margin-bottom:10px;text-align:center">${deniedHint}</p>
                     <button class="detect-location-btn" onclick="requestUserLocation()">
                         <i class="bi bi-geo-alt-fill"></i>
                         إعادة المحاولة

@@ -3,24 +3,33 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>القرآن الكريم</title>
+    <meta name="description" content="اقرأ واستمع إلى القرآن الكريم بواجهة مريحة مع الحفظ والعلامات المرجعية.">
     <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="data/manifest.json">
-    <meta name="theme-color" content="#1B5E20">
+    <meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="js/theme-preload.js"></script>
+    <script src="js/a11y.js"></script>
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
     <script src="js/common.js"></script>
     <link rel="stylesheet" href="css/page-styles/quran.css">
+    <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/native.css">
 </head>
 
 <body>
@@ -35,7 +44,9 @@
         <!-- Surah List View -->
         <div id="surahListView" class="surah-list-view active">
             <div class="search-container">
-                <input type="text" id="surahSearch" placeholder="ابحث باسم السورة أو نص الآية..."
+                <label class="sr-only" for="surahSearch">ابحث عن سورة</label>
+                <input type="text" id="surahSearch"
+                    placeholder="ابحث باسم السورة أو نص الآية..."
                     oninput="onSearchInput()">
                 <div id="instantSearchResults" class="instant-search-results"></div>
             </div>
@@ -46,8 +57,9 @@
         <div id="surahReaderView" class="surah-reader-view">
             <div class="reader-header">
                 <div class="reader-header-top">
-                    <button class="icon-btn-back" onclick="showSurahList()">
-                        <i class="bi bi-arrow-right"></i>
+                    <button class="icon-btn-back" type="button" onclick="showSurahList()"
+                        aria-label="العودة لقائمة السور">
+                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
                     </button>
                     <div class="reader-info">
                         <h2 id="surahTitle"></h2>
@@ -57,35 +69,35 @@
                 <div class="reader-header-actions">
                     <button class="icon-btn" id="memorizationBtn" onclick="toggleMemorizationCoach()"
                         title="مدرب الحفظ">
-                        <i class="bi bi-mortarboard-fill"></i>
+                        <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
                         <span>الحفظ</span>
                     </button>
                     <button class="icon-btn" id="readerFontBtn" onclick="cycleReaderFontSize()" title="حجم الخط">
-                        <i class="bi bi-type"></i>
+                        <i class="bi bi-type" aria-hidden="true"></i>
                         <span id="readerFontLabel">متوسط</span>
                     </button>
                     <button class="icon-btn" id="displayModeBtn" onclick="toggleReaderDisplayMode()" title="عرض المصحف">
-                        <i class="bi bi-file-earmark-image"></i>
+                        <i class="bi bi-file-earmark-image" aria-hidden="true"></i>
                         <span>المصحف</span>
                     </button>
                     <button class="icon-btn" id="tafsirBtn" onclick="toggleTafsir()" title="التفسير">
-                        <i class="bi bi-book-half"></i>
+                        <i class="bi bi-book-half" aria-hidden="true"></i>
                         <span>التفسير</span>
                     </button>
                     <button class="icon-btn" id="reciterBtn" onclick="openReciterModal()" title="اختر القارئ">
-                        <i class="bi bi-person-circle"></i>
+                        <i class="bi bi-person-circle" aria-hidden="true"></i>
                         <span>القارئ</span>
                     </button>
                     <button class="icon-btn" id="playerToggleBtn" onclick="toggleAudioPlayer()" title="تشغيل الصوت">
-                        <i class="bi bi-music-note-beamed"></i>
+                        <i class="bi bi-music-note-beamed" aria-hidden="true"></i>
                         <span>الصوت</span>
                     </button>
                     <button class="icon-btn" id="headerBookmarkBtn" onclick="toggleBookmark()" title="حفظ العلامة">
-                        <i class="bi bi-bookmark"></i>
+                        <i class="bi bi-bookmark" aria-hidden="true"></i>
                         <span>حفظ</span>
                     </button>
                     <button class="icon-btn" id="shareAyahBtn" onclick="openShareAyahModal()" title="مشاركة الآية">
-                        <i class="bi bi-share-fill"></i>
+                        <i class="bi bi-share-fill" aria-hidden="true"></i>
                         <span>مشاركة</span>
                     </button>
                 </div>
@@ -103,7 +115,7 @@
 
             <div class="memorization-coach" id="memorizationCoach" aria-live="polite" style="display:none;">
                 <div class="memorization-coach-head">
-                    <div class="memorization-coach-title"><i class="bi bi-mortarboard-fill"></i><span>مدرب الحفظ</span>
+                    <div class="memorization-coach-title"><i class="bi bi-mortarboard-fill" aria-hidden="true"></i><span>مدرب الحفظ</span>
                     </div>
                     <div class="memorization-progress-text" id="memorizationProgressText">0 / 0</div>
                 </div>
@@ -116,18 +128,18 @@
                 </div>
                 <div class="memorization-controls">
                     <button class="memorization-btn" onclick="previousMemorizationAyah()"><i
-                            class="bi bi-chevron-right"></i><span>السابق</span></button>
+                            class="bi bi-chevron-right" aria-hidden="true"></i><span>السابق</span></button>
                     <button class="memorization-btn" id="memorizationPlayBtn" onclick="toggleMemorizationAyahAudio()"><i
-                            class="bi bi-volume-up"></i><span>استماع</span></button>
+                            class="bi bi-volume-up" aria-hidden="true"></i><span>استماع</span></button>
                     <button class="memorization-btn" id="memorizationRepeatBtn" onclick="toggleMemorizationRepeat()"><i
-                            class="bi bi-arrow-repeat"></i><span>تكرار</span></button>
+                            class="bi bi-arrow-repeat" aria-hidden="true"></i><span>تكرار</span></button>
                     <button class="memorization-btn" id="memorizationRevealBtn" onclick="toggleMemorizationReveal()"><i
-                            class="bi bi-eye-slash"></i><span>إخفاء</span></button>
+                            class="bi bi-eye-slash" aria-hidden="true"></i><span>إخفاء</span></button>
                     <button class="memorization-btn primary" id="memorizationDoneBtn"
-                        onclick="toggleCurrentAyahMemorized()"><i class="bi bi-check2-circle"></i><span>تم
+                        onclick="toggleCurrentAyahMemorized()"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>تم
                             الحفظ</span></button>
                     <button class="memorization-btn" onclick="nextMemorizationAyah()"><span>التالي</span><i
-                            class="bi bi-chevron-left"></i></button>
+                            class="bi bi-chevron-left" aria-hidden="true"></i></button>
                 </div>
             </div>
 
@@ -135,53 +147,58 @@
 
             <div id="quranContent" class="quran-content"></div>
 
-            <button class="mushaf-exit-btn" id="mushafExitBtn" onclick="exitMushafFocusMode()"
+            <button class="mushaf-exit-btn" id="mushafExitBtn" type="button" onclick="exitMushafFocusMode()"
                 aria-label="الخروج من عرض المصحف">
-                <i class="bi bi-x-lg"></i>
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
                 <span>خروج</span>
             </button>
 
-            <button class="mushaf-bookmark-btn" id="mushafBookmarkBtn" onclick="toggleBookmark()"
+            <button class="mushaf-bookmark-btn" id="mushafBookmarkBtn" type="button" onclick="toggleBookmark()"
                 aria-label="حفظ الموضع">
-                <i class="bi bi-bookmark"></i>
+                <i class="bi bi-bookmark" aria-hidden="true"></i>
                 <span>حفظ</span>
             </button>
 
             <div class="ayah-quick-actions" id="ayahQuickActions" aria-hidden="true">
                 <button class="ayah-quick-btn" id="ayahQuickTafsirBtn" type="button" onclick="openHoveredAyahTafsir()">
-                    <i class="bi bi-journal-text"></i>
+                    <i class="bi bi-journal-text" aria-hidden="true"></i>
                     <span>تفسير</span>
                 </button>
                 <button class="ayah-quick-btn" id="ayahQuickListenBtn" type="button" onclick="listenHoveredAyah()">
-                    <i class="bi bi-volume-up"></i>
+                    <i class="bi bi-volume-up" aria-hidden="true"></i>
                     <span>استماع</span>
                 </button>
             </div>
 
             <!-- Floating Navigation Buttons -->
-            <button class="floating-nav-btn floating-nav-right" id="prevPageBtn" onclick="previousPage()" disabled>
-                <i class="bi bi-chevron-right"></i>
+            <button class="floating-nav-btn floating-nav-right" id="prevPageBtn" type="button" onclick="previousPage()"
+                aria-label="الصفحة السابقة" disabled>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </button>
-            <button class="floating-nav-btn floating-nav-left" id="nextPageBtn" onclick="nextPage()">
-                <i class="bi bi-chevron-left"></i>
+            <button class="floating-nav-btn floating-nav-left" id="nextPageBtn" type="button" onclick="nextPage()"
+                aria-label="الصفحة التالية">
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
             </button>
 
-            <button class="scroll-top-btn" id="scrollTopBtn" onclick="scrollReaderToTop()" aria-label="العودة للأعلى">
-                <i class="bi bi-arrow-up"></i>
+            <button class="scroll-top-btn" id="scrollTopBtn" type="button" onclick="scrollReaderToTop()"
+                aria-label="العودة للأعلى">
+                <i class="bi bi-arrow-up" aria-hidden="true"></i>
             </button>
 
             <!-- Audio Player -->
             <div class="audio-player-container" id="audioPlayer">
                 <div class="audio-controls">
-                    <button class="audio-btn" id="playPauseBtn" onclick="toggleAudio()">
-                        <i class="bi bi-play-fill"></i>
+                    <button class="audio-btn" id="playPauseBtn" type="button" onclick="toggleAudio()" aria-label="تشغيل">
+                        <i class="bi bi-play-fill" aria-hidden="true"></i>
                     </button>
                     <div class="audio-info">
                         <div style="display: flex; gap: 8px; align-items: center;">
                             <div id="currentSurahName" style="font-size: 13px; opacity: 0.9;"></div>
                             <div id="currentAyahNum" style="font-size: 13px;">الآية 1</div>
                         </div>
-                        <div class="audio-progress" onclick="seekAudio(event)">
+                        <div class="audio-progress" id="audioProgress" onclick="seekAudio(event)" role="slider"
+                            tabindex="0" aria-label="موضع التشغيل" aria-valuemin="0" aria-valuemax="100"
+                            aria-valuenow="0" aria-valuetext="0%">
                             <div class="audio-progress-bar" id="audioProgressBar"></div>
                         </div>
                     </div>
@@ -190,185 +207,188 @@
 
             <!-- Bookmarks Section (Initially Hidden) -->
             <div id="bookmarksSection" class="bookmarks-section" style="display: none;">
-                <h3>العلامات المرجعية</h3>
+                <h2 class="bookmarks-title">العلامات المرجعية</h2>
                 <div id="bookmarksList" class="bookmarks-list"></div>
             </div>
         </div>
 
-        <!-- Reciter Selection Modal -->
-        <div class="modal-overlay" id="reciterModal" onclick="closeReciterModal()">
-            <div class="reciter-modal-content" onclick="event.stopPropagation()">
-                <div class="modal-header">
-                    <h3>اختر القارئ</h3>
-                    <button class="modal-close-btn" onclick="closeReciterModal()">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-                <div class="reciter-list">
-                    <div class="reciter-item" data-reciter="ar.alafasy"
-                        onclick="selectReciter('ar.alafasy', 'مشاري العفاسي')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>مشاري العفاسي</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.abdulbasitmurattal"
-                        onclick="selectReciter('ar.abdulbasitmurattal', 'عبد الباسط عبد الصمد (مرتل)')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>عبد الباسط عبد الصمد (مرتل)</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.abdulbasitmujawwad"
-                        onclick="selectReciter('ar.abdulbasitmujawwad', 'عبد الباسط عبد الصمد (مجود)')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>عبد الباسط عبد الصمد (مجود)</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.abdurrahmaansudais"
-                        onclick="selectReciter('ar.abdurrahmaansudais', 'عبد الرحمن السديس')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>عبد الرحمن السديس</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.shaatree"
-                        onclick="selectReciter('ar.shaatree', 'أبو بكر الشاطري')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>أبو بكر الشاطري</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.hudhaify"
-                        onclick="selectReciter('ar.hudhaify', 'علي الحذيفي')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>علي الحذيفي</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.minshawi"
-                        onclick="selectReciter('ar.minshawi', 'محمد صديق المنشاوي')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>محمد صديق المنشاوي</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.minshawimujawwad"
-                        onclick="selectReciter('ar.minshawimujawwad', 'المنشاوي (مجود)')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>المنشاوي (مجود)</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.muhammadayyoub"
-                        onclick="selectReciter('ar.muhammadayyoub', 'محمد أيوب')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>محمد أيوب</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.muhammadjibreel"
-                        onclick="selectReciter('ar.muhammadjibreel', 'محمد جبريل')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>محمد جبريل</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.mahermuaiqly"
-                        onclick="selectReciter('ar.mahermuaiqly', 'ماهر المعيقلي')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>ماهر المعيقلي</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.saoodshuraym"
-                        onclick="selectReciter('ar.saoodshuraym', 'سعود الشريم')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>سعود الشريم</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.abdullaahawwaad"
-                        onclick="selectReciter('ar.abdullaahawwaad', 'عبد الله عواد الجهني')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>عبد الله عواد الجهني</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.hanirifai"
-                        onclick="selectReciter('ar.hanirifai', 'هاني الرفاعي')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>هاني الرفاعي</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.husary"
-                        onclick="selectReciter('ar.husary', 'محمود خليل الحصري')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>محمود خليل الحصري</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                    <div class="reciter-item" data-reciter="ar.husarymujawwad"
-                        onclick="selectReciter('ar.husarymujawwad', 'الحصري (مجود)')">
-                        <i class="bi bi-person-circle"></i>
-                        <span>الحصري (مجود)</span>
-                        <i class="bi bi-check-circle-fill reciter-check"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Ayah Share Modal -->
-        <div class="modal-overlay" id="shareAyahModal" onclick="closeShareAyahModal()">
-            <div class="share-modal-content" onclick="event.stopPropagation()">
-                <div class="modal-header share-modal-header">
-                    <div class="share-title-wrap">
-                        <h3>مشاركة بطاقة آية</h3>
-                        <p class="share-modal-subtitle">خصص شكل البطاقة قبل التحميل أو المشاركة</p>
-                    </div>
-                    <button class="modal-close-btn" onclick="closeShareAyahModal()">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-                <div class="share-modal-body">
-                    <div class="share-field">
-                        <label for="shareAyahSelect">اختر الآية</label>
-                        <select id="shareAyahSelect" onchange="onShareAyahSelectionChange()"></select>
-                    </div>
-
-                    <div class="share-style-picker">
-                        <span class="share-style-label">نمط البطاقة</span>
-                        <div class="share-style-options">
-                            <button type="button" class="share-style-btn" data-style="classic"
-                                onclick="selectShareCardStyle('classic')">كلاسيكي</button>
-                            <button type="button" class="share-style-btn" data-style="warm"
-                                onclick="selectShareCardStyle('warm')">دافئ</button>
-                            <button type="button" class="share-style-btn" data-style="night"
-                                onclick="selectShareCardStyle('night')">ليلي</button>
-                        </div>
-                    </div>
-
-                    <label class="share-toggle" for="shareIncludeTafsir">
-                        <span>إضافة مقطع تفسير مختصر</span>
-                        <input type="checkbox" id="shareIncludeTafsir" onchange="onShareTafsirToggle()" checked>
-                    </label>
-
-                    <div class="share-field" id="shareTafsirField">
-                        <label for="shareTafsirSnippet">النص المرافق (يمكن تعديله قبل الإنشاء)</label>
-                        <textarea id="shareTafsirSnippet"
-                            placeholder="سيتم تحميل التفسير المختصر تلقائياً..."></textarea>
-                        <div class="share-field-meta" id="shareTafsirMeta">0 حرف</div>
-                    </div>
-
-                    <div class="share-preview style-classic" id="shareCardPreview">
-                        <div class="share-preview-header">
-                            <span class="share-preview-badge" id="sharePreviewStyleName">نمط كلاسيكي</span>
-                            <span class="share-preview-live">معاينة مباشرة</span>
-                        </div>
-                        <div class="share-preview-ayah" id="sharePreviewAyah">اختر آية للمعاينة</div>
-                        <div class="share-preview-tafsir" id="sharePreviewTafsir"></div>
-                        <div class="share-preview-reference" id="sharePreviewReference"></div>
-                    </div>
-
-                    <div class="share-actions">
-                        <button class="share-action-btn secondary" id="downloadShareCardBtn"
-                            onclick="downloadAyahCardImage()"><i class="bi bi-download"></i><span>تحميل
-                                الصورة</span></button>
-                        <button class="share-action-btn primary" id="shareShareCardBtn"
-                            onclick="shareAyahCardImage()"><i class="bi bi-share-fill"></i><span>مشاركة
-                                الآن</span></button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
+
+    <!-- Reciter Selection Modal -->
+    <div class="modal-overlay" id="reciterModal" role="dialog" aria-labelledby="reciterModalTitle"
+        onclick="closeReciterModal()">
+        <div class="reciter-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="reciterModalTitle">اختر القارئ</h2>
+                <button class="modal-close-btn" type="button" onclick="closeReciterModal()" aria-label="إغلاق">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="reciter-list">
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.alafasy"
+                    onclick="selectReciter('ar.alafasy', 'مشاري العفاسي')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>مشاري العفاسي</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.abdulbasitmurattal"
+                    onclick="selectReciter('ar.abdulbasitmurattal', 'عبد الباسط عبد الصمد (مرتل)')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>عبد الباسط عبد الصمد (مرتل)</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.abdulbasitmujawwad"
+                    onclick="selectReciter('ar.abdulbasitmujawwad', 'عبد الباسط عبد الصمد (مجود)')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>عبد الباسط عبد الصمد (مجود)</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.abdurrahmaansudais"
+                    onclick="selectReciter('ar.abdurrahmaansudais', 'عبد الرحمن السديس')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>عبد الرحمن السديس</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.shaatree"
+                    onclick="selectReciter('ar.shaatree', 'أبو بكر الشاطري')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>أبو بكر الشاطري</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.hudhaify"
+                    onclick="selectReciter('ar.hudhaify', 'علي الحذيفي')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>علي الحذيفي</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.minshawi"
+                    onclick="selectReciter('ar.minshawi', 'محمد صديق المنشاوي')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>محمد صديق المنشاوي</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.minshawimujawwad"
+                    onclick="selectReciter('ar.minshawimujawwad', 'المنشاوي (مجود)')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>المنشاوي (مجود)</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.muhammadayyoub"
+                    onclick="selectReciter('ar.muhammadayyoub', 'محمد أيوب')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>محمد أيوب</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.muhammadjibreel"
+                    onclick="selectReciter('ar.muhammadjibreel', 'محمد جبريل')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>محمد جبريل</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.mahermuaiqly"
+                    onclick="selectReciter('ar.mahermuaiqly', 'ماهر المعيقلي')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>ماهر المعيقلي</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.saoodshuraym"
+                    onclick="selectReciter('ar.saoodshuraym', 'سعود الشريم')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>سعود الشريم</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.abdullaahawwaad"
+                    onclick="selectReciter('ar.abdullaahawwaad', 'عبد الله عواد الجهني')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>عبد الله عواد الجهني</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.hanirifai"
+                    onclick="selectReciter('ar.hanirifai', 'هاني الرفاعي')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>هاني الرفاعي</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.husary"
+                    onclick="selectReciter('ar.husary', 'محمود خليل الحصري')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>محمود خليل الحصري</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="reciter-item" aria-pressed="false" data-reciter="ar.husarymujawwad"
+                    onclick="selectReciter('ar.husarymujawwad', 'الحصري (مجود)')">
+                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    <span>الحصري (مجود)</span>
+                    <i class="bi bi-check-circle-fill reciter-check" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ayah Share Modal -->
+    <div class="modal-overlay" id="shareAyahModal" role="dialog" aria-labelledby="shareAyahModalTitle"
+        onclick="closeShareAyahModal()">
+        <div class="share-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header share-modal-header">
+                <div class="share-title-wrap">
+                    <h2 id="shareAyahModalTitle">مشاركة بطاقة آية</h2>
+                    <p class="share-modal-subtitle">خصص شكل البطاقة قبل التحميل أو المشاركة</p>
+                </div>
+                <button class="modal-close-btn" type="button" onclick="closeShareAyahModal()" aria-label="إغلاق">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="share-modal-body">
+                <div class="share-field">
+                    <label for="shareAyahSelect">اختر الآية</label>
+                    <select id="shareAyahSelect" onchange="onShareAyahSelectionChange()"></select>
+                </div>
+
+                <div class="share-style-picker">
+                    <span class="share-style-label">نمط البطاقة</span>
+                    <div class="share-style-options">
+                        <button type="button" class="share-style-btn" data-style="classic"
+                            onclick="selectShareCardStyle('classic')">كلاسيكي</button>
+                        <button type="button" class="share-style-btn" data-style="warm"
+                            onclick="selectShareCardStyle('warm')">دافئ</button>
+                        <button type="button" class="share-style-btn" data-style="night"
+                            onclick="selectShareCardStyle('night')">ليلي</button>
+                    </div>
+                </div>
+
+                <label class="share-toggle" for="shareIncludeTafsir">
+                    <span>إضافة مقطع تفسير مختصر</span>
+                    <input type="checkbox" id="shareIncludeTafsir" onchange="onShareTafsirToggle()" checked>
+                </label>
+
+                <div class="share-field" id="shareTafsirField">
+                    <label for="shareTafsirSnippet">النص المرافق (يمكن تعديله قبل الإنشاء)</label>
+                    <textarea id="shareTafsirSnippet"
+                        placeholder="سيتم تحميل التفسير المختصر تلقائياً..."></textarea>
+                    <div class="share-field-meta" id="shareTafsirMeta">0 حرف</div>
+                </div>
+
+                <div class="share-preview style-classic" id="shareCardPreview">
+                    <div class="share-preview-header">
+                        <span class="share-preview-badge" id="sharePreviewStyleName">نمط كلاسيكي</span>
+                        <span class="share-preview-live">معاينة مباشرة</span>
+                    </div>
+                    <div class="share-preview-ayah" id="sharePreviewAyah">اختر آية للمعاينة</div>
+                    <div class="share-preview-tafsir" id="sharePreviewTafsir"></div>
+                    <div class="share-preview-reference" id="sharePreviewReference"></div>
+                </div>
+
+                <div class="share-actions">
+                    <button class="share-action-btn secondary" id="downloadShareCardBtn"
+                        onclick="downloadAyahCardImage()"><i class="bi bi-download" aria-hidden="true"></i><span>تحميل
+                            الصورة</span></button>
+                    <button class="share-action-btn primary" id="shareShareCardBtn"
+                        onclick="shareAyahCardImage()"><i class="bi bi-share-fill" aria-hidden="true"></i><span>مشاركة
+                            الآن</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="js/page-scripts/quran-data.js"></script>
 
@@ -388,6 +408,7 @@
             <div class="modal-actions" id="modalActions"></div>
         </div>
     </div>
+    <script src="js/native-ui.js"></script>
 </body>
 
 </html>

@@ -49,22 +49,31 @@ function hexToRgb(hex) {
             navigator.serviceWorker.register('/sw.js', { scope: '/' });
         }
         // Daily Verse Logic
-        async function loadDailyVerse() {
-            const section = document.getElementById('dailyVerseSection');
+        function applyDailyVerse(data) {
             const textElement = document.getElementById('dailyVerseText');
             const infoElement = document.getElementById('dailyVerseInfo');
+            if (textElement) textElement.textContent = data.text;
+            if (infoElement) infoElement.textContent = `${data.surah} - آية ${data.numberInSurah}`;
+            window.dailyVerseData = data;
+            reflectVerseSavedState();
+        }
+
+        async function loadDailyVerse() {
+            const textElement = document.getElementById('dailyVerseText');
 
             // Check if we have a cached verse for today
             const today = new Date().toDateString();
             const cachedVerse = localStorage.getItem('dailyVerse');
 
             if (cachedVerse) {
-                const data = JSON.parse(cachedVerse);
-                if (data.date === today) {
-                    textElement.textContent = data.text;
-                    infoElement.textContent = `${data.surah} - آية ${data.numberInSurah}`;
-                    section.style.display = 'block';
-                    return;
+                try {
+                    const data = JSON.parse(cachedVerse);
+                    if (data.date === today) {
+                        applyDailyVerse(data);
+                        return;
+                    }
+                } catch (_error) {
+                    // Fall through and fetch a fresh verse.
                 }
             }
 
@@ -80,17 +89,111 @@ function hexToRgb(hex) {
                         date: today,
                         text: verse.text,
                         surah: verse.surah.name,
-                        numberInSurah: verse.numberInSurah
+                        surahNumber: verse.surah.number,
+                        numberInSurah: verse.numberInSurah,
+                        audio: verse.audio || ''
                     };
 
                     localStorage.setItem('dailyVerse', JSON.stringify(verseData));
-                    textElement.textContent = verseData.text;
-                    infoElement.textContent = `${verseData.surah} - آية ${verseData.numberInSurah}`;
-                    section.style.display = 'block';
+                    applyDailyVerse(verseData);
                 }
             } catch (error) {
                 console.error('Error fetching daily verse:', error);
-                section.style.display = 'none';
+                if (textElement && textElement.textContent.trim() === 'جارٍ التحميل…') {
+                    textElement.textContent = 'تعذّر تحميل آية اليوم. تحقق من الاتصال.';
+                }
+            }
+        }
+
+        // --- Verse of the day actions: save / listen / share ------------------
+        const DAILY_VERSE_SAVE_KEY = 'savedDailyVerses';
+        let dailyVerseAudio = null;
+
+        function getDailyVerseData() {
+            if (window.dailyVerseData) return window.dailyVerseData;
+            try {
+                return JSON.parse(localStorage.getItem('dailyVerse') || 'null');
+            } catch (_error) {
+                return null;
+            }
+        }
+
+        function loadSavedVerses() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(DAILY_VERSE_SAVE_KEY) || '[]');
+                return Array.isArray(raw) ? raw : [];
+            } catch (_error) {
+                return [];
+            }
+        }
+
+        function verseKey(data) {
+            return `${data.surahNumber || data.surah}:${data.numberInSurah}`;
+        }
+
+        function reflectVerseSavedState() {
+            const btn = document.getElementById('verseSaveBtn');
+            const data = getDailyVerseData();
+            if (!btn || !data) return;
+            const isSaved = loadSavedVerses().some(v => verseKey(v) === verseKey(data));
+            btn.classList.toggle('is-active', isSaved);
+            btn.innerHTML = isSaved
+                ? '<i class="bi bi-bookmark-check-fill" aria-hidden="true"></i> محفوظة'
+                : '<i class="bi bi-bookmark" aria-hidden="true"></i> حفظ';
+        }
+
+        function saveDailyVerse(btn) {
+            const data = getDailyVerseData();
+            if (!data) return;
+            const saved = loadSavedVerses();
+            const key = verseKey(data);
+            const idx = saved.findIndex(v => verseKey(v) === key);
+            if (idx >= 0) {
+                saved.splice(idx, 1);
+            } else {
+                saved.push({
+                    text: data.text,
+                    surah: data.surah,
+                    surahNumber: data.surahNumber,
+                    numberInSurah: data.numberInSurah,
+                    savedAt: Date.now()
+                });
+            }
+            localStorage.setItem(DAILY_VERSE_SAVE_KEY, JSON.stringify(saved));
+            reflectVerseSavedState();
+        }
+
+        function listenDailyVerse(btn) {
+            const data = getDailyVerseData();
+            if (!data || !data.audio) {
+                alert('التلاوة الصوتية غير متاحة لهذه الآية.');
+                return;
+            }
+            // Toggle: a second tap stops playback.
+            if (dailyVerseAudio && !dailyVerseAudio.paused) {
+                dailyVerseAudio.pause();
+                dailyVerseAudio = null;
+                if (btn) btn.classList.remove('is-active');
+                return;
+            }
+            dailyVerseAudio = new Audio(data.audio);
+            if (btn) btn.classList.add('is-active');
+            const clear = () => { if (btn) btn.classList.remove('is-active'); };
+            dailyVerseAudio.addEventListener('ended', clear);
+            dailyVerseAudio.play().catch(clear);
+        }
+
+        function shareDailyVerse() {
+            const data = getDailyVerseData();
+            if (!data) return;
+            const ref = `${data.surah} - آية ${data.numberInSurah}`;
+            const shareText = `${data.text}\n﴿ ${ref} ﴾`;
+            if (navigator.share) {
+                navigator.share({ title: 'آية اليوم', text: shareText }).catch(() => {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareText)
+                    .then(() => alert('تم نسخ الآية إلى الحافظة'))
+                    .catch(() => {});
             }
         }
 
@@ -271,6 +374,7 @@ function hexToRgb(hex) {
             const details = document.getElementById('resumeDetails');
             const continueCard = document.getElementById('dashboardContinueCard');
             const continueValue = document.getElementById('dashboardContinueValue');
+            const homeContinueValue = document.getElementById('homeContinueValue');
             const lastBookmarkValue = document.getElementById('dashboardLastBookmarkValue');
             const lastBookmarkMeta = document.getElementById('dashboardLastBookmarkMeta');
             const bookmarksCount = document.getElementById('dashboardBookmarksCount');
@@ -289,6 +393,7 @@ function hexToRgb(hex) {
             if (bookmarks.length === 0) {
                 if (section) section.style.display = 'none';
                 if (continueCard) continueCard.style.display = 'none';
+                if (homeContinueValue) homeContinueValue.textContent = 'ابدأ من سورة الفاتحة';
                 if (lastBookmarkValue) lastBookmarkValue.textContent = 'لا يوجد موضع محفوظ';
                 if (lastBookmarkMeta) lastBookmarkMeta.textContent = 'ابدأ القراءة ثم احفظ الموضع';
                 window.lastBookmark = null;
@@ -304,6 +409,7 @@ function hexToRgb(hex) {
             if (section) section.style.display = 'block';
             if (continueCard) continueCard.style.display = 'flex';
             if (continueValue) continueValue.textContent = locationLabel;
+            if (homeContinueValue) homeContinueValue.textContent = locationLabel;
 
             if (lastBookmarkValue) {
                 lastBookmarkValue.textContent = surahName;
@@ -330,6 +436,41 @@ function hexToRgb(hex) {
                     ? `&bookmark=${encodeURIComponent(window.lastBookmark.id)}`
                     : '';
                 window.location.href = `quran.html?surah=${window.lastBookmark.surah}&page=${window.lastBookmark.page}${bookmarkQuery}`;
+            }
+        }
+
+        // Continue-reading quick card: resume the last position, or open the
+        // reader from the start when nothing is saved yet.
+        function resumeReadingOrStart() {
+            if (window.lastBookmark) {
+                resumeReading();
+            } else {
+                window.location.href = 'quran.html';
+            }
+        }
+
+        // Home Khatma quick card — mirrors the plan from khatma.html.
+        function renderHomeKhatmaCard() {
+            const fill = document.getElementById('homeKhatmaFill');
+            const percentEl = document.getElementById('homeKhatmaPercent');
+            const metaEl = document.getElementById('homeKhatmaMeta');
+            if (!fill || !percentEl || !metaEl) return;
+
+            const plan = loadKhatmaPlan();
+            if (!plan) {
+                fill.style.width = '0%';
+                percentEl.textContent = '0%';
+                metaEl.textContent = 'ابدأ خطة الختمة';
+                return;
+            }
+
+            const status = getKhatmaStatus(plan);
+            fill.style.width = `${status.progressPercent}%`;
+            percentEl.textContent = `${status.progressPercent}%`;
+            if (status.completedPages >= plan.totalPages) {
+                metaEl.textContent = 'تمت الختمة بنجاح';
+            } else {
+                metaEl.textContent = `هدف اليوم ${status.todayTargetPages} صفحة`;
             }
         }
 
@@ -1007,10 +1148,15 @@ function hexToRgb(hex) {
             }
         }
 
-        function applyMoodQuick(text) {
+        function applyMoodQuick(text, chipEl) {
             const input = document.getElementById('moodInput');
             if (!input) return;
             input.value = text;
+            if (chipEl) {
+                document.querySelectorAll('.mood-chip.is-active')
+                    .forEach(chip => chip.classList.remove('is-active'));
+                chipEl.classList.add('is-active');
+            }
             generateMoodSupport();
         }
 
@@ -1100,6 +1246,7 @@ function hexToRgb(hex) {
         checkResumeReading();
         renderHabitDashboard();
         renderKhatmaPlanner();
+        renderHomeKhatmaCard();
         syncPrayerDashboardCard();
         initPrayerDashboardSync();
 
@@ -1107,5 +1254,6 @@ function hexToRgb(hex) {
             if (document.hidden) return;
             checkResumeReading();
             renderHabitDashboard();
+            renderHomeKhatmaCard();
             syncPrayerDashboardCard();
         });

@@ -1,127 +1,245 @@
+        /* Features hub =====================================================
+           Flat, native-app language: no surface gradients, no decorative
+           pseudo-elements, one card treatment, and grouped-list rows instead
+           of one-word tiles. `css/app-ui.css` loads after this file and owns
+           the shared patterns (hero panel, icon tile, buttons); everything
+           here either agrees with it or is scoped to this page's container.
+           ================================================================== */
+
+        /* .app-content already supplies the page gutter and max width, so the
+           extra 18px here was double padding. */
         .features-hub-container {
-            max-width: 1100px;
+            max-width: var(--container);
             margin: 0 auto;
-            padding: 18px;
+            padding: 0;
         }
 
+        /* Hero -------------------------------------------------------------
+           Was two stacked gradients (a radial gold wash over a linear green
+           ramp). Now the same flat accent panel every page hero uses. */
         .hub-hero {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-            color: #fff;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 18px;
-            box-shadow: var(--shadow);
+            /* Paper panel with an accent edge, matching every other hero.
+               These locals held white for the old green fill. */
+            --hub-fg: var(--text-color);
+            --hub-fg-muted: var(--text-secondary);
+            --hub-chip-bg: var(--surface-2);
+            --hub-chip-line: var(--border-color);
+
+            position: relative;
+            background: var(--surface-1);
+            background-image: none;
+            color: var(--hub-fg);
+            border: 1px solid transparent;
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-block-end: var(--space-4);
+            box-shadow: none;
+        }
+
+        /* Dark mode is a deep panel rather than a glaring bright green slab. */
+        [data-theme="dark"] .hub-hero {
+            --hub-fg: var(--text-color);
+            --hub-fg-muted: var(--text-secondary);
+            --hub-chip-bg: var(--surface-2);
+            --hub-chip-line: var(--border-color);
+
+            background: var(--surface-1);
+            background-image: none;
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: none;
         }
 
         .hub-title {
-            font-size: 32px;
-            margin-bottom: 6px;
-            font-weight: 700;
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            line-height: var(--leading-tight);
+            letter-spacing: -0.02em;
+            margin-block-end: var(--space-2);
         }
 
         .hub-subtitle {
-            opacity: 0.95;
-            line-height: 1.8;
+            font-size: var(--text-base);
+            line-height: var(--leading-normal);
+            color: var(--hub-fg-muted);
+            max-width: 62ch;
         }
 
         .hub-stats {
-            margin-top: 14px;
+            margin-block-start: var(--space-5);
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
+            gap: var(--space-2);
         }
 
         .hub-stat {
-            border: 1px solid rgba(255, 255, 255, 0.24);
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 12px;
-            padding: 10px;
+            border: 1px solid var(--hub-chip-line);
+            background: var(--hub-chip-bg);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
             text-align: center;
+            /* The blur behind a translucent chip on a flat panel bought
+               nothing but a compositing layer. */
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
         }
 
         .hub-stat-value {
-            font-size: 26px;
-            font-weight: 700;
-            line-height: 1.2;
+            font-size: var(--text-xl);
+            font-weight: var(--weight-bold);
+            line-height: var(--leading-tight);
+            font-feature-settings: "tnum";
         }
 
         .hub-stat-label {
-            font-size: 13px;
-            opacity: 0.92;
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--hub-fg-muted);
         }
 
+        /* Search -----------------------------------------------------------
+           Was a full-radius pill with a 20px inline pad and a drop shadow —
+           the placeholder ran past the rounded end. Now a plain field. */
         .search-wrap {
-            margin-bottom: 16px;
+            margin-block-end: var(--space-4);
         }
 
         .feature-search {
+            display: block;
             width: 100%;
             border: 1px solid var(--border-color);
-            border-radius: 14px;
-            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            background: var(--surface-1);
             color: var(--text-color);
-            padding: 14px 16px;
-            font-size: 15px;
+            /* 16px minimum so iOS does not zoom the page on focus. */
+            font-size: var(--text-md);
             font-family: inherit;
+            min-height: var(--tap-target);
+            padding-block: var(--space-3);
+            padding-inline: var(--space-4);
+            text-align: start;
+            text-overflow: ellipsis;
+            box-shadow: none;
+            transition:
+                border-color var(--transition-fast),
+                box-shadow var(--transition-fast);
+        }
+
+        .feature-search::placeholder {
+            color: var(--text-muted);
+        }
+
+        .feature-search:focus-visible {
             outline: none;
-            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-        }
-
-        .feature-search:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.16);
+            box-shadow: var(--focus-ring);
         }
 
+        .results-hint {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-block: var(--space-2) var(--space-4);
+        }
+
+        /* Quick links ------------------------------------------------------
+           Were nine rounded cards each holding a single word. They now read as
+           one grouped list: a single card, hairline dividers, icon tile,
+           label, chevron — the iOS Settings / Things 3 pattern. */
         .quick-page-links {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
-            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            background: var(--surface-1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-block-end: var(--space-4);
         }
 
         .quick-link-card {
             text-decoration: none;
             color: var(--text-color);
-            border-radius: 14px;
-            border: 1px solid var(--border-color);
-            background: var(--card-bg);
-            padding: 12px;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            padding-block: var(--space-3);
+            padding-inline: var(--space-4);
+            min-height: 56px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            transition: all var(--transition-fast);
+            gap: var(--space-3);
+            font-size: var(--text-md);
+            font-weight: var(--weight-medium);
+            transition: background-color var(--transition-fast);
+        }
+
+        .quick-link-card + .quick-link-card {
+            border-block-start: 1px solid var(--border-color);
         }
 
         .quick-link-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--primary-color);
-            box-shadow: var(--shadow);
+            background: var(--surface-2);
+        }
+
+        /* The list card clips its children, so the ring is drawn inside the
+           row rather than as an outer box-shadow that would be cut off. */
+        .quick-link-card:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: -2px;
+        }
+
+        /* Disclosure chevron. The document is RTL, so inline-start is the
+           right edge; the rotated corner therefore points inline-end. */
+        .quick-link-card::after {
+            content: "";
+            inline-size: 8px;
+            block-size: 8px;
+            flex-shrink: 0;
+            margin-inline-start: auto;
+            border-inline-start: 2px solid var(--text-muted);
+            border-block-end: 2px solid var(--text-muted);
+            transform: rotate(135deg);
         }
 
         .quick-link-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            background: rgba(var(--primary-rgb), 0.14);
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background: rgba(var(--primary-rgb), 0.12);
             color: var(--primary-color);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
+            display: grid;
+            place-items: center;
+            font-size: 1.25rem;
+            line-height: 1;
             flex-shrink: 0;
         }
 
-        .features-grid {
+        /* Feature sections -------------------------------------------------
+           One shared card treatment. These are static <article>s, so they
+           deliberately do not lift on hover.
+
+           Scoped to the page container so the 150px auto-fit grid in
+           app-ui.css does not squeeze sentence-length Arabic into two 165px
+           columns on a phone. */
+        .features-hub-container .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-            gap: 14px;
+            grid-template-columns: 1fr;
+            gap: var(--space-4);
+            margin-block-end: var(--space-6);
+        }
+
+        @media (min-width: 900px) {
+            .features-hub-container .features-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         .feature-section {
-            border-radius: 18px;
-            border: 1px solid var(--glass-border);
-            padding: 16px;
+            background: var(--surface-1);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: var(--space-5);
+            box-shadow: none;
         }
 
         .feature-section.hidden-by-filter {
@@ -130,69 +248,78 @@
 
         .feature-section-head {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 10px;
+            gap: var(--space-3);
+            margin-block-end: var(--space-4);
+            padding-block-end: var(--space-3);
+            border-block-end: 1px solid var(--border-color);
         }
 
         .feature-section-title {
-            font-size: 20px;
-            color: var(--primary-color);
-            font-weight: 700;
+            font-size: var(--text-lg);
+            color: var(--text-color);
+            font-weight: var(--weight-bold);
+            line-height: var(--leading-tight);
+            letter-spacing: -0.01em;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--space-2);
+            margin: 0;
         }
 
+        .feature-section-title i {
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        /* Look and size come from the shared secondary-button rule in
+           app-ui.css; only the layout behaviour is page business. */
         .feature-open-link {
             text-decoration: none;
-            font-size: 12px;
-            border: 1px solid rgba(var(--primary-rgb), 0.25);
-            color: var(--primary-color);
-            background: rgba(var(--primary-rgb), 0.08);
-            border-radius: 999px;
-            padding: 6px 10px;
             white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .feature-list {
             list-style: none;
             display: flex;
             flex-direction: column;
-            gap: 9px;
+            gap: 0;
             margin: 0;
             padding: 0;
         }
 
+        /* Rows inside a card are separated by a hairline, not by a gap and a
+           second border. */
         .feature-item {
-            font-size: 14px;
-            color: var(--text-color);
-            line-height: 1.7;
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+            line-height: var(--leading-normal);
             display: flex;
-            gap: 8px;
+            gap: var(--space-3);
             align-items: flex-start;
+            padding-block: var(--space-3);
+        }
+
+        .feature-item + .feature-item {
+            border-block-start: 1px solid var(--border-color);
         }
 
         .feature-item i {
             color: var(--primary-color);
-            margin-top: 4px;
-            font-size: 12px;
+            margin-block-start: 0.2em;
+            font-size: var(--text-sm);
             flex-shrink: 0;
         }
 
-        .results-hint {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            margin-bottom: 10px;
-        }
-
         .empty-filter-state {
-            border-radius: 14px;
-            border: 1px dashed var(--border-color);
-            padding: 24px;
+            border-radius: var(--radius-lg);
+            border: 1px dashed var(--border-strong);
+            background: var(--surface-1);
+            padding: var(--space-8);
             text-align: center;
+            font-size: var(--text-md);
             color: var(--text-secondary);
             display: none;
         }
@@ -203,15 +330,20 @@
 
         @media (max-width: 768px) {
             .features-hub-container {
-                padding: 12px;
+                padding: 0;
             }
 
             .hub-title {
-                font-size: 26px;
+                font-size: var(--text-xl);
             }
 
+            .hub-stat {
+                padding: var(--space-2);
+            }
+        }
+
+        @media (max-width: 380px) {
             .hub-stats {
                 grid-template-columns: 1fr;
             }
         }
-    
