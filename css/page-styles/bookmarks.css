@@ -457,6 +457,89 @@
             color: var(--text-color);
         }
 
+        .recent-title i {
+            color: var(--secondary-color);
+            margin-inline-end: 4px;
+        }
+
+        /* Saved daily verses ------------------------------------------------ */
+        .saved-verses {
+            margin-block-end: var(--space-4);
+        }
+
+        .saved-verses-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-3);
+        }
+
+        .saved-verse-card {
+            padding: var(--space-4);
+        }
+
+        .saved-verse-text {
+            margin: 0;
+            font-family: var(--font-quran, "Amiri", serif);
+            font-size: 1.375rem;
+            line-height: var(--leading-quran, 2.1);
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .saved-verse-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+            margin-block-start: var(--space-3);
+            padding-block-start: var(--space-3);
+            border-block-start: 1px solid var(--border-color);
+        }
+
+        .saved-verse-ref {
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            color: var(--text-muted);
+        }
+
+        .saved-verse-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            flex-shrink: 0;
+        }
+
+        .saved-verse-open {
+            font-size: var(--text-sm);
+            font-weight: var(--weight-bold);
+            color: var(--primary-color);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .saved-verse-open:hover {
+            background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+        }
+
+        .saved-verse-remove {
+            display: inline-grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--surface-1);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color var(--transition-fast), border-color var(--transition-fast);
+        }
+
+        .saved-verse-remove:hover {
+            color: var(--danger);
+            border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+        }
+
         .recent-list {
             display: grid;
             grid-template-columns: 1fr;

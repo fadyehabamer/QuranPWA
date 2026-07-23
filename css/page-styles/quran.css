@@ -1345,8 +1345,15 @@
                 display: none;
             }
 
+            /* Clears the floating scroll-to-top button (42px @ bottom:92px)
+               plus the home-indicator safe area — no more. The bottom nav is
+               hidden in the reader, so it needs no allowance here. */
+            body.quran-reader-active {
+                padding-bottom: 0;
+            }
+
             body.quran-reader-active .app-content {
-                padding-bottom: 120px;
+                padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
             }
 
             body.quran-reader-active .radio-fab,
@@ -1535,13 +1542,16 @@
             }
         }
 
+        /* Just enough breathing room after the last ayah. The old 120/140px
+           was sized to clear a floating nav rail + bottom bar that are hidden
+           in the reader on mobile, so it read as a large empty gap. */
         .quran-content {
-            margin-bottom: 120px;
+            margin-bottom: 32px;
         }
 
         @media (max-width: 768px) {
             .quran-content {
-                margin-bottom: 140px;
+                margin-bottom: 24px;
             }
         }
 

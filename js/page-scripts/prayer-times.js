@@ -910,17 +910,38 @@ let userLocation = null;
                 navigator.serviceWorker.register('/sw.js', { scope: '/' });
             }
 
-            // Check if location was previously selected
+            // Resume whatever location the app already knows, so this page does
+            // not re-ask on every visit.
+            const spinnerHtml = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
             const selectedCountry = getStoredCountrySelection();
+
+            let savedAutoLocation = null;
+            try {
+                const raw = JSON.parse(localStorage.getItem('userLocation') || 'null');
+                if (raw && Number.isFinite(raw.latitude) && Number.isFinite(raw.longitude)) {
+                    savedAutoLocation = raw;
+                }
+            } catch (_error) {
+                savedAutoLocation = null;
+            }
+
             if (selectedCountry) {
                 locationMethod = 'manual';
                 userLocation = { latitude: selectedCountry.lat, longitude: selectedCountry.lng };
                 showLocationSelected(selectedCountry.name);
-                // Clear initial loading spinner and load prayer times
-                document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
+                document.getElementById('prayerGrid').innerHTML = spinnerHtml;
                 loadPrayerTimes(selectedCountry.lat, selectedCountry.lng);
+            } else if (savedAutoLocation) {
+                // Location the home prayer widget detected automatically.
+                locationMethod = 'automatic';
+                userLocation = { latitude: savedAutoLocation.latitude, longitude: savedAutoLocation.longitude };
+                showLocationSelected(localStorage.getItem('locationText') || 'موقعك المحفوظ');
+                document.getElementById('prayerGrid').innerHTML = spinnerHtml;
+                // No lat/lng args: loadPrayerTimes then fetches from the
+                // userLocation we just set and keeps our location label intact.
+                loadPrayerTimes();
             }
-            // If no previous selection, show location buttons (default state)
+            // If nothing is known yet, show the location buttons (default state).
         })();
 
         // Country selection modal functions

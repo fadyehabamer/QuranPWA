@@ -838,11 +838,71 @@ const surahInfo = [
                 .toString(16).slice(1);
         }
 
+        // ---- Saved daily verses (from "آية اليوم" on the home screen) --------
+        const SAVED_VERSES_KEY = 'savedDailyVerses';
+
+        function loadSavedVersesList() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(SAVED_VERSES_KEY) || '[]');
+                return Array.isArray(raw) ? raw : [];
+            } catch (_error) {
+                return [];
+            }
+        }
+
+        function savedVerseKey(v) {
+            return `${v.surahNumber || v.surah}:${v.numberInSurah}`;
+        }
+
+        function removeSavedVerse(key) {
+            const next = loadSavedVersesList().filter(v => savedVerseKey(v) !== key);
+            localStorage.setItem(SAVED_VERSES_KEY, JSON.stringify(next));
+            renderSavedVerses();
+        }
+
+        function renderSavedVerses() {
+            const section = document.getElementById('savedVersesSection');
+            const listEl = document.getElementById('savedVersesList');
+            if (!section || !listEl) return;
+
+            const verses = loadSavedVersesList().slice().sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+            if (verses.length === 0) {
+                section.style.display = 'none';
+                listEl.innerHTML = '';
+                return;
+            }
+
+            section.style.display = 'block';
+            listEl.innerHTML = verses.map(v => {
+                const key = savedVerseKey(v);
+                const ref = `${v.surah || ''} • آية ${v.numberInSurah}`;
+                const openHref = v.surahNumber
+                    ? `quran.html?surah=${v.surahNumber}&ayah=${v.numberInSurah}`
+                    : 'quran.html';
+                return `
+                    <div class="saved-verse-card glass-card">
+                        <p class="saved-verse-text">${escapeHtml(v.text || '')}</p>
+                        <div class="saved-verse-foot">
+                            <span class="saved-verse-ref">${escapeHtml(ref)}</span>
+                            <div class="saved-verse-actions">
+                                <a class="saved-verse-open" href="${openHref}">فتح في المصحف</a>
+                                <button type="button" class="saved-verse-remove" onclick="removeSavedVerse('${key}')" aria-label="حذف الآية المحفوظة">
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        window.removeSavedVerse = removeSavedVerse;
+
         document.addEventListener('DOMContentLoaded', () => {
             loadThemeSettings();
             loadFiltersPanelVisibilityPreference();
             loadFoldersOverviewVisibilityPreference();
             renderBookmarks();
+            renderSavedVerses();
         });
 
         // Register service worker
