@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Lateef&family=Reem+Kufi:wght@400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="js/theme-preload.js"></script>
@@ -28,6 +28,8 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/page-styles/index.css">
     <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/tour.css">
+    <link rel="stylesheet" href="css/onboarding.css">
     <link rel="stylesheet" href="css/native.css">
     <!-- Authoritative layer for the home screen. Loaded last so its native
          mobile layout (prayer hero, quick grid, inspiration, mood) wins over
@@ -53,9 +55,12 @@
             <section class="prayer-hero animate-fade-up" id="homePrayerWidget" data-phase="night"
                 aria-label="مواقيت الصلاة">
                 <div class="prayer-hero-top">
-                    <div class="ph-location">
-                        <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
-                        <span id="pwLocation">جاري تحديد الموقع…</span>
+                    <div class="ph-place">
+                        <div class="ph-location">
+                            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                            <span id="pwLocation">جاري تحديد الموقع…</span>
+                        </div>
+                        <div class="ph-hijri" id="phHijri"></div>
                     </div>
                     <div class="ph-actions">
                         <a class="ph-icon-btn" href="prayer-times.html" aria-label="كل المواقيت والتفاصيل">
@@ -68,23 +73,42 @@
                 </div>
 
                 <div class="prayer-hero-main">
-                    <span class="ph-next-label">الصلاة القادمة</span>
-                    <span class="ph-next-headline">
+                    <div class="ph-now">
+                        <span class="ph-next-label">الصلاة القادمة</span>
                         <span class="ph-next-name" id="phNextName">—</span>
                         <span class="ph-next-time" id="phNextTime">--:--</span>
-                    </span>
-                    <span class="ph-countdown" id="phCountdown">جارٍ حساب الوقت المتبقي…</span>
-                </div>
+                        <span class="ph-edges" id="phEdges"></span>
+                    </div>
 
-                <div class="ph-timeline" aria-hidden="true">
-                    <div class="ph-track">
-                        <span class="ph-fill" id="phFill"></span>
+                    <!-- Countdown ring: sweeps through the current prayer window. -->
+                    <div class="ph-ring" role="timer" aria-live="off">
+                        <svg class="ph-ring-svg" viewBox="0 0 120 120" aria-hidden="true">
+                            <circle class="ph-ring-track" cx="60" cy="60" r="52"></circle>
+                            <circle class="ph-ring-fill" id="phRingFill" cx="60" cy="60" r="52"></circle>
+                        </svg>
+                        <span class="ph-ring-label">
+                            <span class="ph-ring-cap">متبقٍّ</span>
+                            <span class="ph-ring-time" id="phCountdown">--:--</span>
+                        </span>
                     </div>
                 </div>
 
                 <div class="prayer-hero-row" id="pwBody">
                     <!-- Five prayer chips rendered by common.js -->
                 </div>
+
+                <!-- Self-contained mosque silhouette, no asset fetch. -->
+                <svg class="ph-mosque" viewBox="0 0 320 80" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                    <path d="M38 80V34a6 6 0 0 1 12 0v46z" />
+                    <circle cx="44" cy="28" r="6" />
+                    <path d="M270 80V34a6 6 0 0 1 12 0v46z" />
+                    <circle cx="276" cy="28" r="6" />
+                    <path d="M76 80V62a22 20 0 0 1 44 0v18z" />
+                    <path d="M200 80V62a22 20 0 0 1 44 0v18z" />
+                    <path d="M124 80V50a36 32 0 0 1 72 0v30z" />
+                    <path d="M158 20h4v10h-4z" />
+                    <circle cx="160" cy="16" r="4" />
+                </svg>
             </section>
 
             <!-- ============================================================
@@ -119,6 +143,18 @@
                     </div>
                 </a>
             </div>
+
+            <!-- ============================================================
+                 2b. Prayer tracker — mark each prayer as prayed
+                 ============================================================ -->
+            <section class="prayer-tracker animate-fade-up delay-1" aria-label="متابعة الصلوات">
+                <div class="tracker-head">
+                    <div class="tracker-title"><i class="bi bi-check2-square" aria-hidden="true"></i> متابعة الصلوات</div>
+                    <div class="tracker-meta" id="trackerMeta">0 / 5</div>
+                </div>
+                <div class="tracker-row" id="trackerRow" role="group" aria-label="الصلوات اليوم"></div>
+                <div class="tracker-streak" id="trackerStreak"></div>
+            </section>
 
             <!-- ============================================================
                  3. Daily inspiration — verse of the day + hadith
@@ -187,6 +223,9 @@
     <script src="js/common.js"></script>
     <script src="js/page-scripts/index.js"></script>
     <script src="js/native-ui.js"></script>
+    <script src="js/onboarding.js"></script>
+    <script src="js/tour.js"></script>
+    <script src="js/tours.js"></script>
 </body>
 
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quran-app-v20';
+const CACHE_NAME = 'quran-app-v22';
 const OFFLINE_URL = '/offline.html';
 // Long enough for a slow-but-working connection, short enough that a dead
 // one falls back to cache before the user gives up.
@@ -42,7 +42,13 @@ const APP_SHELL_URLS = [
   '/js/common.js',
   '/js/page-scripts/index.js',
   '/js/data/surahs.js',
+  '/js/data/quran-index.js',
   '/js/prayer-core.js',
+  '/js/tour.js',
+  '/js/tours.js',
+  '/js/onboarding.js',
+  '/css/tour.css',
+  '/css/onboarding.css',
   '/js/page-scripts/quran.js',
   '/js/page-scripts/khatma.js',
   '/js/page-scripts/azkar.js',

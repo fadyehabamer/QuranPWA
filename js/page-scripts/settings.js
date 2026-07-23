@@ -69,24 +69,6 @@ let deferredPrompt;
             }
         }
 
-        function toggleDarkMode() {
-            const toggle = document.getElementById('darkModeToggle');
-            const isDark = toggle.getAttribute('aria-checked') !== 'true';
-            setSwitchState(toggle, isDark);
-
-            if (isDark) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-            }
-
-            localStorage.setItem('darkMode', isDark);
-
-            // Update shadow colors when theme changes
-            const currentColor = localStorage.getItem('primaryColor') || '#1B5E20';
-            applyColor(currentColor);
-        }
-
         function changeColor(color) {
             setActiveColorOption(color);
 
@@ -619,6 +601,353 @@ let deferredPrompt;
             }
         }
 
+        /* ==================================================================
+           Theme mode — light / dark / auto
+           ================================================================== */
+
+        const THEME_MODE_KEY = 'themeMode';
+
+        function getThemeMode() {
+            const stored = localStorage.getItem(THEME_MODE_KEY);
+            if (stored === 'light' || stored === 'dark' || stored === 'auto') return stored;
+            // Upgrading from the old boolean: derive the equivalent mode.
+            return localStorage.getItem('darkMode') === 'true' ? 'dark' : 'light';
+        }
+
+        function setThemeMode(mode) {
+            localStorage.setItem(THEME_MODE_KEY, mode);
+            // syncAppTheme resolves 'auto' against the OS, writes the legacy
+            // darkMode key and re-derives the accent for the resulting theme.
+            if (window.syncAppTheme) window.syncAppTheme();
+            applyColor(localStorage.getItem('primaryColor') || '#1B5E20');
+            renderThemeMode();
+        }
+
+        function renderThemeMode() {
+            const mode = getThemeMode();
+            document.querySelectorAll('[data-theme-mode]').forEach(button => {
+                const isActive = button.getAttribute('data-theme-mode') === mode;
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-pressed', String(isActive));
+            });
+        }
+
+        /* ==================================================================
+           Reader default view + haptics
+           ================================================================== */
+
+        const READER_DISPLAY_MODE_KEY = 'quranReaderDisplayModeV1';
+        const HAPTICS_KEY = 'hapticsEnabled';
+
+        function setReaderDefaultMode(mode) {
+            localStorage.setItem(READER_DISPLAY_MODE_KEY, mode);
+            renderReaderDefaultMode();
+        }
+
+        function renderReaderDefaultMode() {
+            const mode = localStorage.getItem(READER_DISPLAY_MODE_KEY) === 'mushaf' ? 'mushaf' : 'text';
+            document.querySelectorAll('[data-reader-mode]').forEach(button => {
+                const isActive = button.getAttribute('data-reader-mode') === mode;
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-pressed', String(isActive));
+            });
+        }
+
+        /* ==================================================================
+           Quran reading font
+           ================================================================== */
+
+        const QURAN_FONT_KEY = 'quranFontFamily';
+
+        function renderQuranFontPicker() {
+            const picker = document.getElementById('quranFontPicker');
+            const fonts = window.QURAN_FONTS;
+            if (!picker || !fonts) return;
+
+            const current = localStorage.getItem(QURAN_FONT_KEY) || 'amiri';
+            picker.innerHTML = Object.entries(fonts).map(([key, font]) => {
+                const isActive = key === current;
+                return `
+                    <button type="button" class="quran-font-option${isActive ? ' is-active' : ''}"
+                        data-quran-font="${key}" aria-pressed="${isActive}"
+                        style="font-family: ${font.stack}"
+                        onclick="setQuranFont('${key}')">
+                        <span class="quran-font-sample">بِسْمِ ٱللَّهِ</span>
+                        <span class="quran-font-name">${font.label}</span>
+                    </button>
+                `;
+            }).join('');
+
+            applyPreviewFont(fonts[current] ? fonts[current].stack : fonts.amiri.stack);
+        }
+
+        // The preview above doubles as the font preview, so it must not keep
+        // inheriting the UI font once a reading face is chosen.
+        function applyPreviewFont(stack) {
+            const preview = document.getElementById('previewText');
+            if (preview) preview.style.fontFamily = stack;
+        }
+
+        function setQuranFont(key) {
+            localStorage.setItem(QURAN_FONT_KEY, key);
+            if (window.syncQuranFont) window.syncQuranFont();
+            renderQuranFontPicker();
+        }
+
+        function toggleHaptics() {
+            const toggle = document.getElementById('hapticsToggle');
+            const enabled = toggle.getAttribute('aria-checked') !== 'true';
+            setSwitchState(toggle, enabled);
+            localStorage.setItem(HAPTICS_KEY, String(enabled));
+            // Confirm the change the way the setting itself works.
+            if (enabled && navigator.vibrate) navigator.vibrate(15);
+        }
+
+        /* ==================================================================
+           Prayer calculation preferences
+           ================================================================== */
+
+        const PRAYER_METHOD_KEY = 'prayerMethod';
+        const PRAYER_SCHOOL_KEY = 'prayerSchool';
+
+        function changePrayerMethod() {
+            const select = document.getElementById('prayerMethodSelect');
+            if (!select) return;
+            localStorage.setItem(PRAYER_METHOD_KEY, select.value);
+            invalidatePrayerCaches();
+        }
+
+        function setAsrSchool(school) {
+            localStorage.setItem(PRAYER_SCHOOL_KEY, String(school));
+            renderAsrSchool();
+            invalidatePrayerCaches();
+        }
+
+        function renderAsrSchool() {
+            const school = localStorage.getItem(PRAYER_SCHOOL_KEY) === '1' ? '1' : '0';
+            document.querySelectorAll('[data-asr]').forEach(button => {
+                const isActive = button.getAttribute('data-asr') === school;
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-pressed', String(isActive));
+            });
+        }
+
+        // Timings are memoised per day; a method change must drop them or the
+        // old angles keep showing until midnight.
+        function invalidatePrayerCaches() {
+            Object.keys(localStorage)
+                .filter(key => key.startsWith('prayerTimesCache'))
+                .forEach(key => localStorage.removeItem(key));
+        }
+
+        // The location is spread over three keys: `userLocation` holds only
+        // lat/lng, the human-readable name lives in `locationText`, and a manual
+        // country pick is stored whole under `selectedCountryV2`. Reading only
+        // `userLocation.name` — which never exists — always showed "no location".
+        function readSavedLocationName() {
+            try {
+                const country = JSON.parse(
+                    localStorage.getItem('preferredManualCountryV1') || localStorage.getItem('selectedCountry') || 'null'
+                );
+                if (country && country.name) return country.name;
+            } catch (_error) { /* fall through */ }
+
+            const label = localStorage.getItem('locationText');
+            if (label) return label;
+
+            try {
+                const coords = JSON.parse(localStorage.getItem('userLocation') || 'null');
+                if (coords && typeof coords.latitude === 'number') {
+                    return `${coords.latitude.toFixed(2)}, ${coords.longitude.toFixed(2)}`;
+                }
+            } catch (_error) { /* fall through */ }
+
+            return null;
+        }
+
+        function renderSavedLocation() {
+            const desc = document.getElementById('savedLocationDesc');
+            if (!desc) return;
+            desc.textContent = readSavedLocationName() || 'لم يتم تحديد موقع بعد';
+        }
+
+        function clearSavedLocation() {
+            showModal({
+                type: 'warning',
+                icon: '<i class="bi bi-geo-alt-fill"></i>',
+                title: 'حذف الموقع المحفوظ',
+                message: 'سيُطلب تحديد الموقع من جديد عند فتح صفحة المواقيت. هل تريد المتابعة؟',
+                confirmText: 'حذف',
+                cancelText: 'إلغاء',
+                onConfirm: () => {
+                    // Clear every key the location is spread across, or the page
+                    // would re-resolve the old city from whichever one survived.
+                    ['userLocation', 'locationText', 'preferredManualCountryV1', 'selectedCountry']
+                        .forEach(key => localStorage.removeItem(key));
+                    invalidatePrayerCaches();
+                    renderSavedLocation();
+                }
+            });
+        }
+
+        /* ==================================================================
+           Backup, restore and storage usage
+           ================================================================== */
+
+        // Everything worth carrying to another device: progress, bookmarks,
+        // memorisation, habits and preferences. Caches are deliberately left
+        // out — they are re-fetchable and would bloat the file.
+        const BACKUP_EXCLUDED_PREFIXES = ['prayerTimesCache', 'quranSurahCache', 'tafsirCache'];
+        const BACKUP_VERSION = 1;
+
+        function collectBackupData() {
+            const data = {};
+            Object.keys(localStorage).forEach(key => {
+                if (BACKUP_EXCLUDED_PREFIXES.some(prefix => key.startsWith(prefix))) return;
+                data[key] = localStorage.getItem(key);
+            });
+            return data;
+        }
+
+        function exportBackup() {
+            const payload = {
+                app: 'quran-pwa',
+                version: BACKUP_VERSION,
+                exportedAt: new Date().toISOString(),
+                data: collectBackupData()
+            };
+
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const stamp = new Date().toISOString().slice(0, 10);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `نسخة-احتياطية-${stamp}.json`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+
+            showModal({
+                type: 'success',
+                icon: '<i class="bi bi-box-arrow-down"></i>',
+                title: 'تم التصدير',
+                message: `تم حفظ ${Object.keys(payload.data).length} عنصراً في ملف النسخة الاحتياطية.`
+            });
+        }
+
+        function importBackup(input) {
+            const file = input.files && input.files[0];
+            // Reset first so re-picking the same file still fires `change`.
+            input.value = '';
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                let payload;
+                try {
+                    payload = JSON.parse(String(reader.result));
+                } catch (_error) {
+                    payload = null;
+                }
+
+                if (!payload || payload.app !== 'quran-pwa' || !payload.data || typeof payload.data !== 'object') {
+                    showModal({
+                        type: 'error',
+                        icon: '<i class="bi bi-x-circle-fill"></i>',
+                        title: 'ملف غير صالح',
+                        message: 'هذا الملف ليس نسخة احتياطية من هذا التطبيق.'
+                    });
+                    return;
+                }
+
+                const count = Object.keys(payload.data).length;
+                showModal({
+                    type: 'warning',
+                    icon: '<i class="bi bi-box-arrow-up"></i>',
+                    title: 'استعادة النسخة',
+                    message: `سيتم استبدال بياناتك الحالية بـ ${count} عنصراً من النسخة. هل تريد المتابعة؟`,
+                    confirmText: 'استعادة',
+                    cancelText: 'إلغاء',
+                    onConfirm: () => {
+                        Object.entries(payload.data).forEach(([key, value]) => {
+                            if (typeof value === 'string') localStorage.setItem(key, value);
+                        });
+                        window.location.reload();
+                    }
+                });
+            };
+            reader.readAsText(file);
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes) return '0 ك.ب';
+            const gb = bytes / (1024 * 1024 * 1024);
+            if (gb >= 1) return `${gb.toFixed(1)} ج.ب`;
+            const mb = bytes / (1024 * 1024);
+            if (mb >= 1) return `${mb.toFixed(1)} م.ب`;
+            return `${Math.max(1, Math.round(bytes / 1024))} ك.ب`;
+        }
+
+        async function renderStorageUsage() {
+            const usedLabel = document.getElementById('storageUsedLabel');
+            const percentLabel = document.getElementById('storagePercentLabel');
+            const fill = document.getElementById('storageMeterFill');
+            if (!usedLabel) return;
+
+            if (!navigator.storage || !navigator.storage.estimate) {
+                usedLabel.textContent = 'حجم التخزين غير متاح على هذا المتصفح';
+                if (fill) fill.style.width = '0%';
+                return;
+            }
+
+            try {
+                const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+                const percent = quota ? Math.min(100, (usage / quota) * 100) : 0;
+                usedLabel.textContent = `${formatBytes(usage)} مستخدمة من ${formatBytes(quota)}`;
+                if (percentLabel) percentLabel.textContent = `${percent < 1 ? '<1' : Math.round(percent)}%`;
+                // Keep a hairline visible so the meter never looks broken.
+                if (fill) fill.style.width = `${Math.max(2, percent)}%`;
+            } catch (_error) {
+                usedLabel.textContent = 'تعذر حساب حجم التخزين';
+            }
+        }
+
+        // Clear the per-page "seen" flags so every page introduces itself again,
+        // then replay this page's tour immediately as confirmation.
+        function replayTours() {
+            if (!window.AppTour) return;
+            window.AppTour.resetAll();
+            // Also replay the first-run wizard, so "show me the intro again"
+            // means the whole introduction and not just the coach marks.
+            if (window.AppOnboarding) window.AppOnboarding.reset();
+            showModal({
+                type: 'success',
+                icon: '<i class="bi bi-signpost-2-fill"></i>',
+                title: 'تم التفعيل',
+                message: 'ستظهر الجولة التعريفية من جديد في كل صفحة، وشاشة الترحيب عند فتح الرئيسية.'
+            });
+            setTimeout(() => window.AppTour.replay('settings'), 900);
+        }
+
+        function loadExtendedSettings() {
+            renderThemeMode();
+            renderQuranFontPicker();
+            renderReaderDefaultMode();
+            renderAsrSchool();
+            renderSavedLocation();
+            renderStorageUsage();
+
+            const method = localStorage.getItem(PRAYER_METHOD_KEY) || '4';
+            const methodSelect = document.getElementById('prayerMethodSelect');
+            if (methodSelect) methodSelect.value = method;
+
+            // Haptics default to on — the masbaha has always vibrated.
+            const haptics = localStorage.getItem(HAPTICS_KEY) !== 'false';
+            setSwitchState(document.getElementById('hapticsToggle'), haptics);
+        }
+
         // Initialize
         loadSettings();
+        loadExtendedSettings();
         scheduleNotifications();

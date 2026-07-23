@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Lateef&family=Reem+Kufi:wght@400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="js/theme-preload.js"></script>
@@ -28,6 +28,7 @@
     <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <link rel="stylesheet" href="css/page-styles/settings.css">
     <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/tour.css">
     <link rel="stylesheet" href="css/native.css">
 </head>
 
@@ -51,17 +52,27 @@
     <main class="app-content settings-container">
         <!-- Theme Settings -->
         <div class="settings-section">
-            <h2 class="settings-section-title">المظهر</h2>
+            <h2 class="settings-section-title"><i class="bi bi-palette-fill" aria-hidden="true"></i>المظهر</h2>
 
-            <div class="setting-item">
-                <div class="setting-label" id="darkModeLabel">
-                    <span>الوضع الليلي</span>
-                    <span class="setting-desc">تفعيل الوضع الداكن</span>
+            <div class="setting-item setting-item--stacked">
+                <div class="setting-label" id="themeModeLabel">
+                    <span>نمط العرض</span>
+                    <span class="setting-desc">فاتح دائماً، داكن دائماً، أو تابع لإعداد الجهاز</span>
                 </div>
-                <button type="button" class="toggle-switch" id="darkModeToggle" role="switch" aria-checked="false"
-                    aria-label="الوضع الليلي" onclick="toggleDarkMode()">
-                    <span class="toggle-slider" aria-hidden="true"></span>
-                </button>
+                <div class="segmented" role="group" aria-labelledby="themeModeLabel">
+                    <button type="button" class="segmented-option" data-theme-mode="light"
+                        onclick="setThemeMode('light')" aria-pressed="false">
+                        <i class="bi bi-sun-fill" aria-hidden="true"></i><span>فاتح</span>
+                    </button>
+                    <button type="button" class="segmented-option" data-theme-mode="dark"
+                        onclick="setThemeMode('dark')" aria-pressed="false">
+                        <i class="bi bi-moon-stars-fill" aria-hidden="true"></i><span>داكن</span>
+                    </button>
+                    <button type="button" class="segmented-option" data-theme-mode="auto"
+                        onclick="setThemeMode('auto')" aria-pressed="false">
+                        <i class="bi bi-circle-half" aria-hidden="true"></i><span>تلقائي</span>
+                    </button>
+                </div>
             </div>
 
             <div class="setting-item">
@@ -88,7 +99,7 @@
 
         <!-- Font Settings -->
         <div class="settings-section">
-            <h2 class="settings-section-title">الخط</h2>
+            <h2 class="settings-section-title"><i class="bi bi-fonts" aria-hidden="true"></i>الخط والقراءة</h2>
 
             <div class="setting-item">
                 <div class="setting-label">
@@ -118,14 +129,98 @@
                 </div>
             </div>
 
+            <div class="setting-item setting-item--stacked">
+                <div class="setting-label" id="quranFontLabel">
+                    <span>خط المصحف</span>
+                    <span class="setting-desc">خط عرض الآيات داخل القارئ</span>
+                </div>
+                <div class="quran-font-picker" role="group" aria-labelledby="quranFontLabel"
+                    id="quranFontPicker"></div>
+            </div>
+
             <div class="preview-text" id="previewText">
                 بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحيمِ
+            </div>
+
+            <div class="setting-item setting-item--stacked">
+                <div class="setting-label" id="readerModeLabel">
+                    <span>طريقة عرض المصحف</span>
+                    <span class="setting-desc">الوضع الافتراضي عند فتح أي سورة</span>
+                </div>
+                <div class="segmented" role="group" aria-labelledby="readerModeLabel">
+                    <button type="button" class="segmented-option" data-reader-mode="text"
+                        onclick="setReaderDefaultMode('text')" aria-pressed="false">
+                        <i class="bi bi-text-paragraph" aria-hidden="true"></i><span>نص</span>
+                    </button>
+                    <button type="button" class="segmented-option" data-reader-mode="mushaf"
+                        onclick="setReaderDefaultMode('mushaf')" aria-pressed="false">
+                        <i class="bi bi-file-earmark-image" aria-hidden="true"></i><span>صور المصحف</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>الاهتزاز عند اللمس</span>
+                    <span class="setting-desc">ردّ فعل لمسي خفيف في المسبحة والأزرار</span>
+                </div>
+                <button type="button" class="toggle-switch" id="hapticsToggle" role="switch" aria-checked="true"
+                    aria-label="الاهتزاز عند اللمس" onclick="toggleHaptics()">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Prayer Settings -->
+        <div class="settings-section">
+            <h2 class="settings-section-title"><i class="bi bi-clock-history" aria-hidden="true"></i>مواقيت الصلاة</h2>
+
+            <div class="setting-item setting-item--stacked">
+                <div class="setting-label" id="prayerMethodLabel">
+                    <span>طريقة الحساب</span>
+                    <span class="setting-desc">تختلف زوايا الفجر والعشاء بين الهيئات</span>
+                </div>
+                <select id="prayerMethodSelect" class="select" aria-labelledby="prayerMethodLabel"
+                    onchange="changePrayerMethod()">
+                    <option value="4">أم القرى — مكة المكرمة</option>
+                    <option value="5">الهيئة المصرية العامة للمساحة</option>
+                    <option value="3">رابطة العالم الإسلامي</option>
+                    <option value="2">الجمعية الإسلامية لأمريكا الشمالية</option>
+                    <option value="1">جامعة العلوم الإسلامية — كراتشي</option>
+                    <option value="8">دائرة الشؤون الإسلامية — دبي</option>
+                    <option value="9">وزارة الأوقاف — الكويت</option>
+                    <option value="10">وزارة الأوقاف — قطر</option>
+                    <option value="12">الاتحاد الإسلامي — فرنسا</option>
+                    <option value="13">رئاسة الشؤون الدينية — تركيا</option>
+                </select>
+            </div>
+
+            <div class="setting-item setting-item--stacked">
+                <div class="setting-label" id="asrMadhabLabel">
+                    <span>مذهب العصر</span>
+                    <span class="setting-desc">الحنفي يؤخر العصر حتى يصير ظل الشيء مثليه</span>
+                </div>
+                <div class="segmented" role="group" aria-labelledby="asrMadhabLabel">
+                    <button type="button" class="segmented-option" data-asr="0" onclick="setAsrSchool(0)"
+                        aria-pressed="true"><span>الجمهور</span></button>
+                    <button type="button" class="segmented-option" data-asr="1" onclick="setAsrSchool(1)"
+                        aria-pressed="false"><span>الحنفي</span></button>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>الموقع المحفوظ</span>
+                    <span class="setting-desc" id="savedLocationDesc">لم يتم تحديد موقع بعد</span>
+                </div>
+                <button type="button" class="font-size-btn font-size-btn--danger" onclick="clearSavedLocation()"
+                    aria-label="حذف الموقع المحفوظ"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i></button>
             </div>
         </div>
 
         <!-- Notification Settings -->
         <div class="settings-section">
-            <h2 class="settings-section-title">التنبيهات</h2>
+            <h2 class="settings-section-title"><i class="bi bi-bell-fill" aria-hidden="true"></i>التنبيهات</h2>
 
             <div class="setting-item">
                 <div class="setting-label">
@@ -147,7 +242,7 @@
 
         <!-- Ramadan Settings -->
         <div class="settings-section" id="ramadanSettingsSection">
-            <h2 class="settings-section-title">إعدادات رمضان</h2>
+            <h2 class="settings-section-title"><i class="bi bi-moon-fill" aria-hidden="true"></i>إعدادات رمضان</h2>
             <div class="setting-item">
                 <div class="setting-label">
                     <span id="ramadanStartLabel">بداية شهر رمضان</span>
@@ -164,15 +259,68 @@
             </div>
         </div>
 
+        <!-- Data & Storage -->
+        <div class="settings-section">
+            <h2 class="settings-section-title"><i class="bi bi-hdd-fill" aria-hidden="true"></i>البيانات والتخزين</h2>
+
+            <div class="storage-meter" id="storageMeter">
+                <div class="storage-meter-head">
+                    <span id="storageUsedLabel">جاري الحساب…</span>
+                    <span id="storagePercentLabel"></span>
+                </div>
+                <div class="storage-meter-track">
+                    <div class="storage-meter-fill" id="storageMeterFill"></div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>نسخة احتياطية</span>
+                    <span class="setting-desc" id="backupDesc">حفظ العلامات والحفظ والأذكار والإعدادات في ملف</span>
+                </div>
+                <button type="button" class="font-size-btn" onclick="exportBackup()"
+                    aria-label="تصدير نسخة احتياطية"><i class="bi bi-box-arrow-down" aria-hidden="true"></i></button>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>استعادة نسخة</span>
+                    <span class="setting-desc">استرجاع بياناتك من ملف نسخة احتياطية</span>
+                </div>
+                <button type="button" class="font-size-btn" onclick="document.getElementById('backupFileInput').click()"
+                    aria-label="استعادة نسخة احتياطية"><i class="bi bi-box-arrow-up" aria-hidden="true"></i></button>
+                <input type="file" id="backupFileInput" accept="application/json,.json" class="sr-only"
+                    onchange="importBackup(this)">
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>مسح ذاكرة التخزين المؤقت</span>
+                    <span class="setting-desc">حذف الملفات المخزنة مؤقتاً — لا يمسّ علاماتك أو تقدمك</span>
+                </div>
+                <button type="button" class="font-size-btn font-size-btn--danger" onclick="clearCache()"
+                    aria-label="مسح ذاكرة التخزين المؤقت"><i class="bi bi-trash-fill" aria-hidden="true"></i></button>
+            </div>
+        </div>
+
         <!-- App Info -->
         <div class="settings-section">
-            <h2 class="settings-section-title">حول التطبيق</h2>
+            <h2 class="settings-section-title"><i class="bi bi-info-circle-fill" aria-hidden="true"></i>حول التطبيق</h2>
 
             <div class="setting-item">
                 <div class="setting-label">
                     <span>الإصدار</span>
                     <span class="setting-desc">2.0</span>
                 </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>الجولات التعريفية</span>
+                    <span class="setting-desc">إعادة عرض شرح كل صفحة عند زيارتها</span>
+                </div>
+                <button type="button" class="font-size-btn" onclick="replayTours()"
+                    aria-label="إعادة الجولات التعريفية"><i class="bi bi-signpost-2-fill" aria-hidden="true"></i></button>
             </div>
 
             <div class="setting-item">
@@ -193,14 +341,6 @@
                     aria-label="التحقق من التحديثات"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
             </div>
 
-            <div class="setting-item">
-                <div class="setting-label">
-                    <span>مسح ذاكرة التخزين المؤقت</span>
-                    <span class="setting-desc">حذف البيانات المخزنة مؤقتاً لتوفير المساحة</span>
-                </div>
-                <button type="button" class="font-size-btn font-size-btn--danger" onclick="clearCache()"
-                    aria-label="مسح ذاكرة التخزين المؤقت"><i class="bi bi-trash-fill" aria-hidden="true"></i></button>
-            </div>
         </div>
 
         <button type="button" class="save-btn" onclick="saveSettings()"><i class="bi bi-floppy-fill" aria-hidden="true"></i><span>حفظ الإعدادات</span></button>
@@ -212,6 +352,8 @@
     <script src="js/common.js"></script>
         <script src="js/page-scripts/settings.js"></script>
     <script src="js/native-ui.js"></script>
+    <script src="js/tour.js"></script>
+    <script src="js/tours.js"></script>
 </body>
 
 </html>

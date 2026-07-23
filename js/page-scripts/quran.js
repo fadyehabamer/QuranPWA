@@ -137,22 +137,9 @@ let totalPages = 0;
             memorizedAyahsByNumber = {};
         }
 
-        const surahNames = [
-            'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال',
-            'التوبة', 'يونس', 'هود', 'يوسف', 'الرعد', 'ابراهيم', 'الحجر', 'النحل', 'الإسراء',
-            'الكهف', 'مريم', 'طه', 'الأنبياء', 'الحج', 'المؤمنون', 'النور', 'الفرقان', 'الشعراء',
-            'النمل', 'القصص', 'العنكبوت', 'الروم', 'لقمان', 'السجدة', 'الأحزاب', 'سبإ', 'فاطر',
-            'يس', 'الصافات', 'ص', 'الزمر', 'غافر', 'فصلت', 'الشورى', 'الزخرف', 'الدخان', 'الجاثية',
-            'الأحقاف', 'محمد', 'الفتح', 'الحجرات', 'ق', 'الذاريات', 'الطور', 'النجم', 'القمر',
-            'الرحمن', 'الواقعة', 'الحديد', 'المجادلة', 'الحشر', 'الممتحنة', 'الصف', 'الجمعة',
-            'المنافقون', 'التغابن', 'الطلاق', 'التحريم', 'الملك', 'القلم', 'الحاقة', 'المعارج',
-            'نوح', 'الجن', 'المزمل', 'المدثر', 'القيامة', 'الانسان', 'المرسلات', 'النبإ',
-            'النازعات', 'عبس', 'التكوير', 'الإنفطار', 'المطففين', 'الإنشقاق', 'البروج', 'الطارق',
-            'الأعلى', 'الغاشية', 'الفجر', 'البلد', 'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين',
-            'العلق', 'القدر', 'البينة', 'الزلزلة', 'العاديات', 'القارعة', 'التكاثر', 'العصر',
-            'الهمزة', 'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر', 'المسد',
-            'الإخلاص', 'الفلق', 'الناس'
-        ];
+        // Byte-identical to window.QURAN_SURAH_NAMES; kept as an alias so the
+        // search haystack below reads unchanged.
+        const surahNames = window.QURAN_SURAH_NAMES;
 
         const surahInfo = window.QURAN_SURAHS;
         const surahToJuz = window.QURAN_SURAH_TO_JUZ;
@@ -288,6 +275,9 @@ let totalPages = 0;
             if (!input) return;
 
             const query = input.value.trim();
+            // Searching only filters the surah list, so a query on the Juz/Page
+            // tab would otherwise look like it did nothing.
+            if (query && activeQuranTab !== 'surah') switchQuranTab('surah');
             filterSurahs(query);
 
             clearTimeout(searchDebounceTimer);
@@ -339,6 +329,59 @@ let totalPages = 0;
             }, 320);
         }
 
+        /* ------------------------------------------------------------------
+           Index browsing: السور / الأجزاء / الصفحات
+           ------------------------------------------------------------------ */
+
+        // Ornamental 8-point star (khatim) framing each index number. Drawn as a
+        // single polygon rather than two rotated squares so the outline stays one
+        // clean stroke instead of showing the overlap seams.
+        const STAR_POINTS =
+            '50.00,0.00 64.65,14.64 85.36,14.64 85.36,35.35 100.00,50.00 85.36,64.65 ' +
+            '85.36,85.36 64.65,85.36 50.00,100.00 35.35,85.36 14.64,85.36 14.64,64.65 ' +
+            '0.00,50.00 14.64,35.35 14.64,14.64 35.35,14.64';
+
+        // Arabic-Indic digits, used for the decorative mushaf-style numeral so it
+        // reads as ornament rather than a second copy of the index number.
+        function toArabicDigits(value) {
+            return String(value).replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+        }
+
+        function starBadge(value) {
+            return `<span class="star-badge" aria-hidden="true">
+                        <svg viewBox="0 0 100 100" focusable="false"><polygon points="${STAR_POINTS}"/></svg>
+                        <span class="star-badge-num">${value}</span>
+                    </span>`;
+        }
+
+        const quranIndex = window.QURAN_INDEX || null;
+        let activeQuranTab = 'surah';
+        let juzListRendered = false;
+        let pageListRendered = false;
+
+        function switchQuranTab(tab) {
+            activeQuranTab = tab;
+
+            const panels = { surah: 'surahList', juz: 'juzList', page: 'pageList' };
+            const tabs = { surah: 'quranTabSurah', juz: 'quranTabJuz', page: 'quranTabPage' };
+
+            Object.entries(panels).forEach(([key, id]) => {
+                const panel = document.getElementById(id);
+                if (panel) panel.hidden = key !== tab;
+            });
+            Object.entries(tabs).forEach(([key, id]) => {
+                const button = document.getElementById(id);
+                if (!button) return;
+                button.classList.toggle('is-active', key === tab);
+                button.setAttribute('aria-selected', String(key === tab));
+            });
+
+            // Render on first reveal — the page list is 604 rows and there is no
+            // reason to build it for someone who never opens that tab.
+            if (tab === 'juz' && !juzListRendered) { renderJuzList(); juzListRendered = true; }
+            if (tab === 'page' && !pageListRendered) { renderPageList(); pageListRendered = true; }
+        }
+
         function renderSurahList() {
             const list = document.getElementById('surahList');
             let html = '';
@@ -346,20 +389,165 @@ let totalPages = 0;
             surahInfo.forEach((surah, index) => {
                 const number = index + 1;
                 const juz = surahToJuz[number];
+                const isMakki = String(surah.type).includes('مكية');
                 html += `
-                    <button type="button" class="surah-item" onclick="selectSurah(` + number + `)" data-name="` + surah.name + `" data-number="` + number + `">
-                        <div class="surah-item-right">
-                            <div class="surah-number">` + number + `</div>
-                            <div class="surah-item-info">
-                                <div class="surah-item-name">` + surah.name + `</div>
-                                <div class="surah-item-details">الجزء ` + juz + ` • ` + surah.type + ` • ` + surah.verses + ` آيات</div>
-                            </div>
-                        </div>
+                    <button type="button" class="surah-item" onclick="selectSurah(${number})" data-name="${surah.name}" data-number="${number}">
+                        ${starBadge(number)}
+                        <span class="surah-item-info">
+                            <span class="surah-item-name">${surah.name}</span>
+                            <span class="surah-item-details">
+                                <span class="surah-tag ${isMakki ? 'is-makki' : 'is-madani'}">${surah.type}</span>
+                                <span class="surah-dot">•</span>
+                                <span>${surah.verses} آية</span>
+                                <span class="surah-dot">•</span>
+                                <span>الجزء ${juz}</span>
+                            </span>
+                        </span>
+                        <span class="surah-item-arabic" aria-hidden="true">${toArabicDigits(number)}</span>
                     </button>
                 `;
             });
 
             list.innerHTML = html;
+        }
+
+        // Where a juz/page starts, described as "السورة — آية ن".
+        function describeStart(surahNumber, ayahNumber) {
+            const surah = surahInfo[surahNumber - 1];
+            const name = surah ? surah.name : `سورة ${surahNumber}`;
+            return `${name} • الآية ${ayahNumber}`;
+        }
+
+        function renderJuzList() {
+            const list = document.getElementById('juzList');
+            if (!list || !quranIndex) return;
+
+            const starts = quranIndex.JUZ_STARTS;
+            list.innerHTML = starts.map(([surahNumber, ayahNumber], index) => {
+                const juzNumber = index + 1;
+                const page = quranIndex.pageForAyah(surahNumber, ayahNumber);
+
+                // A juz ends on the ayah before the next juz begins. When the next
+                // juz starts at ayah 1 the boundary falls on the previous surah's
+                // final ayah, so step back a surah rather than printing "الآية 0".
+                const next = starts[index + 1];
+                let endLabel = 'الناس • الآية 6';
+                if (next) {
+                    let endSurah = next[0];
+                    let endAyah = next[1] - 1;
+                    if (endAyah < 1) {
+                        endSurah -= 1;
+                        endAyah = surahInfo[endSurah - 1]?.verses || 1;
+                    }
+                    endLabel = describeStart(endSurah, endAyah);
+                }
+
+                return `
+                    <button type="button" class="surah-item" onclick="openSearchAyah(${surahNumber}, ${ayahNumber})">
+                        ${starBadge(juzNumber)}
+                        <span class="surah-item-info">
+                            <span class="surah-item-name">الجزء ${juzNumber}</span>
+                            <span class="surah-item-details">
+                                <span>${describeStart(surahNumber, ayahNumber)}</span>
+                                <span class="surah-dot">←</span>
+                                <span>${endLabel}</span>
+                            </span>
+                        </span>
+                        <span class="surah-item-page">ص ${page}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderPageList() {
+            const list = document.getElementById('pageList');
+            if (!list || !quranIndex) return;
+
+            let html = '';
+            let lastJuz = 0;
+            quranIndex.PAGE_STARTS.forEach(([surahNumber, ayahNumber], index) => {
+                const pageNumber = index + 1;
+                const juz = quranIndex.juzForAyah(surahNumber, ayahNumber);
+                if (juz !== lastJuz) {
+                    lastJuz = juz;
+                    html += `<div class="page-grid-heading">الجزء ${juz}</div>`;
+                }
+                const surahName = surahInfo[surahNumber - 1]?.name || '';
+                html += `
+                    <button type="button" class="page-cell" onclick="openSearchAyah(${surahNumber}, ${ayahNumber})"
+                        title="صفحة ${pageNumber} — ${surahName}">
+                        <span class="page-cell-num">${pageNumber}</span>
+                        <span class="page-cell-surah">${surahName}</span>
+                    </button>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        /* ------------------------------------------------------------------
+           Quick access strip
+           ------------------------------------------------------------------ */
+
+        // The most recently touched entry in the per-surah reading positions.
+        function getLastReadingEntry() {
+            const positions = getSurahReadingPositions();
+            let best = null;
+            Object.entries(positions).forEach(([surahNumber, entry]) => {
+                if (!entry || typeof entry.updatedAt !== 'number') return;
+                if (!best || entry.updatedAt > best.updatedAt) {
+                    best = { surah: Number(surahNumber), page: entry.page || 0, updatedAt: entry.updatedAt };
+                }
+            });
+            return best;
+        }
+
+        function resumeLastReading() {
+            const last = getLastReadingEntry();
+            if (last) openSurahAtPage(last.surah, last.page);
+            else selectSurah(1);
+        }
+
+        function openRandomAyah() {
+            const surahNumber = 1 + Math.floor(Math.random() * surahInfo.length);
+            const verses = surahInfo[surahNumber - 1]?.verses || 1;
+            const ayahNumber = 1 + Math.floor(Math.random() * verses);
+            openSearchAyah(surahNumber, ayahNumber);
+        }
+
+        function renderQuickAccess() {
+            const label = document.getElementById('quickResumeLabel');
+            const sub = document.getElementById('quickResumeSub');
+            const last = getLastReadingEntry();
+
+            if (label && sub) {
+                if (last) {
+                    const name = surahInfo[last.surah - 1]?.name || '';
+                    label.textContent = 'متابعة القراءة';
+                    sub.textContent = `${name} • صفحة ${last.page + 1}`;
+                } else {
+                    label.textContent = 'ابدأ القراءة';
+                    sub.textContent = 'سورة الفاتحة';
+                }
+            }
+
+            const bookmarkCount = document.getElementById('quickBookmarkCount');
+            if (bookmarkCount) {
+                try { bookmarkCount.textContent = String(getBookmarks().length); }
+                catch (_error) { bookmarkCount.textContent = '0'; }
+            }
+
+            const khatma = document.getElementById('quickKhatmaValue');
+            if (khatma) {
+                // Progress is however much of the mushaf the reader has visited,
+                // approximated by the furthest page reached in each saved surah.
+                try {
+                    const positions = getSurahReadingPositions();
+                    const readSurahs = Object.keys(positions).length;
+                    khatma.textContent = readSurahs ? `${Math.round((readSurahs / 114) * 100)}%` : '—';
+                } catch (_error) {
+                    khatma.textContent = '—';
+                }
+            }
         }
 
         function filterSurahs(searchTermOverride = '') {
@@ -453,7 +641,10 @@ let totalPages = 0;
         function showSurahList() {
             document.getElementById('surahListView').classList.add('active');
             document.getElementById('surahReaderView').classList.remove('active');
+            renderQuickAccess();
             document.body.classList.remove('quran-reader-active');
+            // Never leave the app chrome hidden outside the reader.
+            setReaderImmersion(false);
             updateMushafFocusMode({ exitFullscreen: true });
             stopMemorizationAyahAudio(true);
             hideAyahQuickActions({ immediate: true });
@@ -1031,6 +1222,65 @@ let totalPages = 0;
             ];
         }
 
+        /**
+         * Split a leading Bismillah off an ayah, returning both halves.
+         *
+         * This used to be done with `indexOf('لرَّحِيمِ')`, which never matched:
+         * the Uthmani text orders the marks shadda-then-fatha (رّ َ) while the
+         * literal in the source had fatha-then-shadda, so the search returned
+         * -1 and the Bismillah stayed glued to the front of ayah 1 of all 112
+         * surahs that open with it.
+         *
+         * Comparing on a mark-free, alef-folded projection avoids depending on
+         * any particular spelling, while the character-by-character walk keeps
+         * the exact original text (marks and all) for display.
+         */
+        const BISMILLAH_PLAIN = 'بسم الله الرحمن الرحيم';
+
+        // Drop tashkeel/quranic annotation marks and fold the alef variants,
+        // WITHOUT collapsing anything else — this is a per-character projection.
+        function plainArabicChar(character) {
+            if (/[ً-ٰٟۖ-ۭـ]/.test(character)) return '';
+            if (/[آأإٱ]/.test(character)) return 'ا';
+            return character;
+        }
+
+        function splitLeadingBismillah(text) {
+            const source = String(text || '');
+            let plain = '';
+
+            for (let i = 0; i < source.length; i += 1) {
+                plain += plainArabicChar(source[i]);
+
+                if (plain === BISMILLAH_PLAIN) {
+                    // The projection matched on the last LETTER; any marks
+                    // sitting on it come after, so keep consuming them or the
+                    // final kasra of "ٱلرَّحِيمِ" would head the next line.
+                    let end = i + 1;
+                    while (end < source.length && plainArabicChar(source[end]) === '') end += 1;
+
+                    return {
+                        bismillah: source.slice(0, end),
+                        rest: source.slice(end).trim()
+                    };
+                }
+                // Bail as soon as the prefix diverges, so an ayah that merely
+                // starts with "بسم" of something else is left untouched.
+                if (!BISMILLAH_PLAIN.startsWith(plain)) break;
+            }
+
+            return { bismillah: '', rest: source };
+        }
+
+        // Ayah text as it should be displayed: the opening Bismillah is set on
+        // its own line by the caller, so it must not be repeated inside ayah 1.
+        function ayahTextWithoutBismillah(ayah) {
+            if (ayah.numberInSurah !== 1 || currentSurah === 1 || currentSurah === 9) {
+                return ayah.text;
+            }
+            return splitLeadingBismillah(ayah.text).rest;
+        }
+
         function renderTextPage(content, page) {
             let html = '<div class="page-content">';
 
@@ -1043,27 +1293,36 @@ let totalPages = 0;
                 `;
             }
 
+            // The Bismillah opens every surah but Al-Fatiha (where it is ayah 1
+            // itself) and At-Tawbah (which has none). It belongs on its own line
+            // above the text, exactly as a printed mushaf sets it — not run into
+            // the first ayah.
+            const opensWithBismillah = currentSurah !== 1 && currentSurah !== 9;
+            const firstAyahOnPage = page.ayahs[0];
+            const showBismillah = opensWithBismillah
+                && firstAyahOnPage
+                && firstAyahOnPage.numberInSurah === 1
+                && splitLeadingBismillah(firstAyahOnPage.text).bismillah;
+
+            if (showBismillah) {
+                html += `<div class="bismillah">${showBismillah}</div>`;
+            }
+
             html += '<div class="ayahs-container">';
             page.ayahs.forEach((ayah, idx) => {
                 let ayahText = ayah.text;
 
-                // Remove Bismillah from the first ayah of any surah (except Al-Fatiha and At-Tawbah)
-                // Al-Fatiha (1): Bismillah is part of the surah itself
-                // At-Tawbah (9): Has no Bismillah
-                if (ayah.numberInSurah === 1 && currentSurah !== 1 && currentSurah !== 9) {
-                    // Bismillah "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ " is 38 characters (including trailing space)
-                    // Check if text starts with بسم (with or without diacritics)
-                    if (ayahText.startsWith('بِسْمِ') || ayahText.startsWith('بِسم') || ayahText.startsWith('بسم')) {
-                        // Find the position after الرحيم
-                        const rahimIndex = ayahText.indexOf('لرَّحِيمِ');
-                        if (rahimIndex !== -1) {
-                            ayahText = ayahText.substring(rahimIndex + 'لرَّحِيمِ'.length).trim();
-                        }
-                    }
-                    ayahText = ayahText.replace(/﷽\s*/g, '');
+                if (ayah.numberInSurah === 1 && opensWithBismillah) {
+                    ayahText = splitLeadingBismillah(ayahText).rest;
+                    ayahText = ayahText.replace(/﷽\s*/g, '').trim();
                 }
 
                 html += `<span class="ayah" data-ayah-number="${ayah.number}" id="ayah-${ayah.number}">${ayahText} <span class="ayah-number">${ayah.numberInSurah}</span>`;
+                // One of the 15 prostration ayahs — mark it the way a printed
+                // mushaf does, so the reader knows to prostrate here.
+                if (quranIndex && quranIndex.isSajdaAyah(currentSurah, ayah.numberInSurah)) {
+                    html += ` <span class="sajda-mark" title="موضع سجدة">۩ سجدة</span>`;
+                }
                 if (idx < page.ayahs.length - 1) {
                     html += ` <span class="ayah-separator">•</span> `;
                 }
@@ -1071,8 +1330,14 @@ let totalPages = 0;
             });
             html += '</div>';
 
+            // Reader pages are 10-ayah chunks, not mushaf pages. Show the real
+            // mushaf page too so the position is meaningful outside the app.
             const juz = surahToJuz[currentSurah];
-            html += `<div class="page-number">الجزء ${juz} • صفحة ${page.pageNum} من ${totalPages}</div>`;
+            const firstAyah = page.ayahs[0]?.numberInSurah;
+            const mushafPage = (quranIndex && firstAyah)
+                ? ` • ص ${quranIndex.pageForAyah(currentSurah, firstAyah)} بالمصحف`
+                : '';
+            html += `<div class="page-number">الجزء ${juz} • صفحة ${page.pageNum} من ${totalPages}${mushafPage}</div>`;
             html += '</div>';
 
             content.innerHTML = html;
@@ -1572,6 +1837,7 @@ let totalPages = 0;
         }
 
         renderSurahList();
+        renderQuickAccess();
         initReaderFontLevel();
         initReaderDisplayMode();
         updateMemorizationCoachUI();
@@ -2235,6 +2501,49 @@ let totalPages = 0;
             quickActions.style.top = `${top}px`;
         }
 
+        /* Immersive reading ------------------------------------------------- */
+        const IMMERSION_HINT_SEEN_KEY = 'readerImmersionHintSeenV1';
+        let immersionHintTimer = null;
+
+        function showImmersionHint(message) {
+            let hint = document.getElementById('immersionHint');
+            if (!hint) {
+                hint = document.createElement('div');
+                hint.id = 'immersionHint';
+                hint.className = 'immersion-hint';
+                hint.setAttribute('role', 'status');
+                document.body.appendChild(hint);
+            }
+            hint.textContent = message;
+            // Next frame so the opacity transition actually runs.
+            requestAnimationFrame(() => hint.classList.add('visible'));
+
+            clearTimeout(immersionHintTimer);
+            immersionHintTimer = setTimeout(() => {
+                hint.classList.remove('visible');
+            }, 2600);
+        }
+
+        function setReaderImmersion(enabled) {
+            document.body.classList.toggle('reader-immersive', enabled);
+
+            if (!enabled) return;
+            // Explain the way out the first time, so the chrome never feels lost.
+            let seen = false;
+            try {
+                seen = localStorage.getItem(IMMERSION_HINT_SEEN_KEY) === '1';
+            } catch (_error) { /* storage blocked — just show the hint */ }
+
+            if (!seen) {
+                showImmersionHint('اضغط على أي فراغ لإظهار الأدوات');
+                try { localStorage.setItem(IMMERSION_HINT_SEEN_KEY, '1'); } catch (_error) { }
+            }
+        }
+
+        function toggleReaderImmersion() {
+            setReaderImmersion(!document.body.classList.contains('reader-immersive'));
+        }
+
         function showAyahQuickActionsForElement(ayahElement) {
             if (!ayahElement || tafsirMode || !isReaderViewActive()) return;
 
@@ -2387,6 +2696,18 @@ let totalPages = 0;
                 if (!ayahElement || !content.contains(ayahElement)) return;
 
                 showAyahQuickActionsForElement(ayahElement);
+            });
+
+            // Immersive reading: a tap on blank page area hides/shows the chrome.
+            // Ayahs and controls are excluded so their own actions still work.
+            content.addEventListener('click', (event) => {
+                if (!isReaderViewActive()) return;
+                if (document.body.classList.contains('mushaf-focus-mode')) return;
+                if (event.target.closest(
+                    '.ayah[data-ayah-number], button, a, input, textarea, select, .ayah-quick-actions, .reader-offline-state'
+                )) return;
+
+                toggleReaderImmersion();
             });
 
             quickActions.addEventListener('mouseenter', () => {
@@ -3261,14 +3582,14 @@ let totalPages = 0;
 
                         return {
                             ayahNumber: ayah.numberInSurah,
-                            arabicText: ayah.text,
+                            arabicText: ayahTextWithoutBismillah(ayah),
                             tafsirText: data.data.text
                         };
                     } catch (error) {
                         console.error('Error loading tafsir for ayah', ayah.number, error);
                         return {
                             ayahNumber: ayah.numberInSurah,
-                            arabicText: ayah.text,
+                            arabicText: ayahTextWithoutBismillah(ayah),
                             tafsirText: 'عذراً، لم نتمكن من تحميل تفسير هذه الآية'
                         };
                     }

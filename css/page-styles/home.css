@@ -28,57 +28,71 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border-radius: var(--radius-2xl, 24px);
+  border-radius: var(--radius-xl, 24px);
   padding: var(--space-5, 1.25rem);
-  padding-block-start: calc(var(--space-5, 1.25rem) + 2px);
-  color: #fff;
-  /* Fallback sky; JS sets data-phase to swap it. */
-  background: linear-gradient(160deg, #1f3a5f 0%, #2c5364 100%);
-  box-shadow: 0 18px 40px -22px rgba(15, 23, 42, 0.55);
-  min-height: 236px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-1);
+  box-shadow: var(--elev-2);
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 1rem);
+  color: var(--text-color);
 }
 
-/* Bottom scrim guarantees light-ink contrast on every phase, whatever the
-   sky's lightest stop is. */
-.prayer-hero::after {
-  content: "";
+/* Time-of-day tint. Warm and light rather than a dark sky, so the hero sits in
+   the same paper world as every other card; the phase reads as a soft wash. */
+/* Time-of-day wash. The first pass tinted these toward sunset orange, which
+   read as a warning colour against the app's green and clashed with a custom
+   accent. They are now all neutral paper tones — the phase still shifts the
+   card, but as a change in warmth, not in hue. */
+.prayer-hero[data-phase='night']     { background: linear-gradient(160deg, #f3f0e9 0%, #e8e4da 100%); }
+.prayer-hero[data-phase='dawn']      { background: linear-gradient(160deg, #f8f5ee 0%, #eeeae0 100%); }
+.prayer-hero[data-phase='morning']   { background: linear-gradient(160deg, #fcfaf4 0%, #f2efe6 100%); }
+.prayer-hero[data-phase='noon']      { background: linear-gradient(160deg, #fefcf7 0%, #f5f2e9 100%); }
+.prayer-hero[data-phase='afternoon'] { background: linear-gradient(160deg, #fbf8f1 0%, #f0ece1 100%); }
+.prayer-hero[data-phase='sunset']    { background: linear-gradient(160deg, #f8f5ed 0%, #ece7dc 100%); }
+
+:root[data-theme='dark'] .prayer-hero,
+:root[data-theme='dark'] .prayer-hero[data-phase] {
+  background: linear-gradient(160deg, var(--surface-2) 0%, var(--surface-1) 100%);
+  border-color: var(--border-color);
+}
+
+/* Mosque silhouette watermark, drawn inline (no asset fetch). */
+.ph-mosque {
   position: absolute;
-  inset: 0;
+  inset-inline: 0;
+  inset-block-end: 0;
   z-index: -1;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0) 34%, rgba(0, 0, 0, 0.32) 100%);
+  width: 100%;
+  height: 90px;
+  fill: color-mix(in srgb, var(--primary-color) 12%, transparent);
   pointer-events: none;
 }
-
-/* Faint calligraphic watermark, self-contained (no asset fetch). */
-.prayer-hero::before {
-  content: "۩";
-  position: absolute;
-  inset-block-start: -0.35em;
-  inset-inline-start: -0.12em;
-  z-index: -1;
-  font-size: 12rem;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.06);
-  pointer-events: none;
-}
-
-/* --- Time-of-day phases (dark, low-chroma; light ink stays ≥4.5:1) --- */
-.prayer-hero[data-phase="night"]     { background: linear-gradient(160deg, #171d33 0%, #0d1120 100%); }
-.prayer-hero[data-phase="dawn"]      { background: linear-gradient(160deg, #2a2a4a 0%, #4a3a52 45%, #274357 100%); }
-.prayer-hero[data-phase="morning"]   { background: linear-gradient(160deg, #1f3a5f 0%, #2c5364 100%); }
-.prayer-hero[data-phase="noon"]      { background: linear-gradient(160deg, #1c4a63 0%, #2f6178 100%); }
-.prayer-hero[data-phase="afternoon"] { background: linear-gradient(160deg, #354063 0%, #6b5335 100%); }
-.prayer-hero[data-phase="sunset"]    { background: linear-gradient(160deg, #2a2140 0%, #6b3a44 62%, #8a4a2a 100%); }
 
 .prayer-hero-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3, 0.75rem);
 }
+
+.ph-place {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ph-hijri {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ph-hijri:empty { display: none; }
 
 .ph-location {
   display: inline-flex;
@@ -86,98 +100,118 @@
   gap: 6px;
   min-width: 0;
   font-size: 0.875rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  color: var(--text-color);
 }
-.ph-location i { font-size: 0.9rem; opacity: 0.85; }
-.ph-location span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.ph-location i { font-size: 0.9rem; color: var(--primary-color); }
+.ph-location span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.ph-actions {
-  display: inline-flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
+.ph-actions { display: inline-flex; gap: 6px; flex-shrink: 0; }
+
 .ph-icon-btn {
   width: 38px;
   height: 38px;
   display: grid;
   place-items: center;
-  border: none;
+  border: 1px solid var(--border-color);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
+  background: var(--surface-1);
+  color: var(--text-secondary);
   font-size: 1rem;
   cursor: pointer;
   text-decoration: none;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  transition: background var(--dur-2, 180ms) var(--ease, ease);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
 }
-.ph-icon-btn:hover { background: rgba(255, 255, 255, 0.24); }
+.ph-icon-btn:hover { color: var(--primary-color); border-color: var(--primary-color); }
 
-/* --- Next-prayer focus --- */
+/* --- Next prayer + countdown ring --- */
 .prayer-hero-main {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-block-start: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4, 1rem);
 }
+
+.ph-now { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
 .ph-next-label {
   font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.72);
+  font-weight: 600;
+  color: var(--text-secondary);
 }
-.ph-next-headline {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
+
 .ph-next-name {
-  font-family: var(--font-arabic, "Amiri", serif);
+  font-family: var(--font-quran, 'Amiri', serif);
   font-size: 2rem;
   font-weight: 700;
   line-height: 1.15;
-}
-.ph-next-time {
-  font-size: 1.375rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
-  color: var(--gold-300, #f9d423);
-}
-.ph-countdown {
-  margin-block-start: 2px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.88);
-  font-variant-numeric: tabular-nums;
+  color: var(--text-color);
 }
 
-/* --- Timeline between previous and next prayer --- */
-.ph-timeline {
-  margin-block: 2px;
+.ph-next-time {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--primary-color);
 }
-.ph-track {
+
+.ph-edges {
+  margin-block-start: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ph-edges:empty { display: none; }
+
+.ph-ring {
   position: relative;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-  overflow: hidden;
+  flex-shrink: 0;
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
 }
-.ph-fill {
+
+.ph-ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+
+.ph-ring-track {
+  fill: none;
+  stroke: color-mix(in srgb, var(--text-color) 10%, transparent);
+  stroke-width: 8;
+}
+
+.ph-ring-fill {
+  fill: none;
+  stroke: var(--primary-color);
+  stroke-width: 8;
+  stroke-linecap: round;
+  /* 2 * pi * r (r = 52) */
+  stroke-dasharray: 326.726;
+  stroke-dashoffset: 326.726;
+  transition: stroke-dashoffset 500ms linear;
+}
+
+.ph-ring-label {
   position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: 0%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.55), var(--gold-300, #f9d423));
-  transition: width var(--dur-4, 420ms) var(--ease, ease);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.ph-ring-cap {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ph-ring-time {
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--text-color);
 }
 
 /* --- Five prayer chips --- */
@@ -185,7 +219,10 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
+  padding-block-start: var(--space-3, 0.75rem);
+  border-block-start: 1px solid var(--border-color);
 }
+
 .pw-item {
   display: flex;
   flex-direction: column;
@@ -194,25 +231,23 @@
   padding: 8px 4px;
   border-radius: var(--radius-md, 12px);
   text-align: center;
-  transition: background var(--dur-2, 180ms) var(--ease, ease);
 }
+
 .pw-item.active {
-  background: rgba(255, 255, 255, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-color) 26%, transparent);
 }
-.pw-name {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.78);
-}
-.pw-item.active .pw-name { color: #fff; }
+
+.pw-name { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
+.pw-item.active .pw-name { color: var(--primary-color); }
+
 .pw-time {
   font-size: 0.8125rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--text-color);
 }
-.pw-item.active .pw-time { color: var(--gold-300, #f9d423); }
+.pw-item.active .pw-time { color: var(--primary-color); }
 
 /* Location-detect fallback inside the hero. */
 .detect-location-container {
@@ -226,15 +261,16 @@
   gap: 8px;
   min-height: 44px;
   padding: 0 18px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid var(--primary-color);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
+  background: var(--primary-color);
+  color: var(--on-primary);
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
-.detect-location-btn:hover { background: rgba(255, 255, 255, 0.24); }
+.detect-location-btn:hover { filter: brightness(1.05); }
+
 
 /* ==========================================================================
    2. Quick-action grid — Continue reading + Khatma
@@ -610,3 +646,89 @@
 :root[data-theme="dark"] .quick-card.gold .quick-card-cta,
 :root[data-theme="dark"] .inspiration-card.gold .inspiration-label,
 :root[data-theme="dark"] .quick-card.gold .quick-card-icon { color: var(--gold-300, #f9d423); }
+
+/* ==========================================================================
+   2b. Prayer tracker — tap each prayer once you've prayed it
+   ========================================================================== */
+.prayer-tracker {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl, 20px);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem) var(--space-5, 1.25rem);
+  background: var(--surface-1);
+}
+
+.tracker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-end: var(--space-4, 1rem);
+}
+
+.tracker-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+.tracker-title i { color: var(--primary-color); }
+
+.tracker-meta {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tracker-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.tracker-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 62px;
+  padding: 8px 4px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 14px);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-fast),
+              border-color var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.tracker-pill i { font-size: 1rem; opacity: 0.55; }
+
+.tracker-pill:hover { border-color: var(--border-strong); color: var(--text-color); }
+
+/* Prayed. */
+.tracker-pill.is-done {
+  background: color-mix(in srgb, var(--primary-color) 14%, transparent);
+  border-color: color-mix(in srgb, var(--primary-color) 34%, transparent);
+  color: var(--primary-color);
+}
+.tracker-pill.is-done i { opacity: 1; }
+
+.tracker-streak {
+  margin-block-start: var(--space-3, 0.75rem);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.tracker-streak:empty { display: none; }
+
+@media (hover: none) and (pointer: coarse) {
+  .tracker-pill:active { transform: scale(0.96); }
+}

@@ -2101,6 +2101,13 @@ function initHadith() {
 async function initHomePrayerWidget() {
     const body = document.getElementById('pwBody');
     const locationEl = document.getElementById('pwLocation');
+
+    // Declared up here, not beside the render helpers below: updatePrayerUI is
+    // hoisted and gets called from the early-return path above those helpers,
+    // so a `let` further down would still be in its temporal dead zone.
+    const PH_RING_CIRCUMFERENCE = 326.726; // 2 * pi * r, r = 52 in the SVG
+    let phLastNextKey = null;
+
     const SHARED_COUNTRY_STORAGE_KEY = 'preferredManualCountryV1';
     const LEGACY_COUNTRY_STORAGE_KEY = 'selectedCountry';
 
@@ -2164,11 +2171,25 @@ async function initHomePrayerWidget() {
         maximumAge: 300000
     });
 
-    // Paints the hero from already-fetched timings. Split out from the fetch so
-    // the countdown/timeline can re-tick every minute without re-hitting the API.
+    // Cheap per-second update: only the countdown text and the ring sweep.
+    function tickPrayerHero(timings, timezone) {
+        const win = PrayerEngine.getDailyWindow(timings, timezone);
+
+        const countdownEl = document.getElementById('phCountdown');
+        const ringEl = document.getElementById('phRingFill');
+        if (countdownEl) countdownEl.textContent = PrayerEngine.formatCountdown(win.remainingSec);
+        if (ringEl) ringEl.style.strokeDashoffset = String(PH_RING_CIRCUMFERENCE * (1 - win.fraction));
+
+        // Rolled over into the next prayer — repaint the rest.
+        if (win.next.key !== phLastNextKey) renderPrayerHero(timings, timezone);
+    }
+
+    // Full paint. Split from the fetch so the hero can re-tick without
+    // re-hitting the API.
     function renderPrayerHero(timings, timezone) {
         const prayerNames = { Fajr: 'الفجر', Dhuhr: 'الظهر', Asr: 'العصر', Maghrib: 'المغرب', Isha: 'العشاء' };
         const win = PrayerEngine.getDailyWindow(timings, timezone);
+        phLastNextKey = win.next.key;
 
         const hero = document.getElementById('homePrayerWidget');
         if (hero) hero.setAttribute('data-phase', PrayerEngine.phaseForNow(timezone));
@@ -2176,11 +2197,18 @@ async function initHomePrayerWidget() {
         const nameEl = document.getElementById('phNextName');
         const timeEl = document.getElementById('phNextTime');
         const countdownEl = document.getElementById('phCountdown');
-        const fillEl = document.getElementById('phFill');
+        const ringEl = document.getElementById('phRingFill');
+        const edgesEl = document.getElementById('phEdges');
+
         if (nameEl) nameEl.textContent = win.next.label;
         if (timeEl) timeEl.textContent = PrayerEngine.formatTime(timings[win.next.key]);
-        if (countdownEl) countdownEl.textContent = PrayerEngine.formatRemainingMinutes(win.remainingMin);
-        if (fillEl) fillEl.style.width = `${Math.round(win.fraction * 100)}%`;
+        if (countdownEl) countdownEl.textContent = PrayerEngine.formatCountdown(win.remainingSec);
+        if (ringEl) ringEl.style.strokeDashoffset = String(PH_RING_CIRCUMFERENCE * (1 - win.fraction));
+
+        // The day's two edges, the way Suhur/Iftar are surfaced elsewhere.
+        if (edgesEl && timings.Sunrise && timings.Maghrib) {
+            edgesEl.textContent = `الشروق ${PrayerEngine.formatTime(timings.Sunrise)} • المغرب ${PrayerEngine.formatTime(timings.Maghrib)}`;
+        }
 
         let html = '';
         Object.keys(prayerNames).forEach(key => {
@@ -2210,20 +2238,31 @@ async function initHomePrayerWidget() {
                 locationEl.textContent = localStorage.getItem('locationText') || 'موقعك المكتشف';
             }
 
+            // Hijri date — comes back with the timings, no extra request.
+            const hijriEl = document.getElementById('phHijri');
+            const hijri = data.date && data.date.hijri;
+            if (hijriEl && hijri) {
+                const month = (hijri.month && hijri.month.ar) || '';
+                hijriEl.textContent = `${hijri.day} ${month} ${hijri.year} هـ`;
+            }
+
             renderPrayerHero(timings, timezone);
 
-            // Keep the countdown and timeline honest without re-fetching.
+            // Ring + countdown tick every second without re-fetching.
             if (window.__prayerHeroTick) clearInterval(window.__prayerHeroTick);
             window.__prayerHeroTick = setInterval(function () {
                 if (!document.getElementById('homePrayerWidget')) {
                     clearInterval(window.__prayerHeroTick);
                     return;
                 }
-                renderPrayerHero(timings, timezone);
-            }, 30000);
+                tickPrayerHero(timings, timezone);
+            }, 1000);
         } catch (e) {
+            // Was swallowed silently, which made a render bug look like a
+            // network failure.
+            console.error('Home prayer widget failed:', e);
             if (body) {
-                body.innerHTML = '<p style="grid-column:1/-1;font-size:12px;color:rgba(255,255,255,0.72);text-align:center;margin:0">فشل تحميل المواقيت</p>';
+                body.innerHTML = '<p style="grid-column:1/-1;font-size:12px;color:var(--text-muted);text-align:center;margin:0">فشل تحميل المواقيت</p>';
             }
         }
     }

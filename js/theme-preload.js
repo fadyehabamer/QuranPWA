@@ -99,11 +99,32 @@
     ACCENT_PROPS.forEach(function (prop) { root.style.removeProperty(prop); });
   }
 
+  /**
+   * Resolve the effective theme.
+   *
+   * `themeMode` is the current setting: 'light' | 'dark' | 'auto'. The older
+   * boolean `darkMode` key is still written so every other page keeps working
+   * unchanged, and is used as the fallback for anyone upgrading.
+   */
+  function resolveDarkMode() {
+    var mode = null;
+    try { mode = localStorage.getItem('themeMode'); } catch (_e) { /* storage blocked */ }
+
+    if (mode === 'dark') return true;
+    if (mode === 'light') return false;
+    if (mode === 'auto') {
+      return Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+
+    try { return localStorage.getItem('darkMode') === 'true'; }
+    catch (_e) { return false; }
+  }
+
   function syncTheme() {
-    var isDark = false;
-    try {
-      isDark = localStorage.getItem('darkMode') === 'true';
-    } catch (_e) { /* storage blocked */ }
+    var isDark = resolveDarkMode();
+    // Keep the legacy key in step so pages that read it directly agree with
+    // what is actually on screen — otherwise 'auto' would desync them.
+    try { localStorage.setItem('darkMode', String(isDark)); } catch (_e) { /* storage blocked */ }
 
     if (isDark) {
       root.setAttribute('data-theme', 'dark');
@@ -125,11 +146,46 @@
     } catch (_e) { /* storage blocked */ }
   }
 
+  /* Quran reading font ------------------------------------------------------
+     Applied here, before first paint, so the reader never flashes Amiri and
+     then reflows into the chosen face. `--quran-font-family` is read only by
+     the reader surfaces; the rest of the UI keeps --font-ui / --font-quran. */
+  var QURAN_FONTS = {
+    amiri: { label: 'أميري', stack: '"Amiri", serif' },
+    scheherazade: { label: 'شهرزاد', stack: '"Scheherazade New", "Amiri", serif' },
+    naskh: { label: 'نسخ', stack: '"Noto Naskh Arabic", "Amiri", serif' },
+    lateef: { label: 'لطيف', stack: '"Lateef", "Amiri", serif' },
+    kufi: { label: 'كوفي', stack: '"Reem Kufi", "Amiri", serif' }
+  };
+
+  function syncQuranFont() {
+    var key = null;
+    try { key = localStorage.getItem('quranFontFamily'); } catch (_e) { /* storage blocked */ }
+    var font = QURAN_FONTS[key] || QURAN_FONTS.amiri;
+    root.style.setProperty('--quran-font-family', font.stack);
+  }
+
   syncTheme();
+  syncQuranFont();
+
+  // In 'auto' the OS can flip the theme while the app is open.
+  if (window.matchMedia) {
+    var query = window.matchMedia('(prefers-color-scheme: dark)');
+    var onSystemThemeChange = function () {
+      var mode = null;
+      try { mode = localStorage.getItem('themeMode'); } catch (_e) { /* storage blocked */ }
+      if (mode === 'auto') syncTheme();
+    };
+    if (query.addEventListener) query.addEventListener('change', onSystemThemeChange);
+    else if (query.addListener) query.addListener(onSystemThemeChange);
+  }
 
   // Exposed so the settings page can re-derive the whole palette when the
   // accent OR the theme changes, instead of setting --primary-color alone.
   window.applyAccentColor = applyAccent;
   window.syncAppTheme = syncTheme;
   window.clearAccentColor = clearAccent;
+  window.resolveDarkMode = resolveDarkMode;
+  window.QURAN_FONTS = QURAN_FONTS;
+  window.syncQuranFont = syncQuranFont;
 })();

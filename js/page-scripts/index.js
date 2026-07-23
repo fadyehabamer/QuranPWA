@@ -257,11 +257,17 @@ function hexToRgb(hex) {
                 const response = await fetch('data/azkar.json');
                 const data = await response.json();
 
-                Object.entries(data || {}).forEach(([categoryKey, category]) => {
-                    if (!category || !Array.isArray(category.azkar)) return;
+                // azkar.json is an ARRAY of { category, array: [...] }. This used
+                // to read `category.azkar` off an object, which never matched, so
+                // the total stayed 0 and azkar progress always reported 0%.
+                // Keys must match the ones azkar.js writes: slugified category
+                // name + "_" + index.
+                (Array.isArray(data) ? data : []).forEach(entry => {
+                    if (!entry || !Array.isArray(entry.array)) return;
 
-                    category.azkar.forEach((zikr, index) => {
-                        const target = getAzkarTargetCountFromText(zikr.repeat);
+                    const categoryKey = String(entry.category || '').replace(/\s+/g, '_').toLowerCase();
+                    entry.array.forEach((zikr, index) => {
+                        const target = parseInt(zikr.count, 10) || 1;
                         const current = parseInt(counts[`${categoryKey}_${index}`], 10) || 0;
                         totalTarget += target;
                         totalCurrent += Math.min(current, target);
@@ -1226,7 +1232,99 @@ function hexToRgb(hex) {
             }
         }
 
+        /* --- Prayer tracker -------------------------------------------------
+           Which of today's five prayers you've prayed, kept per calendar day so
+           a streak can be counted across days. Local date parts (not
+           toISOString, which is UTC and would roll the day over early). */
+        const PRAYER_LOG_KEY = 'prayerLogV1';
+        const TRACKED_PRAYERS = [
+            { key: 'Fajr', label: 'الفجر', icon: 'bi-sunrise' },
+            { key: 'Dhuhr', label: 'الظهر', icon: 'bi-sun' },
+            { key: 'Asr', label: 'العصر', icon: 'bi-sunset' },
+            { key: 'Maghrib', label: 'المغرب', icon: 'bi-moon' },
+            { key: 'Isha', label: 'العشاء', icon: 'bi-moon-stars' }
+        ];
+
+        function localDateKey(date) {
+            const d = date || new Date();
+            return [
+                d.getFullYear(),
+                String(d.getMonth() + 1).padStart(2, '0'),
+                String(d.getDate()).padStart(2, '0')
+            ].join('-');
+        }
+
+        function loadPrayerLog() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(PRAYER_LOG_KEY) || '{}');
+                return (raw && typeof raw === 'object') ? raw : {};
+            } catch (_error) {
+                return {};
+            }
+        }
+
+        function togglePrayerLogged(prayerKey) {
+            const log = loadPrayerLog();
+            const today = localDateKey();
+            const day = log[today] || {};
+            day[prayerKey] = !day[prayerKey];
+            log[today] = day;
+            localStorage.setItem(PRAYER_LOG_KEY, JSON.stringify(log));
+
+            if (window.recordHabitActivity) window.recordHabitActivity('prayer');
+            renderPrayerTracker();
+        }
+
+        // Consecutive days with all five logged. Today counts only once it is
+        // complete, but a still-in-progress today does not break a streak
+        // running from previous days.
+        function getPrayerStreak(log) {
+            let streak = 0;
+            const cursor = new Date();
+
+            for (let i = 0; i < 400; i += 1) {
+                const day = log[localDateKey(cursor)] || {};
+                const complete = TRACKED_PRAYERS.every(p => day[p.key]);
+
+                if (complete) streak += 1;
+                else if (i > 0) break; // a past day that isn't complete ends it
+
+                cursor.setDate(cursor.getDate() - 1);
+            }
+            return streak;
+        }
+
+        function renderPrayerTracker() {
+            const row = document.getElementById('trackerRow');
+            const meta = document.getElementById('trackerMeta');
+            const streakEl = document.getElementById('trackerStreak');
+            if (!row) return;
+
+            const log = loadPrayerLog();
+            const today = log[localDateKey()] || {};
+            const done = TRACKED_PRAYERS.filter(p => today[p.key]).length;
+
+            row.innerHTML = TRACKED_PRAYERS.map(p => {
+                const isDone = Boolean(today[p.key]);
+                return `<button type="button" class="tracker-pill${isDone ? ' is-done' : ''}"
+                    onclick="togglePrayerLogged('${p.key}')"
+                    aria-pressed="${isDone}"
+                    aria-label="${p.label}${isDone ? ' — تم' : ''}">
+                    <i class="bi ${isDone ? 'bi-check-circle-fill' : p.icon}" aria-hidden="true"></i>
+                    <span>${p.label}</span>
+                </button>`;
+            }).join('');
+
+            if (meta) meta.textContent = `${done} / ${TRACKED_PRAYERS.length}`;
+
+            if (streakEl) {
+                const streak = getPrayerStreak(log);
+                streakEl.textContent = streak > 1 ? `${streak} أيام متتالية بالصلوات الخمس` : '';
+            }
+        }
+
         // Initialize
+        renderPrayerTracker();
         loadDailyVerse();
         checkResumeReading();
         renderHabitDashboard();

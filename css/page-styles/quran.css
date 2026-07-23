@@ -457,7 +457,7 @@
         }
 
         .memorization-ayah-text {
-            font-family: 'Amiri', serif;
+            font-family: var(--quran-font-family, var(--font-quran));
             font-size: 31px;
             line-height: 2.1;
             text-align: center;
@@ -555,28 +555,170 @@
             font-size: 11px;
         }
 
+        /* ==================================================================
+           Index browsing — quick access, tabs, ornamental rows
+           ================================================================== */
+
+        .quran-quick {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+
+        .quick-resume {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            width: 100%;
+            padding: var(--space-4) var(--space-5);
+            border: 1px solid var(--green-100);
+            border-radius: var(--radius-lg, 16px);
+            background:
+                linear-gradient(135deg, rgba(var(--primary-rgb), 0.07), rgba(var(--primary-rgb), 0.02));
+            color: inherit;
+            font: inherit;
+            text-align: start;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+
+        .quick-resume:hover { border-color: var(--primary-color); }
+        .quick-resume:active { transform: scale(0.99); }
+        .quick-resume:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        .quick-resume-icon {
+            flex: 0 0 auto;
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: var(--on-primary);
+            font-size: 1.25rem;
+        }
+
+        .quick-resume-body {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .quick-resume-label {
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            color: var(--primary-dark);
+        }
+
+        .quick-resume-sub {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .quick-resume-go { color: var(--primary-color); font-size: 1.1rem; }
+
+        .quick-chips {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+        }
+
+        .quick-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: var(--space-3) var(--space-2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md, 12px);
+            background: var(--card-bg);
+            color: inherit;
+            font: inherit;
+            text-decoration: none;
+            cursor: pointer;
+            transition: border-color 0.15s, transform 0.15s;
+        }
+
+        .quick-chip:hover { border-color: var(--primary-color); }
+        .quick-chip:active { transform: scale(0.97); }
+        .quick-chip:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+        .quick-chip > i { color: var(--secondary-color); font-size: 1.05rem; }
+
+        .quick-chip-value {
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            color: var(--primary-dark);
+        }
+
+        .quick-chip-label { font-size: var(--text-xs); color: var(--text-muted); }
+
+        .quran-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            padding: 4px;
+            margin-bottom: var(--space-4);
+            border-radius: var(--radius-md, 12px);
+            background: var(--surface-3);
+        }
+
+        .quran-tab {
+            padding: var(--space-2) var(--space-3);
+            border: 0;
+            border-radius: calc(var(--radius-md, 12px) - 4px);
+            background: transparent;
+            color: var(--text-secondary);
+            font: inherit;
+            font-size: var(--text-base);
+            font-weight: var(--weight-medium);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .quran-tab.is-active {
+            background: var(--card-bg);
+            color: var(--primary-dark);
+            font-weight: var(--weight-semibold);
+            box-shadow: var(--elev-1, 0 1px 2px rgba(0, 0, 0, 0.08));
+        }
+
+        .quran-tab:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
         .surah-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--space-2);
+        }
+
+        /* `display: grid` outranks the UA's `[hidden] { display: none }`, so the
+           inactive tab panels stayed on screen and the tabs looked dead. */
+        .surah-list[hidden],
+        .page-grid[hidden] {
+            display: none;
         }
 
         /* Rendered as a real `<button>` by renderSurahList(); these reset the
-           UA button styling so the card layout is unchanged. */
+           UA button styling so the row layout is unchanged. */
         .surah-item {
             width: 100%;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px 20px;
+            border-radius: var(--radius-md, 12px);
+            padding: var(--space-3) var(--space-4);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: var(--space-4);
             text-align: start;
             font: inherit;
             color: inherit;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: border-color 0.15s, background 0.15s, transform 0.15s;
         }
 
         .surah-item:focus-visible {
@@ -585,66 +727,161 @@
         }
 
         .surah-item:hover {
-            border-color: var(--primary-color);
+            border-color: var(--green-200);
+            background: var(--surface-2);
         }
 
         .surah-item:active {
             transform: scale(0.99);
         }
 
-        .surah-item-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        /* Ornamental 8-point star (khatim) around the index number. */
+        .star-badge {
+            position: relative;
+            flex: 0 0 auto;
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
         }
 
-        .surah-number {
-            width: 40px;
-            height: 40px;
-            background: var(--primary-color);
-            color: var(--on-primary);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 16px;
+        .star-badge svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .star-badge polygon {
+            fill: rgba(var(--primary-rgb), 0.06);
+            stroke: var(--green-200);
+            stroke-width: 2.5;
+        }
+
+        .surah-item:hover .star-badge polygon {
+            fill: rgba(var(--primary-rgb), 0.12);
+            stroke: var(--primary-light);
+        }
+
+        .star-badge-num {
+            position: relative;
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            color: var(--primary-dark);
+            font-variant-numeric: tabular-nums;
         }
 
         .surah-item-info {
+            flex: 1 1 auto;
+            min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
 
         .surah-item-name {
-            font-size: 20px;
-            color: var(--primary-color);
-            font-weight: 600;
+            font-family: var(--font-quran);
+            font-size: var(--text-lg);
+            line-height: 1.3;
+            color: var(--text-color);
+            font-weight: var(--weight-bold);
         }
 
         .surah-item-details {
-            font-size: 14px;
-            color: var(--text-color);
-            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            font-size: var(--text-xs);
+            color: var(--text-muted);
         }
 
-        .surah-item-left {
+        .surah-dot { opacity: 0.5; }
+
+        .surah-tag {
+            padding: 1px 7px;
+            border-radius: 999px;
+            font-size: var(--text-2xs);
+            font-weight: var(--weight-medium);
+        }
+
+        .surah-tag.is-makki {
+            background: var(--warning-surface);
+            color: var(--warning);
+        }
+
+        .surah-tag.is-madani {
+            background: var(--success-surface);
+            color: var(--success);
+        }
+
+        /* Decorative mirror of the index number, in the mushaf's own style. */
+        .surah-item-arabic {
+            flex: 0 0 auto;
+            font-family: var(--font-quran);
+            font-size: 1.5rem;
+            line-height: 1;
+            color: var(--green-200);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .surah-item-page {
+            flex: 0 0 auto;
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+            gap: var(--space-2);
+        }
+
+        .page-grid-heading {
+            grid-column: 1 / -1;
+            margin-top: var(--space-3);
+            padding-bottom: var(--space-1);
+            border-bottom: 1px solid var(--border-color);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            color: var(--primary-dark);
+        }
+
+        .page-grid-heading:first-child { margin-top: 0; }
+
+        .page-cell {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
+            align-items: center;
+            gap: 2px;
+            padding: var(--space-2) 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
         }
 
-        .surah-item-arabic {
-            font-size: 22px;
-            color: var(--primary-color);
+        .page-cell:hover { border-color: var(--primary-color); background: var(--surface-2); }
+        .page-cell:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        .page-cell-num {
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            color: var(--primary-dark);
+            font-variant-numeric: tabular-nums;
         }
 
-        .surah-item-verses {
-            font-size: 13px;
-            color: var(--text-color);
-            opacity: 0.5;
+        .page-cell-surah {
+            font-size: var(--text-2xs);
+            color: var(--text-muted);
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* Reader Styles */
@@ -1088,19 +1325,22 @@
             font-size: 15px;
         }
 
+        /* Set on its own centred line above the ayahs, the way a printed mushaf
+           does — it used to be run into the front of ayah 1. */
         .bismillah {
             text-align: center;
-            font-size: 28px;
-            color: var(--primary-color);
-            margin: 30px 0;
-            padding: 20px;
-            background: var(--bg-color);
-            border-radius: 10px;
+            font-family: var(--quran-font-family, var(--font-quran));
+            font-size: clamp(1.35rem, 1.1rem + 1.2vw, 1.75rem);
+            line-height: 1.9;
+            color: var(--primary-dark);
+            margin-block: var(--space-2) var(--space-5);
+            padding-block-end: var(--space-4);
+            border-block-end: 1px solid var(--border-color);
         }
 
         .ayahs-container {
             line-height: 2.5;
-            font-family: 'Amiri', serif;
+            font-family: var(--quran-font-family, var(--font-quran));
         }
 
         .ayah {
@@ -1110,7 +1350,7 @@
             transition: background-color 0.3s ease;
             padding: 2px 4px;
             border-radius: 4px;
-            font-family: 'Amiri', serif;
+            font-family: var(--quran-font-family, var(--font-quran));
         }
 
         .ayah.quick-actions-target {
@@ -1540,6 +1780,47 @@
                 inset-inline-start: 28px;
                 bottom: 28px;
             }
+        }
+
+        /* Immersive reading -------------------------------------------------
+           Tap any blank part of the page to drop the chrome and read without
+           distraction; tap again to bring it back. Ayah taps still open the
+           quick actions, so only "empty" areas toggle. */
+        body.reader-immersive .app-header,
+        body.reader-immersive .large-title-bar,
+        body.reader-immersive .reader-header,
+        body.reader-immersive .reader-progress-strip,
+        body.reader-immersive .swipe-hint {
+            display: none;
+        }
+
+        body.reader-immersive .app-content {
+            padding-block-start: var(--space-5);
+        }
+
+        /* Shown once, the first time immersion is entered, so the way back is
+           never a mystery. */
+        .immersion-hint {
+            position: fixed;
+            inset-inline: 0;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+            margin-inline: auto;
+            width: max-content;
+            max-width: 88vw;
+            padding: 10px 18px;
+            border-radius: var(--radius-full);
+            background: rgba(20, 18, 15, 0.92);
+            color: #fff;
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            z-index: var(--z-toast);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity var(--duration-normal) var(--ease-out);
+        }
+
+        .immersion-hint.visible {
+            opacity: 1;
         }
 
         /* Offline / failed-load state for the reader ----------------------- */
@@ -2045,7 +2326,7 @@
         }
 
         .quick-tafsir-ayah {
-            font-family: 'Amiri', serif;
+            font-family: var(--quran-font-family, var(--font-quran));
             font-size: 24px;
             line-height: 2;
             color: var(--primary-color);
@@ -2400,7 +2681,7 @@
             font-size: 24px;
             line-height: 2;
             color: var(--share-preview-ayah-color);
-            font-family: 'Amiri', serif;
+            font-family: var(--quran-font-family, var(--font-quran));
         }
 
         .share-preview-tafsir {
@@ -2523,3 +2804,28 @@
             }
         }
     
+
+        /* ------------------------------------------------------------------
+           Sajda (prostration) marker — one of the 15 places a reader prostrates.
+           ------------------------------------------------------------------ */
+        .sajda-mark {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 1px 8px;
+            border: 1px solid var(--gold-400);
+            border-radius: 999px;
+            background: var(--warning-surface);
+            color: var(--warning);
+            font-family: var(--font-ui);
+            font-size: var(--text-2xs);
+            font-weight: var(--weight-semibold);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        /* Tab labels centre inside their own pill, matching the segmented
+           controls in settings. */
+        .quran-tab {
+            text-align: center;
+        }

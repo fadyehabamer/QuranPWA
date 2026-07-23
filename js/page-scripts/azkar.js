@@ -143,28 +143,111 @@ function toggleViewMode() {
     }
 }
 
+/* --------------------------------------------------------------------------
+   Category grouping
+
+   The 132 duas rendered as one flat grid of near-identical cards (~11,000px
+   tall) with no hierarchy, so finding "أذكار الصباح" meant scrolling forever.
+   They are bucketed into themes by keyword instead.
+
+   Matching runs against a NORMALISED name — tashkeel stripped and
+   alef/ya/waw/ta-marbuta folded — so prefixed forms ("للمريض") and vocalised
+   text ("الدِّيكِ") still match their stem. Anything unmatched lands in
+   "أدعية متنوعة" rather than being lost.
+   -------------------------------------------------------------------------- */
+const AZKAR_DIACRITICS = /[ؐ-ًؚ-ٰٟۖ-ۭـ]/g;
+
+function normalizeAzkarText(value) {
+    return String(value || '')
+        .replace(AZKAR_DIACRITICS, '')
+        .replace(/[إأآٱ]/g, 'ا')
+        .replace(/ى/g, 'ي')
+        .replace(/ؤ/g, 'و')
+        .replace(/ئ/g, 'ي')
+        .replace(/ة/g, 'ه')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+const AZKAR_GROUPS = [
+    { id: 'daily', name: 'أذكار اليوم والليلة', icon: 'bi-sunrise-fill', keywords: ['صباح', 'مساء', 'نوم', 'استيقاظ', 'فزع', 'تقلب', 'رؤيا', 'حلم', 'أرق'] },
+    { id: 'prayer', name: 'الصلاة والمسجد', icon: 'bi-building', keywords: ['صلاة', 'مسجد', 'اذان', 'أذان', 'وضوء', 'استفتاح', 'ركوع', 'سجود', 'سجدتين', 'تلاوة', 'تشهد', 'وتر', 'قنوت', 'استخارة', 'السلام', 'النبي'] },
+    { id: 'travel', name: 'المنزل والسفر', icon: 'bi-house-door-fill', keywords: ['المنزل', 'الخلاء', 'ثوب', 'سفر', 'مسافر', 'مقيم', 'ركوب', 'مركوب', 'الدابة', 'السوق', 'القرية', 'البلد', 'مترل', 'أسحر', 'نزول'] },
+    { id: 'social', name: 'الناس والمناسبات', icon: 'bi-people-fill', keywords: ['مولود', 'أولاد', 'متزوج', 'عطاس', 'عطس', 'كافر', 'تهنئة', 'نكاح', 'زواج', 'زوجة', 'أحسن', 'مدح', 'زكي', 'مجلس', 'ﻟﻤﺠلس', 'أحب', 'الدعاء لمن'] },
+    { id: 'distress', name: 'الهمّ والكرب', icon: 'bi-cloud-drizzle-fill', keywords: ['الهم', 'الحزن', 'الكرب', 'العدو', 'السلطان', 'وسوس', 'الدين', 'ذنب', 'خاف', 'استصعب', 'غلب', 'مصيبة', 'الغضب', 'القرض'] },
+    { id: 'illness', name: 'المرض والجنائز', icon: 'bi-heart-pulse-fill', keywords: ['مريض', 'محتضر', 'ميت', 'تعزية', 'قبور', 'القبر', 'عيادة', 'دفن', 'إغماض', 'الفرط', 'يئس', 'وجع', 'مبتلى'] },
+    { id: 'food', name: 'الطعام والشراب', icon: 'bi-cup-hot-fill', keywords: ['طعام', 'افطار', 'إفطار', 'صائم', 'أفطر', 'شراب', 'الثمر', 'الضيف', 'الذبح', 'النحر'] },
+    { id: 'nature', name: 'الطقس والكون', icon: 'bi-cloud-rain-fill', keywords: ['الريح', 'الرعد', 'المطر', 'استسقاء', 'استصحاء', 'الهلال', 'البرق', 'ديك', 'كلاب', 'حمار'] },
+    { id: 'protect', name: 'الرقية والتحصين', icon: 'bi-shield-fill-check', keywords: ['الدجال', 'الشرك', 'الطيرة', 'شياطين', 'مردة', 'بعين', 'العين', 'الحسد', 'يعصم', 'يعوذ', 'الشيطان'] },
+    { id: 'hajj', name: 'الحج والعمرة', icon: 'bi-geo-fill', keywords: ['محرم', 'الحج', 'عمرة', 'الركن', 'الصفا', 'المروة', 'عرفة', 'المشعر', 'الجمار', 'الأسود', 'يلبي', 'تلبية'] },
+    { id: 'praise', name: 'التسبيح والاستغفار', icon: 'bi-stars', keywords: ['تسبيح', 'استغفار', 'الحمد', 'التوبة', 'فضل', 'تهليل', 'سبحان', 'التعجب', 'يسره', 'الخير والآداب'] }
+];
+
+const AZKAR_FALLBACK_GROUP = { id: 'misc', name: 'أدعية متنوعة', icon: 'bi-bookmark-star-fill' };
+
+function groupForCategory(categoryName) {
+    const name = normalizeAzkarText(categoryName);
+    for (const group of AZKAR_GROUPS) {
+        if (group.keywords.some(keyword => name.includes(normalizeAzkarText(keyword)))) {
+            return group;
+        }
+    }
+    return AZKAR_FALLBACK_GROUP;
+}
+
+// How many azkar in a category have reached their repeat target.
+function getCategoryProgress(categoryKey) {
+    const category = azkarData[categoryKey];
+    if (!category || !Array.isArray(category.azkar)) return { done: 0, total: 0 };
+
+    let done = 0;
+    category.azkar.forEach((zikr, index) => {
+        const target = zikr.count || 1;
+        if ((zikrCounts[`${categoryKey}_${index}`] || 0) >= target) done += 1;
+    });
+    return { done, total: category.azkar.length };
+}
+
+let azkarExpandedGroups = new Set(['daily']);
+let azkarSearchQuery = '';
+
+function renderCategoryRow(key, category) {
+    const progress = getCategoryProgress(key);
+    const complete = progress.total > 0 && progress.done === progress.total;
+    const badge = progress.done > 0 ? `${progress.done}/${progress.total}` : `${progress.total}`;
+
+    return `<button type="button" class="category-item${complete ? ' is-complete' : ''}" onclick="showCategory('${key}')">
+        <span class="category-info">
+            <span class="category-name">${category.name}</span>
+        </span>
+        <span class="category-count">${complete ? '<i class="bi bi-check-lg" aria-hidden="true"></i>' : badge}</span>
+    </button>`;
+}
+
+function toggleAzkarGroup(groupId) {
+    if (azkarExpandedGroups.has(groupId)) {
+        azkarExpandedGroups.delete(groupId);
+    } else {
+        azkarExpandedGroups.add(groupId);
+    }
+    renderCategories();
+}
+
+function handleAzkarSearch(value) {
+    azkarSearchQuery = value || '';
+    renderCategories();
+}
+
 function renderCategories() {
     const list = document.getElementById('categoryList');
+    if (!list) return;
 
-    function getCategoryIcon(categoryName) {
-        const iconMap = {
-            'أذكار الصباح': 'bi-sunrise-fill',
-            'أذكار المساء': 'bi-sunset-fill',
-            'أذكار النوم': 'bi-moon-stars-fill',
-            'أذكار الاستيقاظ': 'bi-alarm-fill',
-            'أذكار الصلاة': 'bi-building',
-            'الأذكار': 'bi-bookmark-star-fill'
-        };
+    const query = normalizeAzkarText(azkarSearchQuery);
+    const entries = Object.entries(azkarData);
 
-        return iconMap[categoryName] || 'bi-bookmark-star-fill';
-    }
-
-    let html = '';
-
-    // Real <button>s rather than clickable <div>s: keyboard reachable and
-    // announced as controls. The count is folded into the accessible name so
-    // it is not read as a stray number.
-    html += `<button type="button" class="category-item" onclick="showFavorites()">
+    // Favourites stay pinned above everything else — but not while searching,
+    // where it would sit among the results pretending to be one.
+    let html = query ? '' : `<button type="button" class="category-item category-item-favorites" onclick="showFavorites()">
         <span class="category-info">
             <span class="category-icon"><i class="bi bi-heart-fill" aria-hidden="true"></i></span>
             <span class="category-name">المفضلة</span>
@@ -172,16 +255,36 @@ function renderCategories() {
         <span class="category-count">${favorites.length}</span>
     </button>`;
 
-    for (const [key, category] of Object.entries(azkarData)) {
-        const icon = getCategoryIcon(category.name);
-        html += `<button type="button" class="category-item" onclick="showCategory('${key}')">
-            <span class="category-info">
-                <span class="category-icon"><i class="bi ${icon}" aria-hidden="true"></i></span>
-                <span class="category-name">${category.name}</span>
-            </span>
-            <span class="category-count">${category.azkar.length}</span>
-        </button>`;
+    // Searching flattens the groups — you want the match, not its bucket.
+    if (query) {
+        const matches = entries.filter(([, category]) => normalizeAzkarText(category.name).includes(query));
+        html += `<div class="azkar-search-meta">${matches.length} نتيجة</div>`;
+        html += matches.length
+            ? matches.map(([key, category]) => renderCategoryRow(key, category)).join('')
+            : '<div class="azkar-empty">لا توجد نتائج مطابقة</div>';
+        list.innerHTML = html;
+        return;
     }
+
+    const buckets = new Map();
+    AZKAR_GROUPS.concat([AZKAR_FALLBACK_GROUP]).forEach(group => buckets.set(group.id, { group, items: [] }));
+    entries.forEach(([key, category]) => {
+        buckets.get(groupForCategory(category.name).id).items.push([key, category]);
+    });
+
+    buckets.forEach(({ group, items }) => {
+        if (!items.length) return;
+        const open = azkarExpandedGroups.has(group.id);
+        html += `<section class="azkar-group${open ? ' is-open' : ''}">
+            <button type="button" class="azkar-group-head" onclick="toggleAzkarGroup('${group.id}')" aria-expanded="${open}">
+                <span class="azkar-group-icon"><i class="bi ${group.icon}" aria-hidden="true"></i></span>
+                <span class="azkar-group-name">${group.name}</span>
+                <span class="azkar-group-count">${items.length}</span>
+                <i class="bi bi-chevron-down azkar-group-chevron" aria-hidden="true"></i>
+            </button>
+            <div class="azkar-group-body">${items.map(([key, category]) => renderCategoryRow(key, category)).join('')}</div>
+        </section>`;
+    });
 
     list.innerHTML = html;
 }
@@ -338,11 +441,18 @@ function renderCurrentCategoryView() {
     }
 }
 
+function toggleAzkarSearchBar(visible) {
+    const bar = document.getElementById('azkarSearchBar');
+    if (bar) bar.style.display = visible ? 'flex' : 'none';
+}
+
 function showCategory(categoryKey) {
     currentCategory = categoryKey;
     currentSwipeIndex = 0;
 
     document.getElementById('categoryList').style.display = 'none';
+
+    toggleAzkarSearchBar(false);
     document.getElementById('azkarList').classList.add('active');
     document.getElementById('headerTitle').textContent = azkarData[categoryKey].name;
     document.getElementById('backBtn').style.display = 'flex';
@@ -358,6 +468,8 @@ function showFavorites() {
     currentSwipeIndex = 0;
 
     document.getElementById('categoryList').style.display = 'none';
+
+    toggleAzkarSearchBar(false);
     document.getElementById('azkarList').classList.add('active');
     document.getElementById('headerTitle').textContent = 'المفضلة';
     document.getElementById('backBtn').style.display = 'flex';
@@ -373,6 +485,8 @@ function showCategories() {
     currentSwipeIndex = 0;
 
     document.getElementById('categoryList').style.display = 'grid';
+
+    toggleAzkarSearchBar(true);
     document.getElementById('azkarList').classList.remove('active');
     document.getElementById('headerTitle').textContent = 'الأذكار';
     document.getElementById('backBtn').style.display = 'none';

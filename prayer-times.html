@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Lateef&family=Reem+Kufi:wght@400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="js/theme-preload.js"></script>
@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/page-styles/prayer-times.css">
     <link rel="stylesheet" href="css/app-ui.css">
+    <link rel="stylesheet" href="css/tour.css">
     <link rel="stylesheet" href="css/native.css">
 </head>
 
@@ -79,10 +80,36 @@
                 </div>
             </div>
 
+            <!-- Day navigator -->
+            <div class="day-nav" id="dayNav" style="display: none;">
+                <button type="button" class="day-nav-btn" id="dayNavPrev" onclick="stepDay(-1)"
+                    aria-label="اليوم السابق"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                <div class="day-nav-label">
+                    <span class="day-nav-date" id="dayNavDate">—</span>
+                    <span class="day-nav-hijri" id="dayNavHijri"></span>
+                </div>
+                <button type="button" class="day-nav-btn" id="dayNavNext" onclick="stepDay(1)"
+                    aria-label="اليوم التالي"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+            </div>
+
+            <button type="button" class="day-nav-today" id="dayNavToday" onclick="goToToday()"
+                style="display: none;"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> العودة لليوم</button>
+
             <!-- Prayer Times Grid -->
             <div class="prayer-grid" id="prayerGrid">
                 <!-- Prayer times will be loaded here after location selection -->
             </div>
+
+            <!-- Forbidden (disliked) prayer times -->
+            <section class="forbidden-section" id="forbiddenSection" style="display: none;"
+                aria-label="أوقات الكراهة">
+                <h2 class="forbidden-title">
+                    <i class="bi bi-slash-circle" aria-hidden="true"></i>
+                    <span>أوقات الكراهة</span>
+                </h2>
+                <p class="forbidden-note">تُكره فيها صلاة التطوع، وتُقضى فيها الفوائض. الأوقات تقريبية.</p>
+                <div class="forbidden-list" id="forbiddenList"></div>
+            </section>
 
             <!-- Qibla Compass -->
             <div class="qibla-section" id="qiblaSection" style="display: none;">
@@ -102,6 +129,25 @@
                         <div class="qibla-center-dot"></div>
                     </div>
                 </div>
+                <!-- Which way to turn, in words. The dial alone does not say
+                     whether to rotate left or right. -->
+                <div class="qibla-guidance" id="qiblaGuidance">وجّه هاتفك أفقياً لبدء القياس</div>
+
+                <div class="qibla-stats">
+                    <div class="qibla-stat">
+                        <span class="qibla-stat-value" id="qiblaBearingValue">—</span>
+                        <span class="qibla-stat-label">اتجاه القبلة</span>
+                    </div>
+                    <div class="qibla-stat">
+                        <span class="qibla-stat-value" id="qiblaOffsetValue">—</span>
+                        <span class="qibla-stat-label">انحرافك</span>
+                    </div>
+                    <div class="qibla-stat">
+                        <span class="qibla-stat-value" id="qiblaDistanceValue">—</span>
+                        <span class="qibla-stat-label">المسافة للكعبة</span>
+                    </div>
+                </div>
+
                 <div class="qibla-meta" id="qiblaMeta">جاري حساب اتجاه القبلة...</div>
                 <!-- Throttled screen-reader readout of the live bearing. The
                      visible #qiblaMeta repaints up to ~12x/second, which would
@@ -171,6 +217,8 @@
     <script src="js/common.js"></script>
     <script src="js/page-scripts/prayer-times.js"></script>
     <script src="js/native-ui.js"></script>
+    <script src="js/tour.js"></script>
+    <script src="js/tours.js"></script>
 </body>
 
 </html>

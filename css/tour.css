@@ -1,0 +1,175 @@
+/* ==========================================================================
+   Guided tour — coach marks (see js/tour.js)
+   ========================================================================== */
+
+body.tour-active {
+  overflow: hidden;
+}
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1000);
+  animation: tour-fade-in 180ms ease-out;
+}
+
+@keyframes tour-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* The dim is painted as an enormous spread shadow on the cut-out box, so the
+   highlighted element stays fully interactive-looking with no clip-path or
+   four-panel maths. */
+.tour-spotlight {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(12, 10, 8, 0.72);
+  transition:
+    top 260ms ease,
+    left 260ms ease,
+    width 260ms ease,
+    height 260ms ease,
+    opacity 200ms ease;
+  pointer-events: none;
+}
+
+/* Target-less steps (welcome / closing) dim the whole screen instead. */
+.tour-spotlight[style*="opacity: 0"] {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: none;
+  background: rgba(12, 10, 8, 0.72);
+  opacity: 1 !important;
+  border-radius: 0;
+}
+
+.tour-bubble {
+  position: fixed;
+  max-width: 420px;
+  margin-inline: auto;
+  padding: var(--space-5);
+  border-radius: var(--radius-lg, 20px);
+  background: var(--surface-1);
+  color: var(--text-color);
+  box-shadow: var(--elev-4, 0 12px 32px rgba(0, 0, 0, 0.28));
+  transition: top 260ms ease;
+}
+
+.tour-step-count {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--primary-color);
+  font-variant-numeric: tabular-nums;
+  margin-block-end: var(--space-1);
+}
+
+.tour-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--text-color);
+}
+
+.tour-text {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-base);
+  line-height: var(--leading-snug);
+  color: var(--text-secondary);
+}
+
+.tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.tour-nav {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.tour-btn {
+  min-height: 40px;
+  padding-inline: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 14px);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tour-btn:hover { border-color: var(--green-200); }
+.tour-btn:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+.tour-btn[disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.tour-btn-primary {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: var(--on-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.tour-btn-skip {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-overlay,
+  .tour-spotlight,
+  .tour-bubble {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Help button — replays the current page's tour on demand. Sits above the
+   bottom nav and clear of the radio FAB on the opposite edge. */
+.tour-help-btn {
+  position: fixed;
+  inset-inline-end: 16px;
+  inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 84px);
+  z-index: var(--z-sticky, 90);
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: var(--surface-1);
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  box-shadow: var(--elev-3, 0 6px 16px rgba(0, 0, 0, 0.16));
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.tour-help-btn:hover {
+  background: var(--green-50);
+  transform: translateY(-2px);
+}
+
+.tour-help-btn:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+/* The tour paints its own overlay; the button must not float over it. */
+body.tour-active .tour-help-btn,
+body.quran-reader-active .tour-help-btn,
+body.reader-immersive .tour-help-btn,
+body.onboarding-active .tour-help-btn {
+  display: none;
+}

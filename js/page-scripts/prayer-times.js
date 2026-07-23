@@ -1,6 +1,10 @@
 let userLocation = null;
         let prayerTimes = null;
         let updateInterval = null;
+        // Which day is on screen, relative to today. Declared up here because
+        // renderPrayerTimes reads it and hoisted functions can run before a
+        // `let` further down the file has initialised.
+        let dayOffset = 0;
         let locationMethod = null; // 'automatic' or 'manual'
         let qiblaBearing = null;
         let currentHeading = null;
@@ -113,6 +117,22 @@ let userLocation = null;
             const y = Math.sin(lng2 - lng1);
             const x = Math.cos(lat1) * Math.tan(lat2) - Math.sin(lat1) * Math.cos(lng2 - lng1);
             return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+        }
+
+        // Great-circle distance to the Kaaba, in kilometres.
+        function distanceToKaaba(latitude, longitude) {
+            const R = 6371;
+            const dLat = toRadians(KAABA_COORDS.latitude - latitude);
+            const dLng = toRadians(KAABA_COORDS.longitude - longitude);
+            const a = Math.sin(dLat / 2) ** 2
+                + Math.cos(toRadians(latitude)) * Math.cos(toRadians(KAABA_COORDS.latitude)) * Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function formatDistance(km) {
+            if (km < 1) return `${Math.round(km * 1000)} م`;
+            if (km < 100) return `${km.toFixed(1)} كم`;
+            return `${Math.round(km).toLocaleString('ar-EG')} كم`;
         }
 
         function getDirectionName(degrees) {
@@ -260,6 +280,66 @@ let userLocation = null;
             }, 100);
         }
 
+        /* ------------------------------------------------------------------
+           Qibla guidance — the dial shows where the Kaaba is, but not which way
+           to turn to face it, nor how far away it is. These fill both gaps.
+           ------------------------------------------------------------------ */
+
+        const QIBLA_ALIGNED_DEGREES = 5;
+        let qiblaWasAligned = false;
+
+        function renderQiblaGuidance() {
+            const guidance = document.getElementById('qiblaGuidance');
+            const compass = document.getElementById('qiblaCompass');
+            const bearingValue = document.getElementById('qiblaBearingValue');
+            const offsetValue = document.getElementById('qiblaOffsetValue');
+            const distanceValue = document.getElementById('qiblaDistanceValue');
+            if (!guidance || qiblaBearing === null || !userLocation) return;
+
+            if (bearingValue) {
+                bearingValue.textContent = `${Math.round(qiblaBearing)}° ${getDirectionName(qiblaBearing)}`;
+            }
+            if (distanceValue) {
+                distanceValue.textContent = formatDistance(
+                    distanceToKaaba(userLocation.latitude, userLocation.longitude)
+                );
+            }
+
+            if (currentHeading === null) {
+                guidance.textContent = 'وجّه هاتفك أفقياً لبدء القياس';
+                guidance.className = 'qibla-guidance';
+                if (offsetValue) offsetValue.textContent = '—';
+                if (compass) compass.classList.remove('is-aligned');
+                qiblaWasAligned = false;
+                return;
+            }
+
+            // Signed, so it says which way to turn instead of just how far off.
+            const signed = shortestAngleDiff(currentHeading, qiblaBearing);
+            const magnitude = Math.abs(signed);
+            const aligned = magnitude <= QIBLA_ALIGNED_DEGREES;
+
+            if (offsetValue) offsetValue.textContent = `${Math.round(magnitude)}°`;
+            if (compass) compass.classList.toggle('is-aligned', aligned);
+
+            if (aligned) {
+                guidance.textContent = 'أنت مواجه للقبلة';
+                guidance.className = 'qibla-guidance is-aligned';
+                // Buzz once on arrival so the phone can be held at prayer level
+                // without watching the screen. Respects the haptics setting.
+                if (!qiblaWasAligned && navigator.vibrate && localStorage.getItem('hapticsEnabled') !== 'false') {
+                    navigator.vibrate(30);
+                }
+                qiblaWasAligned = true;
+                return;
+            }
+
+            qiblaWasAligned = false;
+            guidance.className = 'qibla-guidance';
+            const turn = signed > 0 ? 'يميناً' : 'يساراً';
+            guidance.textContent = `استدر ${turn} ${Math.round(magnitude)}°`;
+        }
+
         function updateQiblaDisplay() {
             const section = document.getElementById('qiblaSection');
             const needle = document.getElementById('qiblaNeedle');
@@ -305,10 +385,12 @@ let userLocation = null;
             const headingSourceText = headingSourceName ? ` • المصدر: ${headingSourceName}` : '';
 
             if (currentHeading === null) {
-                meta.textContent = `اتجاه القبلة: ${qiblaText} • اتجاه الهاتف: ${headingText} • حرّك الهاتف بشكل أفقي أو فعّل إذن المستشعر`;
+                meta.textContent = `اتجاه الهاتف: ${headingText} • حرّك الهاتف بشكل أفقي أو فعّل إذن المستشعر`;
             } else {
-                meta.textContent = `اتجاه القبلة: ${qiblaText} • اتجاه الهاتف: ${headingText}${alignmentText}${headingSourceText}`;
+                meta.textContent = `اتجاه الهاتف: ${headingText}${alignmentText}${headingSourceText}`;
             }
+
+            renderQiblaGuidance();
 
             if (orientationTiltPoor) {
                 meta.textContent += ' • وضع الهاتف غير مناسب، اجعله ثابتًا وبعيدًا عن المعادن';
@@ -553,7 +635,9 @@ let userLocation = null;
 
         // Update remaining time display
         function updateRemainingTime() {
-            if (!prayerTimes) return;
+            // The interval keeps firing while another day is on screen; that
+            // day's timings would produce a nonsense "next prayer".
+            if (!prayerTimes || dayOffset !== 0) return;
 
             // The API reports timings in the location's timezone; pass it
             // through so "next prayer" and its countdown agree with it.
@@ -568,43 +652,167 @@ let userLocation = null;
             document.getElementById('tahajjudTime').textContent = formatTime(tahajjudTime);
         }
 
-        // Render prayer times
+        // Render prayer times as start–end windows rather than single instants,
+        // so it is clear how long each prayer may still be performed.
         function renderPrayerTimes(data) {
             const grid = document.getElementById('prayerGrid');
             const tz = data.meta && data.meta.timezone;
-            const nextPrayer = getNextPrayer(data.timings, tz);
             const tahajjudTime = calculateTahajjudTime(data.timings);
 
-            // Names and icons come from the shared prayerNames/prayerIcons
-            // tables above so there is only one place to edit them.
-            const prayers = [
-                { key: 'Fajr' },
-                { key: 'Sunrise' },
-                { key: 'Dhuhr' },
-                { key: 'Asr' },
-                { key: 'Maghrib' },
-                { key: 'Isha' },
-                { key: 'Tahajjud', time: tahajjudTime, isTahajjud: true }
-            ];
+            // "Next prayer" and "current window" are only meaningful for today.
+            const isToday = dayOffset === 0;
+            const nextPrayer = isToday ? getNextPrayer(data.timings, tz) : null;
+            const nowMinutes = minutesNowAt(tz);
+
+            const ranges = PrayerEngine.getPrayerRanges(data.timings);
+            const rows = ranges.concat([{
+                key: 'Tahajjud', label: prayerNames.Tahajjud, start: tahajjudTime,
+                end: data.timings.Fajr, wraps: true, isTahajjud: true
+            }]);
 
             let html = '';
-            prayers.forEach(prayer => {
-                const time = prayer.time || data.timings[prayer.key];
-                const isNext = prayer.key === nextPrayer.name;
-                const remaining = isNext && !nextPrayer.tomorrow ? calculateRemainingTime(time, tz) : '';
-                const cardClass = prayer.isTahajjud ? 'prayer-card tahajjud' : `prayer-card ${isNext ? 'next' : ''}`;
+            rows.forEach(row => {
+                const isNext = Boolean(nextPrayer) && row.key === nextPrayer.name;
+
+                // Is the clock inside this window right now? Isha and Tahajjud
+                // wrap past midnight, so those compare against a shifted end.
+                let isCurrent = false;
+                if (isToday && !row.moment && row.end) {
+                    const start = PrayerEngine.toMinutes(row.start);
+                    let end = PrayerEngine.toMinutes(row.end);
+                    if (row.wraps && end <= start) end += 1440;
+                    const now = nowMinutes < start && row.wraps ? nowMinutes + 1440 : nowMinutes;
+                    isCurrent = now >= start && now < end;
+                }
+
+                const remaining = isNext && !nextPrayer.tomorrow
+                    ? calculateRemainingTime(row.start, tz)
+                    : '';
+
+                const classes = ['prayer-row'];
+                if (row.isTahajjud) classes.push('tahajjud');
+                if (row.moment) classes.push('is-moment');
+                if (isNext) classes.push('next');
+                if (isCurrent) classes.push('is-current');
+
+                const rangeText = row.moment
+                    ? 'لا صلاة — بداية وقت الكراهة'
+                    : `حتى ${formatTime(row.end)}`;
 
                 html += `
-                    <div class="${cardClass}">
-                        <div class="prayer-icon"><i class="bi ${prayerIcons[prayer.key]}" aria-hidden="true"></i></div>
-                        <div class="prayer-name">${prayerNames[prayer.key]}</div>
-                        <div class="prayer-time">${formatTime(time)}</div>
-                        ${remaining ? `<div class="prayer-remaining">بعد ${remaining}</div>` : ''}
+                    <div class="${classes.join(' ')}">
+                        <div class="prayer-row-icon"><i class="bi ${prayerIcons[row.key]}" aria-hidden="true"></i></div>
+                        <div class="prayer-row-body">
+                            <div class="prayer-row-name">${row.label}${isCurrent ? '<span class="prayer-row-badge">الوقت الحالي</span>' : ''}</div>
+                            <div class="prayer-row-range">${rangeText}</div>
+                        </div>
+                        <div class="prayer-row-times">
+                            <div class="prayer-row-start">${formatTime(row.start)}</div>
+                            ${remaining ? `<div class="prayer-row-remaining">بعد ${remaining}</div>` : ''}
+                        </div>
                     </div>
                 `;
             });
 
             grid.innerHTML = html;
+            renderForbiddenTimes(data, tz, isToday);
+        }
+
+        function renderForbiddenTimes(data, tz, isToday) {
+            const section = document.getElementById('forbiddenSection');
+            const list = document.getElementById('forbiddenList');
+            if (!section || !list) return;
+
+            const windows = PrayerEngine.getForbiddenWindows(data.timings);
+            list.innerHTML = windows.map(w => {
+                const active = isToday && PrayerEngine.isWithinWindow(w.from, w.to, tz);
+                return `
+                    <div class="forbidden-row${active ? ' is-active' : ''}">
+                        <div class="forbidden-row-head">
+                            <span class="forbidden-row-label">${w.label}</span>
+                            <span class="forbidden-row-time">${formatTime(w.from)} — ${formatTime(w.to)}</span>
+                        </div>
+                        <div class="forbidden-row-note">${w.note}</div>
+                    </div>
+                `;
+            }).join('');
+
+            section.style.display = 'block';
+        }
+
+        /* ------------------------------------------------------------------
+           Day navigator — browse timings for other days.
+           ------------------------------------------------------------------ */
+
+        const WEEKDAY_NAMES = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const MONTH_NAMES = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+        function renderDayNav(data) {
+            const nav = document.getElementById('dayNav');
+            const dateLabel = document.getElementById('dayNavDate');
+            const hijriLabel = document.getElementById('dayNavHijri');
+            const todayBtn = document.getElementById('dayNavToday');
+            if (!nav || !dateLabel) return;
+
+            const date = new Date();
+            date.setDate(date.getDate() + dayOffset);
+
+            let label = `${WEEKDAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTH_NAMES[date.getMonth()]}`;
+            if (dayOffset === 0) label = `اليوم • ${label}`;
+            else if (dayOffset === 1) label = `غداً • ${label}`;
+            else if (dayOffset === -1) label = `أمس • ${label}`;
+            dateLabel.textContent = label;
+
+            const hijri = data && data.date && data.date.hijri;
+            if (hijriLabel) {
+                hijriLabel.textContent = hijri ? `${hijri.day} ${hijri.month.ar} ${hijri.year} هـ` : '';
+            }
+
+            nav.style.display = 'flex';
+            if (todayBtn) todayBtn.style.display = dayOffset === 0 ? 'none' : 'inline-flex';
+        }
+
+        async function stepDay(delta) {
+            if (!userLocation) return;
+            const previous = dayOffset;
+            dayOffset += delta;
+            const ok = await refreshForCurrentDay();
+            // A failed fetch must not strand the reader on a day with no data.
+            if (!ok) {
+                dayOffset = previous;
+                await refreshForCurrentDay();
+            }
+        }
+
+        async function goToToday() {
+            dayOffset = 0;
+            await refreshForCurrentDay();
+        }
+
+        async function refreshForCurrentDay() {
+            const grid = document.getElementById('prayerGrid');
+            if (grid) {
+                grid.innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
+            }
+
+            try {
+                prayerTimes = await PrayerEngine.fetchTimings(
+                    userLocation.latitude, userLocation.longitude, undefined, dayOffset
+                );
+                renderPrayerTimes(prayerTimes);
+                renderDayNav(prayerTimes);
+
+                // The live countdown only applies to today.
+                const nextSection = document.getElementById('nextPrayerSection');
+                if (nextSection) nextSection.style.display = dayOffset === 0 ? 'block' : 'none';
+                if (dayOffset === 0) updateRemainingTime();
+                return true;
+            } catch (error) {
+                console.error('Error loading prayer times for day offset', dayOffset, error);
+                if (grid) grid.innerHTML = '';
+                return false;
+            }
         }
 
         // Load prayer times
@@ -636,11 +844,15 @@ let userLocation = null;
 
                 updateQiblaFromLocation();
 
+                // A fresh load always lands on today.
+                dayOffset = 0;
+
                 // Fetch prayer times
                 prayerTimes = await fetchPrayerTimes(userLocation.latitude, userLocation.longitude);
 
                 // Render prayer times
                 renderPrayerTimes(prayerTimes);
+                renderDayNav(prayerTimes);
 
                 // Show next prayer section
                 document.getElementById('nextPrayerSection').style.display = 'block';

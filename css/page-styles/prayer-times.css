@@ -1039,3 +1039,324 @@
                 transform: translateY(0) scale(1);
             }
         }
+
+        /* ==================================================================
+           Prayer rows — each prayer as a window (start → end), plus the day
+           navigator and the disliked-time rows beneath the list.
+           ================================================================== */
+
+        .day-nav {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-3);
+            margin-bottom: var(--space-3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--surface-1);
+        }
+
+        .day-nav-btn {
+            flex: 0 0 auto;
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            background: var(--surface-2);
+            color: var(--primary-dark);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .day-nav-btn:hover { background: var(--green-50); border-color: var(--green-200); }
+        .day-nav-btn:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        .day-nav-label {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .day-nav-date {
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            color: var(--text-color);
+        }
+
+        .day-nav-hijri {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        .day-nav-today {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 auto var(--space-4);
+            padding: var(--space-2) var(--space-4);
+            border: 1px solid var(--green-200);
+            border-radius: 999px;
+            background: var(--green-50);
+            color: var(--primary-dark);
+            font: inherit;
+            font-size: var(--text-base);
+            font-weight: var(--weight-medium);
+            cursor: pointer;
+        }
+
+        .day-nav-today:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        .prayer-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--surface-1);
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .prayer-row-icon {
+            flex: 0 0 auto;
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--green-50);
+            color: var(--primary-color);
+            font-size: 1.05rem;
+        }
+
+        .prayer-row-body {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .prayer-row-name {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            color: var(--text-color);
+        }
+
+        .prayer-row-badge {
+            padding: 1px 8px;
+            border-radius: 999px;
+            background: var(--success-surface);
+            color: var(--success);
+            font-size: var(--text-2xs);
+            font-weight: var(--weight-medium);
+        }
+
+        .prayer-row-range {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        .prayer-row-times {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+            text-align: end;
+        }
+
+        .prayer-row-start {
+            font-size: var(--text-lg);
+            font-weight: var(--weight-bold);
+            color: var(--primary-dark);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .prayer-row-remaining {
+            font-size: var(--text-xs);
+            color: var(--secondary-color);
+            white-space: nowrap;
+        }
+
+        /* The window the clock is inside right now. */
+        .prayer-row.is-current {
+            border-color: var(--green-300);
+            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08), rgba(var(--primary-rgb), 0.02));
+        }
+
+        .prayer-row.is-current .prayer-row-icon {
+            background: var(--primary-color);
+            color: var(--on-primary);
+        }
+
+        /* The one coming up next. */
+        .prayer-row.next {
+            border-color: var(--secondary-color);
+        }
+
+        .prayer-row.next .prayer-row-icon {
+            background: var(--warning-surface);
+            color: var(--warning);
+        }
+
+        /* Sunrise is a boundary, not a prayer. */
+        .prayer-row.is-moment {
+            background: var(--surface-2);
+        }
+
+        .prayer-row.is-moment .prayer-row-start {
+            color: var(--text-secondary);
+        }
+
+        .prayer-row.tahajjud {
+            border-style: dashed;
+        }
+
+        /* Disliked times ---------------------------------------------------- */
+        .forbidden-section {
+            padding: var(--space-4);
+            margin-bottom: var(--space-5);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--surface-1);
+        }
+
+        .forbidden-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin: 0 0 var(--space-1);
+            font-size: var(--text-md);
+            font-weight: var(--weight-bold);
+            color: var(--text-color);
+        }
+
+        .forbidden-title > i { color: var(--danger); }
+
+        .forbidden-note {
+            margin: 0 0 var(--space-3);
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            line-height: var(--leading-snug);
+        }
+
+        .forbidden-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .forbidden-row {
+            padding: var(--space-3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--surface-2);
+        }
+
+        .forbidden-row.is-active {
+            border-color: var(--danger);
+            background: var(--danger-surface);
+        }
+
+        .forbidden-row-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: var(--space-3);
+        }
+
+        .forbidden-row-label {
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            color: var(--text-color);
+        }
+
+        .forbidden-row-time {
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .forbidden-row.is-active .forbidden-row-label,
+        .forbidden-row.is-active .forbidden-row-time {
+            color: var(--danger);
+        }
+
+        .forbidden-row-note {
+            margin-top: 2px;
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        /* Qibla guidance ---------------------------------------------------- */
+        .qibla-guidance {
+            margin-block: var(--space-3) var(--space-2);
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--surface-2);
+            color: var(--text-secondary);
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            text-align: center;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .qibla-guidance.is-aligned {
+            border-color: var(--success);
+            background: var(--success-surface);
+            color: var(--success);
+        }
+
+        .qibla-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-2);
+            margin-block-end: var(--space-3);
+        }
+
+        .qibla-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: var(--space-3) var(--space-2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--surface-1);
+        }
+
+        .qibla-stat-value {
+            font-size: var(--text-base);
+            font-weight: var(--weight-bold);
+            color: var(--primary-dark);
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+        }
+
+        .qibla-stat-label {
+            font-size: var(--text-2xs);
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* The dial itself confirms the lock, so the phone can be glanced at. */
+        .qibla-compass.is-aligned {
+            box-shadow: 0 0 0 3px var(--success), 0 0 24px rgba(27, 127, 59, 0.35);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .qibla-guidance { transition: none; }
+        }

@@ -395,7 +395,7 @@
         .preview-text {
             font-size: var(--font-size-ayah);
             line-height: var(--leading-quran);
-            text-align: center;
+            text-align: start;
             padding: var(--space-5);
             background: var(--surface-2);
             border: 1px solid var(--border-color);
@@ -442,4 +442,176 @@
             .setting-item {
                 gap: var(--space-3);
             }
+        }
+
+        /* Section titles now carry a leading icon so the groups are scannable
+           at a glance rather than reading as a wall of identical labels. */
+        .settings-section-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .settings-section-title > i {
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+
+        /* A control too wide to sit beside its label drops under it.
+           Doubled class on purpose: app-ui.css loads AFTER this file and sets
+           `.setting-item { align-items: center }` at the same specificity, so a
+           single-class rule here loses and the whole block renders centred. */
+        .setting-item.setting-item--stacked {
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: var(--space-3);
+        }
+
+        .setting-item.setting-item--stacked .select {
+            width: 100%;
+            max-width: none;
+            text-align: start;
+        }
+
+        /* Every row reads from the start edge (the right, in RTL). */
+        .setting-item.setting-item--stacked .setting-label,
+        .setting-item.setting-item--stacked .setting-desc {
+            text-align: start;
+        }
+
+        /* Segmented control ------------------------------------------------
+           Used where a toggle would be lossy: theme has three states, and the
+           reader mode and Asr madhab both read better as named choices. */
+        .segmented {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            border-radius: var(--radius-md);
+            background: var(--surface-3);
+        }
+
+        /* Segment labels stay centred inside their own pill — the row's LABEL
+           and description are what read from the start edge, not the choices. */
+        .segmented-option {
+            flex: 1 1 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 6px;
+            min-height: 40px;
+            padding: var(--space-2) var(--space-2);
+            border: 0;
+            border-radius: calc(var(--radius-md) - 4px);
+            background: transparent;
+            color: var(--text-secondary);
+            font: inherit;
+            font-size: var(--text-base);
+            font-weight: var(--weight-medium);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .segmented-option > i {
+            font-size: 0.95rem;
+        }
+
+        .segmented-option.is-active {
+            background: var(--surface-1);
+            color: var(--primary-dark);
+            font-weight: var(--weight-semibold);
+            box-shadow: var(--elev-1);
+        }
+
+        .segmented-option:focus-visible {
+            box-shadow: var(--focus-ring);
+            outline: none;
+        }
+
+        /* Storage meter ----------------------------------------------------- */
+        .storage-meter {
+            padding-block: var(--space-4) var(--space-3);
+            border-block-end: 1px solid var(--border-color);
+        }
+
+        .storage-meter-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: var(--space-3);
+            margin-block-end: var(--space-2);
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+        }
+
+        #storagePercentLabel {
+            font-weight: var(--weight-semibold);
+            color: var(--primary-dark);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .storage-meter-track {
+            height: 8px;
+            border-radius: 999px;
+            background: var(--surface-3);
+            overflow: hidden;
+        }
+
+        .storage-meter-fill {
+            width: 0;
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--primary-light), var(--primary-color));
+            transition: width 0.4s ease-out;
+        }
+
+        /* Quran font picker -------------------------------------------------
+           Each option renders its own sample, so the choice is made by looking
+           at the face rather than reading its name. */
+        .quran-font-picker {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+            gap: var(--space-2);
+        }
+
+        .quran-font-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 2px;
+            padding: var(--space-3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--surface-2);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .quran-font-option:hover { border-color: var(--green-200); }
+        .quran-font-option:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        .quran-font-option.is-active {
+            border-color: var(--primary-color);
+            background: rgba(var(--primary-rgb), 0.07);
+        }
+
+        .quran-font-sample {
+            font-size: 1.35rem;
+            line-height: 1.7;
+            color: var(--primary-dark);
+            white-space: nowrap;
+        }
+
+        .quran-font-name {
+            font-family: var(--font-ui);
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        .quran-font-option.is-active .quran-font-name {
+            color: var(--primary-color);
+            font-weight: var(--weight-semibold);
         }

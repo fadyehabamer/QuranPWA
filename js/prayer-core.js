@@ -18,16 +18,43 @@
 
   // Fetch today's timings for a location. Builds the date from LOCAL calendar
   // parts (not toISOString, which is UTC and rolls over early east of Greenwich).
-  async function fetchTimings(latitude, longitude, method) {
+  //
+  // The date MUST be DD-MM-YYYY. The app previously sent YYYY-MM-DD, which
+  // Aladhan silently misparsed: "2026-07-23" came back echoed as 23-07-2023,
+  // i.e. timings for the WRONG YEAR (and a Hijri date three years out).
+  // Prayer times differ only a minute or two year-over-year for the same
+  // day-of-year, which is why it went unnoticed.
+  // Calculation preferences, chosen on the settings page. Aladhan `method` is
+  // the authority whose Fajr/Isha angles to use; `school` is the Asr rule
+  // (0 = majority, 1 = Hanafi, which puts Asr noticeably later).
+  function calculationMethod() {
+    try {
+      const stored = parseInt(localStorage.getItem('prayerMethod'), 10);
+      if (Number.isInteger(stored)) return stored;
+    } catch (_e) { /* storage blocked */ }
+    return 4; // Umm al-Qura
+  }
+
+  function asrSchool() {
+    try {
+      return localStorage.getItem('prayerSchool') === '1' ? 1 : 0;
+    } catch (_e) {
+      return 0;
+    }
+  }
+
+  async function fetchTimings(latitude, longitude, method, dayOffset) {
     const today = new Date();
+    if (dayOffset) today.setDate(today.getDate() + dayOffset);
     const date = [
-      today.getFullYear(),
+      String(today.getDate()).padStart(2, '0'),
       String(today.getMonth() + 1).padStart(2, '0'),
-      String(today.getDate()).padStart(2, '0')
+      today.getFullYear()
     ].join('-');
 
-    const m = method || 2;
-    const url = `https://api.aladhan.com/v1/timings/${date}?latitude=${latitude}&longitude=${longitude}&method=${m}`;
+    const m = method || calculationMethod();
+    const school = asrSchool();
+    const url = `https://api.aladhan.com/v1/timings/${date}?latitude=${latitude}&longitude=${longitude}&method=${m}&school=${school}`;
     const response = await fetch(url);
     const data = await response.json();
     if (data.code !== 200) throw new Error('Failed to fetch prayer times');
@@ -114,8 +141,35 @@
     return { name: first.name, time: first.time, minutes: first.minutes, tomorrow: true };
   }
 
+  // Seconds since midnight at the timings' location. The hero ring counts down
+  // in HH:MM:SS, so minute resolution is not enough.
+  function secondsNowAt(timezone) {
+    const now = new Date();
+    if (!timezone) return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    try {
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: timezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      }).formatToParts(now);
+      const h = Number(parts.find(p => p.type === 'hour').value);
+      const m = Number(parts.find(p => p.type === 'minute').value);
+      const s = Number(parts.find(p => p.type === 'second').value);
+      return h * 3600 + m * 60 + s;
+    } catch (_e) {
+      return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    }
+  }
+
+  function formatCountdown(totalSeconds) {
+    const t = Math.max(0, Math.floor(totalSeconds));
+    const h = Math.floor(t / 3600);
+    const m = Math.floor((t % 3600) / 60);
+    const s = t % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  }
+
   // The five daily prayers only, with the surrounding window and how far
-  // through it we are now — for the home hero (timeline + countdown + chips).
+  // through it we are now — for the home hero (ring + countdown + chips).
   // Timezone-aware and midnight-safe.
   function getDailyWindow(timings, timezone) {
     const order = [
@@ -140,10 +194,23 @@
       nextMin = next.min;
       prevMin = nextIdx === 0 ? times[times.length - 1].min - 1440 : times[nextIdx - 1].min;
     }
-    const span = Math.max(1, nextMin - prevMin);
-    const fraction = Math.min(1, Math.max(0, (cur - prevMin) / span));
-    const remainingMin = Math.max(0, nextMin - cur);
-    return { order, next, fraction, remainingMin };
+    // Second-resolution so the ring sweeps smoothly and the countdown ticks.
+    const curSec = secondsNowAt(timezone);
+    const prevSec = prevMin * 60;
+    const nextSec = nextMin * 60;
+    const spanSec = Math.max(1, nextSec - prevSec);
+    const fraction = Math.min(1, Math.max(0, (curSec - prevSec) / spanSec));
+    const remainingSec = Math.max(0, nextSec - curSec);
+
+    return {
+      order,
+      next,
+      fraction,
+      remainingSec,
+      remainingMin: Math.ceil(remainingSec / 60),
+      prevMin,
+      nextMin
+    };
   }
 
   // Time-of-day phase for the home hero's sky gradient (matches home.css).
@@ -158,6 +225,75 @@
     return 'night';
   }
 
+  function fromMinutes(total) {
+    const wrapped = ((Math.round(total) % 1440) + 1440) % 1440;
+    const h = Math.floor(wrapped / 60);
+    const m = wrapped % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  function addMinutes(time24, delta) {
+    return fromMinutes(toMinutes(time24) + delta);
+  }
+
+  /**
+   * Each prayer as the window it may be performed in, rather than a single
+   * instant. Sunrise is a boundary, not a prayer, so it is marked as a moment.
+   * Isha runs to the next day's Fajr, which is why its range wraps midnight.
+   */
+  function getPrayerRanges(timings) {
+    return [
+      { key: 'Fajr', label: 'الفجر', start: timings.Fajr, end: timings.Sunrise },
+      { key: 'Sunrise', label: 'الشروق', start: timings.Sunrise, moment: true },
+      { key: 'Dhuhr', label: 'الظهر', start: timings.Dhuhr, end: timings.Asr },
+      { key: 'Asr', label: 'العصر', start: timings.Asr, end: timings.Maghrib },
+      { key: 'Maghrib', label: 'المغرب', start: timings.Maghrib, end: timings.Isha },
+      { key: 'Isha', label: 'العشاء', start: timings.Isha, end: timings.Fajr, wraps: true }
+    ];
+  }
+
+  /**
+   * The three times at which voluntary prayer is disliked (أوقات الكراهة):
+   * just after sunrise until the sun has risen a spear's length, the few
+   * minutes around solar zenith, and from the sun yellowing until it sets.
+   *
+   * The classical descriptions are of the sun's apparent position, not clock
+   * minutes. The offsets below are the conventional approximations used by
+   * prayer apps (~15 / ~10 / ~15 minutes) — close enough to warn with, which
+   * is why each row says "تقريباً".
+   */
+  function getForbiddenWindows(timings) {
+    return [
+      {
+        key: 'afterSunrise',
+        label: 'بعد الشروق',
+        from: timings.Sunrise,
+        to: addMinutes(timings.Sunrise, 15),
+        note: 'حتى ترتفع الشمس قِيدَ رمح'
+      },
+      {
+        key: 'zenith',
+        label: 'قبل الظهر',
+        from: addMinutes(timings.Dhuhr, -10),
+        to: timings.Dhuhr,
+        note: 'عند استواء الشمس حتى تزول'
+      },
+      {
+        key: 'beforeSunset',
+        label: 'قبل المغرب',
+        from: addMinutes(timings.Maghrib, -15),
+        to: timings.Maghrib,
+        note: 'من اصفرار الشمس حتى تغرب'
+      }
+    ];
+  }
+
+  // Is the clock currently inside [from, to)? Windows here never wrap midnight.
+  function isWithinWindow(from, to, timezone) {
+    const now = minutesNowAt(timezone);
+    return now >= toMinutes(from) && now < toMinutes(to);
+  }
+
   function formatRemainingMinutes(mins) {
     const total = Math.max(0, Math.round(mins));
     const h = Math.floor(total / 60);
@@ -168,13 +304,22 @@
 
   window.PrayerEngine = {
     fetchTimings,
+    calculationMethod,
+    asrSchool,
     formatTime,
     toMinutes,
     minutesNowAt,
+    secondsNowAt,
+    formatCountdown,
     calculateTahajjudTime,
     calculateRemainingTime,
     getNextPrayer,
     getDailyWindow,
+    fromMinutes,
+    addMinutes,
+    getPrayerRanges,
+    getForbiddenWindows,
+    isWithinWindow,
     phaseForNow,
     formatRemainingMinutes
   };
