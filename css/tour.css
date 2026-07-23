@@ -135,13 +135,14 @@ body.tour-active {
   }
 }
 
-/* Help button — replays the current page's tour on demand. Sits above the
-   bottom nav and clear of the radio FAB on the opposite edge. */
+/* Help button — replays the current page's tour on demand.
+   The radio FAB already owns the inline-END corner at this height, so this
+   takes the opposite corner and matches its vertical offset exactly. */
 .tour-help-btn {
   position: fixed;
-  inset-inline-end: 16px;
-  inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 84px);
-  z-index: var(--z-sticky, 90);
+  inset-inline-start: var(--space-4);
+  inset-block-end: calc(var(--bottom-nav-height) + var(--safe-bottom) + var(--space-4));
+  z-index: var(--z-raised, 90);
   width: 44px;
   height: 44px;
   display: grid;

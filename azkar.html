@@ -30,37 +30,28 @@
     <link rel="stylesheet" href="css/app-ui.css">
     <link rel="stylesheet" href="css/tour.css">
     <link rel="stylesheet" href="css/native.css">
+    <link rel="stylesheet" href="css/nav.css">
 </head>
 
 <body>
     <!-- App Header -->
         <app-sidebar current="azkar"></app-sidebar>
 
-    <!-- Bespoke header (not <app-header>): azkar.js drives #backBtn,
-         #headerTitle and #viewModeBtn at runtime. -->
-    <header class="app-header glass-card">
-        <button class="menu-toggle-btn" id="backBtn" onclick="showCategories()" style="display: none;"
-            aria-label="رجوع">
+    <app-header title="الأذكار" heading-id="headerTitle">
+        <button class="menu-toggle-btn view-mode-btn" id="viewModeBtn" onclick="toggleViewMode()" style="display: none;"
+            title="تبديل طريقة العرض" aria-label="تبديل طريقة العرض">
+            <i class="bi bi-view-stacked" aria-hidden="true"></i>
+            <span class="view-mode-label">بطاقات</span>
+        </button>
+        <button class="header-back-btn" id="backBtn" onclick="showCategories()" style="display: none;"
+            aria-label="رجوع للأقسام">
             <i class="bi bi-arrow-right" aria-hidden="true"></i>
         </button>
-        <!-- aria-controls="sidebar" + .menu-toggle-btn is the selector
-             syncSidebarA11y() in common.js uses to keep aria-expanded in sync. -->
-        <button class="icon-btn menu-toggle-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="القائمة"
-            aria-expanded="false" aria-controls="sidebar">
-            <i class="bi bi-list" aria-hidden="true"></i>
-        </button>
-        <h1 id="headerTitle">الأذكار</h1>
-        <div class="header-left-buttons">
-            <button class="menu-toggle-btn view-mode-btn" id="viewModeBtn" onclick="toggleViewMode()" style="display: none;" title="تبديل طريقة العرض" aria-label="تبديل طريقة العرض">
-                <i class="bi bi-view-stacked" aria-hidden="true"></i>
-                <span class="view-mode-label">بطاقات</span>
-            </button>
-            <div class="visitor-badge">
-                <i class="bi bi-people-fill" aria-hidden="true"></i>
-                <span class="count" id="visitorCount">-</span>
-            </div>
+        <div class="visitor-badge">
+            <i class="bi bi-people-fill" aria-hidden="true"></i>
+            <span class="count" id="visitorCount">-</span>
         </div>
-    </header>
+    </app-header>
 
     <!-- Main Content -->
     <main class="app-content">

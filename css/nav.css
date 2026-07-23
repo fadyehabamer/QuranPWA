@@ -1,0 +1,262 @@
+/* ==========================================================================
+   Navigation — bottom tab bar and drawer.
+
+   Loaded LAST, after app-ui.css and native.css. Those two also style
+   `.bottom-nav` / `.sidebar-nav-item`, and at equal specificity the later
+   sheet wins — putting the redesign anywhere earlier meant fighting them with
+   escalating selectors. One file, loaded last, is the whole cascade story.
+   ========================================================================== */
+
+/* ==========================================================================
+   Bottom tab bar
+
+   Selection is shown with a short indicator bar on the top edge plus a colour
+   shift, not a filled blob behind the glyph — at six tabs a solid circle on
+   one of them dominated the whole bar.
+   ========================================================================== */
+
+.bottom-nav {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline: 0;
+  z-index: var(--z-nav);
+  display: none;
+  align-items: stretch;
+  gap: 0;
+  padding-block: 0;
+  padding-block-end: var(--safe-bottom);
+  padding-inline: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: none;
+  border-block-start: 1px solid var(--border-color);
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .bottom-nav { display: flex; }
+}
+
+.nav-item {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding-block: var(--space-3) var(--space-2);
+  border-radius: 0;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+/* Indicator bar, drawn on the top edge of the active tab. */
+.nav-item::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  transform: translateX(50%) scaleX(0);
+  width: 26px;
+  height: 3px;
+  border-radius: 0 0 var(--radius-full) var(--radius-full);
+  background: var(--primary-color);
+  transition: transform var(--transition-fast);
+}
+
+.nav-item.active::before { transform: translateX(50%) scaleX(1); }
+
+.nav-icon-pill {
+  display: grid;
+  place-items: center;
+  width: auto;
+  height: 24px;
+  background: none;
+  border-radius: 0;
+  transition: transform var(--transition-fast);
+}
+
+.nav-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  width: auto;
+  height: auto;
+  background: none;
+  margin: 0;
+}
+
+.nav-label {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.01em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-item:hover { color: var(--text-secondary); }
+
+.nav-item.active { color: var(--primary-color); }
+.nav-item.active .nav-label { font-weight: var(--weight-bold); }
+
+.nav-item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.nav-item:active .nav-icon-pill { transform: scale(0.9); }
+
+/* ==========================================================================
+   Drawer
+   ========================================================================== */
+
+.sidebar-logo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-5);
+  padding-inline: var(--space-5);
+  border-block-end: 1px solid var(--border-color);
+  background: none;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.sidebar-brand-mark {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(var(--primary-rgb), 0.12);
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.sidebar-logo-text {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  color: var(--text-color);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: var(--space-4) var(--space-3) var(--space-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sidebar-group + .sidebar-group {
+  margin-block-start: var(--space-5);
+}
+
+.sidebar-group-title {
+  padding-inline: var(--space-3);
+  margin-block-end: var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.sidebar-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 46px;
+  margin-block-end: 2px;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+/* Icons are plain glyphs at a fixed width, so the labels line up without the
+   list turning into a column of coloured tiles. */
+.sidebar-nav-icon {
+  flex: 0 0 auto;
+  width: 24px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border-radius: 0;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  transition: color var(--transition-fast);
+}
+
+.sidebar-nav-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-nav-item:hover {
+  background: var(--surface-2);
+  color: var(--text-color);
+}
+
+.sidebar-nav-item:hover .sidebar-nav-icon { color: var(--text-secondary); }
+
+.sidebar-nav-item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.sidebar-nav-item.active {
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary-dark);
+}
+
+.sidebar-nav-item.active .sidebar-nav-label { font-weight: var(--weight-bold); }
+.sidebar-nav-item.active .sidebar-nav-icon { color: var(--primary-color); }
+
+/* The old edge marker is redundant next to the filled row. */
+.sidebar-nav-item.active::before { content: none; }
+
+.sidebar-footer {
+  padding: var(--space-4);
+  border-block-start: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.sidebar-version {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-item,
+  .nav-item::before,
+  .nav-icon-pill,
+  .sidebar-nav-item,
+  .sidebar-nav-icon {
+    transition: none;
+  }
+}

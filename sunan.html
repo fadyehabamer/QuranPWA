@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="css/app-ui.css">
     <link rel="stylesheet" href="css/tour.css">
     <link rel="stylesheet" href="css/native.css">
+    <link rel="stylesheet" href="css/nav.css">
 </head>
 
 <body>
@@ -37,30 +38,16 @@
     <!-- Desktop Sidebar -->
         <app-sidebar current="sunan"></app-sidebar>
 
-    <!-- Bespoke header (not <app-header>): sunan.js drives #backBtn and
-         #headerTitle at runtime. -->
-    <header class="app-header glass-card">
-        <!-- aria-controls="sidebar" + .menu-toggle-btn is the selector
-             syncSidebarA11y() in common.js uses to keep aria-expanded in sync. -->
-        <button class="menu-toggle-btn" onclick="toggleSidebar()" aria-label="القائمة" aria-expanded="false"
-            aria-controls="sidebar">
-            <i class="bi bi-list" aria-hidden="true"></i>
+    <app-header title="سنن النبي ﷺ" heading-id="headerTitle">
+        <button class="header-back-btn" id="backBtn" onclick="showCategories()" style="display: none;"
+            aria-label="رجوع للأقسام">
+            <i class="bi bi-arrow-right" aria-hidden="true"></i>
         </button>
-        <h1 id="headerTitle">سنن النبي ﷺ</h1>
-        <div class="header-left-buttons">
-            <div class="visitor-badge">
-                <i class="bi bi-people-fill" aria-hidden="true"></i>
-                <span class="count" id="visitorCount">-</span>
-            </div>
-            <button class="header-back-btn" id="backBtn" onclick="showCategories()" style="display: none;"
-                aria-label="رجوع">
-                <i class="bi bi-arrow-right" aria-hidden="true"></i>
-            </button>
-            <button class="settings-btn" onclick="window.location.href='settings.html'" aria-label="الإعدادات">
-                <i class="bi bi-gear-fill" aria-hidden="true"></i>
-            </button>
+        <div class="visitor-badge">
+            <i class="bi bi-people-fill" aria-hidden="true"></i>
+            <span class="count" id="visitorCount">-</span>
         </div>
-    </header>
+    </app-header>
 
     <main class="app-content">
         <div class="sunan-container">

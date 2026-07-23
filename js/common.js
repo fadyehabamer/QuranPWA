@@ -1001,10 +1001,16 @@ function loadVisitorCount() {
 // ===== Quran Radio Player (Web Component) =====
 (function registerRadioPlayerComponent() {
     const RADIO_STYLE_ID = 'appRadioPlayerStyles';
+    /* `qurango.net/radio/noor` was returning 404 — the stream had been retired
+       upstream, so that station simply never played. Every URL below was
+       checked to answer 200 with `audio/mpeg`. */
     const STATIONS = [
         { name: 'إذاعة القرآن الكريم - القاهرة', url: 'https://n02.radiojar.com/8s5u5tpdtwzuv' },
         { name: 'إذاعة القرآن الكريم - السعودية', url: 'https://qurango.net/radio/mix' },
-        { name: 'إذاعة نور القرآن', url: 'https://qurango.net/radio/noor' },
+        { name: 'إذاعة ترتيل القرآن', url: 'https://qurango.net/radio/tarateel' },
+        { name: 'ماهر المعيقلي', url: 'https://qurango.net/radio/maher' },
+        { name: 'ياسر الدوسري', url: 'https://qurango.net/radio/yasser_aldosari' },
+        { name: 'سعود الشريم', url: 'https://qurango.net/radio/saud_alshuraim' },
     ];
 
     function ensureRadioStyles() {
@@ -1316,22 +1322,32 @@ function loadVisitorCount() {
 // Only the six tab-bar entries used to carry an icon, so the drawer rendered
 // as an unlabelled wall of text while the tab bar had icons — the two navs
 // looked like they belonged to different apps.
+// `group` drives the sidebar's sections; items without one are ungrouped.
 const APP_NAV_ITEMS = [
-    { key: 'home', href: '/', label: 'الرئيسية', icon: 'bi-house-fill', bottomLabel: 'الرئيسية', bottomIcon: 'bi-house-fill' },
-    { key: 'quran', href: 'quran.html', label: 'القرآن الكريم', icon: 'bi-book-fill', bottomLabel: 'القرآن', bottomIcon: 'bi-book-fill' },
-    { key: 'khatma', href: 'khatma.html', label: 'مركز الختمة', icon: 'bi-journal-check' },
-    { key: 'bookmarks', href: 'bookmarks.html', label: 'المواضع المحفوظة', icon: 'bi-bookmark-fill' },
-    { key: 'azkar', href: 'azkar.html', label: 'الأذكار', icon: 'bi-moon-stars-fill', bottomLabel: 'الأذكار', bottomIcon: 'bi-moon-stars-fill' },
-    { key: 'masbaha', href: 'masbaha.html', label: 'المسبحة', icon: 'bi-circle-fill', bottomLabel: 'المسبحة', bottomIcon: 'bi-circle-fill' },
-    { key: 'sunan', href: 'sunan.html', label: 'سنن النبي', icon: 'bi-stars' },
-    { key: 'prayer', href: 'prayer-times.html', label: 'مواقيت الصلاة', icon: 'bi-clock-fill', bottomLabel: 'الصلاة', bottomIcon: 'bi-clock-fill' },
-    { key: 'features', href: 'features.html', label: 'كل الميزات', icon: 'bi-grid-fill', bottomLabel: 'الميزات', bottomIcon: 'bi-grid-fill' },
-    { key: 'bio', href: 'bio.html', label: 'عن المطور', icon: 'bi-person-fill' },
-    { key: 'references', href: 'references.html', label: 'المصادر والمراجع', icon: 'bi-link-45deg' },
-    { key: 'settings', href: 'settings.html', label: 'الإعدادات', icon: 'bi-gear-fill' }
+    { key: 'home', href: '/', label: 'الرئيسية', icon: 'bi-house-fill', group: 'main', bottomLabel: 'الرئيسية', bottomIcon: 'bi-house-fill' },
+    { key: 'quran', href: 'quran.html', label: 'القرآن الكريم', icon: 'bi-book-fill', group: 'read', bottomLabel: 'القرآن', bottomIcon: 'bi-book-fill' },
+    { key: 'khatma', href: 'khatma.html', label: 'مركز الختمة', icon: 'bi-journal-check', group: 'read' },
+    { key: 'bookmarks', href: 'bookmarks.html', label: 'المواضع المحفوظة', icon: 'bi-bookmark-fill', group: 'read' },
+    { key: 'azkar', href: 'azkar.html', label: 'الأذكار', icon: 'bi-moon-stars-fill', group: 'worship', bottomLabel: 'الأذكار', bottomIcon: 'bi-moon-stars-fill' },
+    { key: 'masbaha', href: 'masbaha.html', label: 'المسبحة', icon: 'bi-circle-fill', group: 'worship', bottomLabel: 'المسبحة', bottomIcon: 'bi-circle-fill' },
+    { key: 'prayer', href: 'prayer-times.html', label: 'مواقيت الصلاة', icon: 'bi-clock-fill', group: 'worship', bottomLabel: 'الصلاة', bottomIcon: 'bi-clock-fill' },
+    { key: 'sunan', href: 'sunan.html', label: 'سنن النبي', icon: 'bi-stars', group: 'worship' },
+    { key: 'features', href: 'features.html', label: 'كل الميزات', icon: 'bi-grid-fill', group: 'app' },
+    { key: 'settings', href: 'settings.html', label: 'الإعدادات', icon: 'bi-gear-fill', group: 'app', bottomLabel: 'الإعدادات', bottomIcon: 'bi-gear-fill' },
+    { key: 'references', href: 'references.html', label: 'المصادر والمراجع', icon: 'bi-link-45deg', group: 'app' },
+    { key: 'bio', href: 'bio.html', label: 'عن المطور', icon: 'bi-person-fill', group: 'app' }
 ];
 
-const APP_BOTTOM_NAV_KEYS = ['home', 'quran', 'azkar', 'masbaha', 'prayer', 'features'];
+const APP_NAV_GROUPS = [
+    { key: 'main', label: '' },
+    { key: 'read', label: 'القراءة' },
+    { key: 'worship', label: 'العبادات' },
+    { key: 'app', label: 'التطبيق' }
+];
+
+// Settings replaced "كل الميزات" here — it is reached far more often, and the
+// features hub is one tap away in the drawer.
+const APP_BOTTOM_NAV_KEYS = ['home', 'quran', 'azkar', 'masbaha', 'prayer', 'settings'];
 
 function normalizeNavKey(value) {
     const key = String(value || '').trim().toLowerCase();
@@ -1372,37 +1388,55 @@ function resolveNavActiveKey(preferredKey) {
         : getNavKeyFromPath(window.location.pathname);
 }
 
+// Pages that are not in the bottom bar highlight nothing, rather than lighting
+// up an unrelated tab. This used to fall back to "الميزات", which is no longer
+// in the bar at all.
 function getBottomActiveKey(currentKey) {
-    return APP_BOTTOM_NAV_KEYS.includes(currentKey) ? currentKey : 'features';
+    return APP_BOTTOM_NAV_KEYS.includes(currentKey) ? currentKey : '';
 }
 
 function buildSidebarMarkup(currentKey) {
-    const linksMarkup = APP_NAV_ITEMS.map(item => {
-        const isActive = item.key === currentKey;
-        const activeClass = isActive ? ' active' : '';
-        // aria-current marks the active page for screen readers; the green
-        // highlight alone conveyed it only visually.
-        const current = isActive ? ' aria-current="page"' : '';
-        const icon = item.icon
-            ? `<i class="bi ${item.icon} sidebar-nav-icon" aria-hidden="true"></i>`
+    // Grouped under section headings rather than one flat list of twelve — at
+    // that length everything reads as equally important.
+    const groupsMarkup = APP_NAV_GROUPS.map(group => {
+        const items = APP_NAV_ITEMS.filter(item => item.group === group.key);
+        if (!items.length) return '';
+
+        const links = items.map(item => {
+            const isActive = item.key === currentKey;
+            const activeClass = isActive ? ' active' : '';
+            // aria-current marks the active page for screen readers; the green
+            // highlight alone conveyed it only visually.
+            const current = isActive ? ' aria-current="page"' : '';
+            const icon = item.icon
+                ? `<span class="sidebar-nav-icon"><i class="bi ${item.icon}" aria-hidden="true"></i></span>`
+                : '';
+            return `
+                <a href="${item.href}" class="sidebar-nav-item${activeClass}"${current} onclick="closeSidebar()">
+                    ${icon}
+                    <span class="sidebar-nav-label">${item.label}</span>
+                </a>`;
+        }).join('');
+
+        const heading = group.label
+            ? `<div class="sidebar-group-title">${group.label}</div>`
             : '';
-        return `
-            <a href="${item.href}" class="sidebar-nav-item${activeClass}"${current} onclick="closeSidebar()">
-                ${icon}
-                <div class="sidebar-nav-label">${item.label}</div>
-            </a>`;
+        return `<div class="sidebar-group">${heading}${links}</div>`;
     }).join('');
 
     return `
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
         <aside class="desktop-sidebar" id="sidebar" aria-label="القائمة الرئيسية">
             <div class="sidebar-logo">
+                <div class="sidebar-brand">
+                    <span class="sidebar-brand-mark"><i class="bi bi-book-half" aria-hidden="true"></i></span>
+                    <span class="sidebar-logo-text">القرآن الكريم</span>
+                </div>
                 <button class="sidebar-close-btn" onclick="toggleSidebar(false)" aria-label="إغلاق القائمة">
                     <i class="bi bi-x-lg" aria-hidden="true"></i>
                 </button>
-                <div class="sidebar-logo-text">القرآن الكريم</div>
             </div>
-            <nav class="sidebar-nav" aria-label="أقسام التطبيق">${linksMarkup}
+            <nav class="sidebar-nav" aria-label="أقسام التطبيق">${groupsMarkup}
             </nav>
             <div class="sidebar-footer">
                 <div class="sidebar-version">الإصدار 2.0</div>
@@ -1419,9 +1453,11 @@ function buildBottomNavMarkup(currentKey) {
             const isActive = item.key === activeBottomKey;
             const activeClass = isActive ? ' active' : '';
             const current = isActive ? ' aria-current="page"' : '';
+            // The icon sits in its own pill so the active state is a shape
+            // change, not just a colour change.
             return `
                 <a href="${item.href}" class="nav-item${activeClass}"${current}>
-                    <i class="bi ${item.bottomIcon} nav-icon" aria-hidden="true"></i>
+                    <span class="nav-icon-pill"><i class="bi ${item.bottomIcon} nav-icon" aria-hidden="true"></i></span>
                     <span class="nav-label">${item.bottomLabel}</span>
                 </a>`;
         }).join('');
@@ -1444,7 +1480,7 @@ function buildHeaderMarkup(opts) {
     return `
         <button class="menu-toggle-btn" onclick="toggleSidebar()" aria-label="القائمة" aria-expanded="false" aria-controls="sidebar"><i class="bi bi-list" aria-hidden="true"></i></button>
         <h1${headingId}>${opts.title || ''}</h1>
-        <div class="header-left-buttons">${backBtn}${settingsBtn}</div>`;
+        <div class="header-left-buttons">${opts.extraActions || ''}${backBtn}${settingsBtn}</div>`;
 }
 
 // The drawer is hidden only by a transform, so without inerting it its 12
@@ -1537,12 +1573,21 @@ if (window.customElements && !customElements.get('app-sidebar')) {
             // A custom element has no implicit role, so without this there is
             // no banner landmark on the 11 pages that use <app-header>.
             this.setAttribute('role', 'banner');
+
+            // Any markup written inside <app-header> is carried through into
+            // the action cluster. azkar and sunan needed a view-mode toggle and
+            // an in-page back button, and hand-rolled their whole header to get
+            // them — which is how azkar ended up with no settings button and a
+            // back button on the wrong side.
+            const extraActions = this.innerHTML.trim();
+
             this.innerHTML = buildHeaderMarkup({
                 title: this.getAttribute('title') || '',
                 headingId: this.getAttribute('heading-id') || '',
                 showBack: !isHome && !this.hasAttribute('no-back'),
                 backHref: this.getAttribute('back') || '/',
-                showSettings: !this.hasAttribute('no-settings')
+                showSettings: !this.hasAttribute('no-settings'),
+                extraActions: extraActions
             });
         }
     }

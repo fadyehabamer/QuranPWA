@@ -247,12 +247,27 @@ function renderCategories() {
 
     // Favourites stay pinned above everything else — but not while searching,
     // where it would sit among the results pretending to be one.
-    let html = query ? '' : `<button type="button" class="category-item category-item-favorites" onclick="showFavorites()">
-        <span class="category-info">
-            <span class="category-icon"><i class="bi bi-heart-fill" aria-hidden="true"></i></span>
-            <span class="category-name">المفضلة</span>
+    // Its own component rather than a `.category-item`: that class is a centred
+    // card in the base sheet and a row in the group overrides, and the pinned
+    // favourites entry ended up caught between the two.
+    // Arabic counts one, two and many differently, and the singular and dual
+    // drop the numeral entirely — "1 ذكر" reads as broken text.
+    const favCount = favorites.length;
+    let favSubtitle;
+    if (favCount === 0) favSubtitle = 'اضغط ♥ بجانب أي ذكر لحفظه هنا';
+    else if (favCount === 1) favSubtitle = 'ذكر واحد محفوظ';
+    else if (favCount === 2) favSubtitle = 'ذكران محفوظان';
+    else if (favCount <= 10) favSubtitle = `${favCount} أذكار محفوظة`;
+    else favSubtitle = `${favCount} ذكراً محفوظاً`;
+
+    let html = query ? '' : `<button type="button" class="azkar-fav-card${favCount ? '' : ' is-empty'}" onclick="showFavorites()">
+        <span class="azkar-fav-icon"><i class="bi bi-heart-fill" aria-hidden="true"></i></span>
+        <span class="azkar-fav-body">
+            <span class="azkar-fav-title">المفضلة</span>
+            <span class="azkar-fav-sub">${favSubtitle}</span>
         </span>
-        <span class="category-count">${favorites.length}</span>
+        ${favCount ? `<span class="azkar-fav-count">${favCount}</span>` : ''}
+        <span class="azkar-fav-go"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>
     </button>`;
 
     // Searching flattens the groups — you want the match, not its bucket.

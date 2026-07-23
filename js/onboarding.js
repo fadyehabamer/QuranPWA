@@ -1,10 +1,13 @@
 /* ==========================================================================
    First-run onboarding.
 
-   Three intro screens followed by a setup screen where the reader picks their
-   accent colour, Quran font, mushaf display mode and location before ever
-   seeing the app. Previously the app just fired a bare geolocation prompt on
-   first load with no explanation of why it wanted the permission.
+   Three intro screens, then a four-step setup wizard — accent colour, Quran
+   font, mushaf display mode, location — one decision per screen. Previously
+   the app just fired a bare geolocation prompt on first load with no
+   explanation of why it wanted the permission.
+
+   Full-screen rather than a dialog card: this is the first thing the app shows,
+   and a popup floating over an empty home page read as an interruption.
 
    Runs on index.html only, once, gated by `onboardingDoneV1`.
    ========================================================================== */
@@ -22,36 +25,6 @@
     try { localStorage.setItem(DONE_KEY, '1'); } catch (_e) { /* ignore */ }
   }
 
-  var ACCENTS = [
-    { hex: '#1B5E20', label: 'أخضر' },
-    { hex: '#2196F3', label: 'أزرق' },
-    { hex: '#9C27B0', label: 'بنفسجي' },
-    { hex: '#FF5722', label: 'برتقالي' },
-    { hex: '#795548', label: 'بني' },
-    { hex: '#607D8B', label: 'رمادي' }
-  ];
-
-  var INTRO_SLIDES = [
-    {
-      icon: 'bi-book-half',
-      title: 'المصحف كاملاً بين يديك',
-      text: 'اقرأ نصاً أو بصور المصحف، مع التفسير والاستماع لأي آية، وتتبّع لموضع قراءتك.'
-    },
-    {
-      icon: 'bi-clock-history',
-      title: 'مواقيت صلاتك',
-      text: 'الصلاة القادمة والوقت المتبقي لها، وأوقات الكراهة، واتجاه القبلة من موقعك.'
-    },
-    {
-      icon: 'bi-stars',
-      title: 'وردك اليومي',
-      text: 'الأذكار والمسبحة ومتابعة الصلوات والختمة — كلها تعمل بلا إنترنت.'
-    }
-  ];
-
-  var state = { index: 0, root: null };
-  var TOTAL_STEPS = INTRO_SLIDES.length + 1; // intro slides + the setup screen
-
   function read(key, fallback) {
     try { return localStorage.getItem(key) || fallback; }
     catch (_e) { return fallback; }
@@ -61,174 +34,250 @@
     try { localStorage.setItem(key, value); } catch (_e) { /* ignore */ }
   }
 
+  var ACCENTS = [
+    { hex: '#1B5E20', label: 'أخضر' },
+    { hex: '#2196F3', label: 'أزرق' },
+    { hex: '#9C27B0', label: 'بنفسجي' },
+    { hex: '#FF5722', label: 'برتقالي' },
+    { hex: '#795548', label: 'بني' },
+    { hex: '#607D8B', label: 'رمادي' }
+  ];
+
+  var state = { index: 0, root: null };
+
+  /* ------------------------------------------------------------------ steps */
+
+  function introStep(icon, title, text) {
+    return {
+      kind: 'intro',
+      render: function () {
+        return '' +
+          '<div class="onb-hero"><i class="bi ' + icon + '" aria-hidden="true"></i></div>' +
+          '<h2 class="onb-title">' + title + '</h2>' +
+          '<p class="onb-text">' + text + '</p>';
+      }
+    };
+  }
+
+  function choiceStep(config) {
+    return {
+      kind: 'setup',
+      render: function () {
+        return '' +
+          '<div class="onb-icon"><i class="bi ' + config.icon + '" aria-hidden="true"></i></div>' +
+          '<h2 class="onb-title">' + config.title + '</h2>' +
+          '<p class="onb-text">' + config.text + '</p>' +
+          '<div class="onb-choices" id="onbChoices">' + config.options() + '</div>';
+      },
+      bind: function (root) {
+        var group = root.querySelector('#onbChoices');
+        if (!group) return;
+        group.addEventListener('click', function (event) {
+          var button = event.target.closest('[data-value]');
+          if (!button) return;
+          config.select(button.getAttribute('data-value'));
+          Array.prototype.forEach.call(group.children, function (child) {
+            var isActive = child === button;
+            child.classList.toggle('is-active', isActive);
+            child.setAttribute('aria-pressed', String(isActive));
+          });
+        });
+      }
+    };
+  }
+
+  function accentOptions() {
+    var current = read('primaryColor', '#1B5E20');
+    return ACCENTS.map(function (option) {
+      var active = option.hex === current;
+      return '<button type="button" class="onb-swatch' + (active ? ' is-active' : '') + '"' +
+        ' style="background:' + option.hex + '" data-value="' + option.hex + '"' +
+        ' aria-label="' + option.label + '" aria-pressed="' + active + '"></button>';
+    }).join('');
+  }
+
+  function fontOptions() {
+    var current = read('quranFontFamily', 'amiri');
+    var fonts = window.QURAN_FONTS || {};
+    return Object.keys(fonts).map(function (key) {
+      var active = key === current;
+      return '<button type="button" class="onb-card-option' + (active ? ' is-active' : '') + '"' +
+        ' data-value="' + key + '" aria-pressed="' + active + '">' +
+        '<span class="onb-card-sample" style="font-family:' + fonts[key].stack + '">بِسْمِ ٱللَّهِ</span>' +
+        '<span class="onb-card-name">' + fonts[key].label + '</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  function modeOptions() {
+    var current = read('quranReaderDisplayModeV1', 'text') === 'mushaf' ? 'mushaf' : 'text';
+    var options = [
+      { value: 'text', icon: 'bi-text-paragraph', name: 'نص', hint: 'يتكيّف مع حجم الخط' },
+      { value: 'mushaf', icon: 'bi-file-earmark-image', name: 'صور المصحف', hint: 'صفحات المصحف كما هي' }
+    ];
+    return options.map(function (option) {
+      var active = option.value === current;
+      return '<button type="button" class="onb-card-option' + (active ? ' is-active' : '') + '"' +
+        ' data-value="' + option.value + '" aria-pressed="' + active + '">' +
+        '<span class="onb-card-icon"><i class="bi ' + option.icon + '" aria-hidden="true"></i></span>' +
+        '<span class="onb-card-name">' + option.name + '</span>' +
+        '<span class="onb-card-hint">' + option.hint + '</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  var locationStep = {
+    kind: 'setup',
+    render: function () {
+      return '' +
+        '<div class="onb-icon"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i></div>' +
+        '<h2 class="onb-title">أين أنت؟</h2>' +
+        '<p class="onb-text">نحتاج موقعك لحساب مواقيت الصلاة واتجاه القبلة. لا يُرسل لأي جهة أخرى.</p>' +
+        '<button type="button" class="onb-location-btn" id="onbLocationBtn">' +
+        '  <i class="bi bi-crosshair" aria-hidden="true"></i><span>تحديد موقعي تلقائياً</span>' +
+        '</button>' +
+        '<p class="onb-location-state" id="onbLocationState"></p>' +
+        '<p class="onb-hint">يمكنك تخطي هذه الخطوة واختيار دولتك يدوياً لاحقاً من صفحة المواقيت.</p>';
+    },
+    bind: function (root) {
+      var button = root.querySelector('#onbLocationBtn');
+      var status = root.querySelector('#onbLocationState');
+
+      var existing = read('locationText', '');
+      if (existing) {
+        status.textContent = 'الموقع الحالي: ' + existing;
+        status.className = 'onb-location-state is-ok';
+      }
+
+      button.addEventListener('click', function () {
+        if (!navigator.geolocation) {
+          status.textContent = 'خدمة الموقع غير متاحة على هذا الجهاز.';
+          status.className = 'onb-location-state is-error';
+          return;
+        }
+
+        status.textContent = 'جاري تحديد موقعك…';
+        status.className = 'onb-location-state';
+        button.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            write('userLocation', JSON.stringify({ latitude: lat, longitude: lng }));
+            status.textContent = 'تم تحديد موقعك';
+            status.className = 'onb-location-state is-ok';
+            button.disabled = false;
+            resolvePlaceName(lat, lng, status);
+          },
+          function () {
+            // A refusal is a valid outcome; manual country choice still works.
+            status.textContent = 'لم يُسمح بالوصول للموقع. اختر دولتك يدوياً من صفحة المواقيت.';
+            status.className = 'onb-location-state is-error';
+            button.disabled = false;
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+        );
+      });
+    }
+  };
+
+  /**
+   * Turn coordinates into a city name.
+   *
+   * The first version stored the literal string "موقعك الحالي", which is why
+   * the settings page showed that placeholder instead of a real place. Aladhan
+   * already returns the resolved timezone for a coordinate pair, and its city
+   * component is a good enough label without adding a geocoding provider.
+   */
+  function resolvePlaceName(latitude, longitude, status) {
+    var fallback = latitude.toFixed(2) + ', ' + longitude.toFixed(2);
+
+    fetch('https://api.aladhan.com/v1/timings?latitude=' + latitude + '&longitude=' + longitude)
+      .then(function (response) { return response.json(); })
+      .then(function (payload) {
+        var timezone = payload && payload.data && payload.data.meta && payload.data.meta.timezone;
+        // "Africa/Cairo" -> "Cairo"; underscores are word separators there.
+        var city = timezone ? timezone.split('/').pop().replace(/_/g, ' ') : '';
+        var name = city || fallback;
+        write('locationText', name);
+        if (status) status.textContent = 'تم تحديد موقعك: ' + name;
+      })
+      .catch(function () {
+        write('locationText', fallback);
+        if (status) status.textContent = 'تم تحديد موقعك: ' + fallback;
+      });
+  }
+
+  var STEPS = [
+    introStep('bi-book-half', 'المصحف كاملاً بين يديك',
+      'اقرأ نصاً أو بصور المصحف، مع التفسير والاستماع لأي آية، وتتبّع لموضع قراءتك.'),
+    introStep('bi-clock-history', 'مواقيت صلاتك',
+      'الصلاة القادمة والوقت المتبقي لها، وأوقات الكراهة، واتجاه القبلة من موقعك.'),
+    introStep('bi-stars', 'وردك اليومي',
+      'الأذكار والمسبحة ومتابعة الصلوات والختمة — كلها تعمل بلا إنترنت.'),
+
+    choiceStep({
+      icon: 'bi-palette-fill',
+      title: 'اختر لون التطبيق',
+      text: 'يمكنك تغييره في أي وقت من الإعدادات.',
+      options: accentOptions,
+      select: function (hex) {
+        write('primaryColor', hex);
+        // Repaint immediately so the choice is visible while still choosing.
+        if (window.applyAccentColor) {
+          window.applyAccentColor(hex, document.documentElement.getAttribute('data-theme') === 'dark');
+        }
+      }
+    }),
+
+    choiceStep({
+      icon: 'bi-fonts',
+      title: 'خط المصحف',
+      text: 'الخط الذي تُعرض به الآيات داخل القارئ.',
+      options: fontOptions,
+      select: function (key) {
+        write('quranFontFamily', key);
+        if (window.syncQuranFont) window.syncQuranFont();
+      }
+    }),
+
+    choiceStep({
+      icon: 'bi-book',
+      title: 'طريقة عرض المصحف',
+      text: 'كيف تفضّل قراءة السور؟',
+      options: modeOptions,
+      select: function (mode) { write('quranReaderDisplayModeV1', mode); }
+    }),
+
+    locationStep
+  ];
+
   /* ---------------------------------------------------------------- render */
 
-  function introMarkup(slide) {
-    return '' +
-      '<div class="onb-hero"><i class="bi ' + slide.icon + '" aria-hidden="true"></i></div>' +
-      '<h2 class="onb-title">' + slide.title + '</h2>' +
-      '<p class="onb-text">' + slide.text + '</p>';
-  }
-
-  function setupMarkup() {
-    var accent = read('primaryColor', '#1B5E20');
-    var font = read('quranFontFamily', 'amiri');
-    var mode = read('quranReaderDisplayModeV1', 'text');
-    var fonts = window.QURAN_FONTS || {};
-
-    var accents = ACCENTS.map(function (option) {
-      return '<button type="button" class="onb-swatch' + (option.hex === accent ? ' is-active' : '') + '"' +
-        ' style="background:' + option.hex + '" data-accent="' + option.hex + '"' +
-        ' aria-label="' + option.label + '" aria-pressed="' + (option.hex === accent) + '"></button>';
-    }).join('');
-
-    var fontOptions = Object.keys(fonts).map(function (key) {
-      return '<button type="button" class="onb-chip' + (key === font ? ' is-active' : '') + '"' +
-        ' data-font="' + key + '" style="font-family:' + fonts[key].stack + '"' +
-        ' aria-pressed="' + (key === font) + '">' + fonts[key].label + '</button>';
-    }).join('');
-
-    return '' +
-      '<h2 class="onb-title">لنُجهّز التطبيق لك</h2>' +
-      '<p class="onb-text">يمكنك تغيير كل هذا لاحقاً من الإعدادات.</p>' +
-
-      '<div class="onb-field">' +
-      '  <span class="onb-label">لون التطبيق</span>' +
-      '  <div class="onb-swatches" id="onbAccents">' + accents + '</div>' +
-      '</div>' +
-
-      '<div class="onb-field">' +
-      '  <span class="onb-label">خط المصحف</span>' +
-      '  <div class="onb-chips" id="onbFonts">' + fontOptions + '</div>' +
-      '</div>' +
-
-      '<div class="onb-field">' +
-      '  <span class="onb-label">طريقة عرض المصحف</span>' +
-      '  <div class="onb-chips" id="onbModes">' +
-      '    <button type="button" class="onb-chip' + (mode !== 'mushaf' ? ' is-active' : '') + '"' +
-      '      data-mode="text" aria-pressed="' + (mode !== 'mushaf') + '">نص</button>' +
-      '    <button type="button" class="onb-chip' + (mode === 'mushaf' ? ' is-active' : '') + '"' +
-      '      data-mode="mushaf" aria-pressed="' + (mode === 'mushaf') + '">صور المصحف</button>' +
-      '  </div>' +
-      '</div>' +
-
-      '<div class="onb-field">' +
-      '  <span class="onb-label">موقعك</span>' +
-      '  <p class="onb-hint">نستخدمه لحساب مواقيت الصلاة واتجاه القبلة فقط، ولا يُرسل لأي جهة أخرى.</p>' +
-      '  <button type="button" class="onb-location-btn" id="onbLocationBtn">' +
-      '    <i class="bi bi-crosshair" aria-hidden="true"></i><span id="onbLocationLabel">تحديد موقعي تلقائياً</span>' +
-      '  </button>' +
-      '  <p class="onb-location-state" id="onbLocationState"></p>' +
-      '</div>';
-  }
-
   function render() {
-    var isSetup = state.index === INTRO_SLIDES.length;
+    var step = STEPS[state.index];
+    var isLast = state.index === STEPS.length - 1;
     var body = state.root.querySelector('.onb-body');
     var dots = state.root.querySelector('.onb-dots');
     var next = state.root.querySelector('#onbNext');
     var back = state.root.querySelector('#onbBack');
 
-    body.innerHTML = isSetup ? setupMarkup() : introMarkup(INTRO_SLIDES[state.index]);
+    body.innerHTML = step.render();
     body.scrollTop = 0;
-    // The class belongs on the card — `.onb-card.is-setup` is what the
-    // stylesheet targets; putting it on the overlay silently did nothing.
-    state.root.querySelector('.onb-card').classList.toggle('is-setup', isSetup);
+    state.root.classList.toggle('is-intro', step.kind === 'intro');
 
-    dots.innerHTML = Array.apply(null, { length: TOTAL_STEPS }).map(function (_v, i) {
+    dots.innerHTML = STEPS.map(function (_step, i) {
       return '<span class="onb-dot' + (i === state.index ? ' is-active' : '') + '"></span>';
     }).join('');
 
-    next.textContent = isSetup ? 'ابدأ' : 'التالي';
-    back.style.visibility = state.index === 0 ? 'hidden' : 'visible';
+    next.textContent = isLast ? 'ابدأ' : 'التالي';
+    // "Back" only exists once there is somewhere to go back to, so the first
+    // screen's primary action is centred on its own rather than pushed aside.
+    back.hidden = state.index === 0;
+    state.root.classList.toggle('is-first', state.index === 0);
 
-    if (isSetup) bindSetup();
-  }
-
-  /* ----------------------------------------------------------- setup wiring */
-
-  function selectIn(container, selected) {
-    Array.prototype.forEach.call(container.children, function (child) {
-      var isActive = child === selected;
-      child.classList.toggle('is-active', isActive);
-      child.setAttribute('aria-pressed', String(isActive));
-    });
-  }
-
-  function bindSetup() {
-    var accents = state.root.querySelector('#onbAccents');
-    accents.addEventListener('click', function (event) {
-      var button = event.target.closest('[data-accent]');
-      if (!button) return;
-      var hex = button.getAttribute('data-accent');
-      write('primaryColor', hex);
-      // Repaint immediately so the choice is visible while still choosing.
-      if (window.applyAccentColor) {
-        window.applyAccentColor(hex, document.documentElement.getAttribute('data-theme') === 'dark');
-      }
-      selectIn(accents, button);
-    });
-
-    var fonts = state.root.querySelector('#onbFonts');
-    if (fonts) {
-      fonts.addEventListener('click', function (event) {
-        var button = event.target.closest('[data-font]');
-        if (!button) return;
-        write('quranFontFamily', button.getAttribute('data-font'));
-        if (window.syncQuranFont) window.syncQuranFont();
-        selectIn(fonts, button);
-      });
-    }
-
-    var modes = state.root.querySelector('#onbModes');
-    modes.addEventListener('click', function (event) {
-      var button = event.target.closest('[data-mode]');
-      if (!button) return;
-      write('quranReaderDisplayModeV1', button.getAttribute('data-mode'));
-      selectIn(modes, button);
-    });
-
-    var locationBtn = state.root.querySelector('#onbLocationBtn');
-    var locationState = state.root.querySelector('#onbLocationState');
-
-    // Already granted on a previous run? Say so instead of asking again.
-    var existing = read('locationText', '');
-    if (existing) {
-      locationState.textContent = 'الموقع الحالي: ' + existing;
-      locationState.className = 'onb-location-state is-ok';
-    }
-
-    locationBtn.addEventListener('click', function () {
-      if (!navigator.geolocation) {
-        locationState.textContent = 'خدمة الموقع غير متاحة على هذا الجهاز — يمكنك اختيار دولتك يدوياً لاحقاً.';
-        locationState.className = 'onb-location-state is-error';
-        return;
-      }
-
-      locationState.textContent = 'جاري تحديد موقعك…';
-      locationState.className = 'onb-location-state';
-      locationBtn.disabled = true;
-
-      navigator.geolocation.getCurrentPosition(
-        function (position) {
-          write('userLocation', JSON.stringify({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          }));
-          write('locationText', 'موقعك الحالي');
-          locationState.textContent = 'تم تحديد موقعك بنجاح';
-          locationState.className = 'onb-location-state is-ok';
-          locationBtn.disabled = false;
-        },
-        function () {
-          // A refusal is a valid outcome; manual country choice still works.
-          locationState.textContent = 'لم يُسمح بالوصول للموقع. يمكنك اختيار دولتك يدوياً من صفحة المواقيت.';
-          locationState.className = 'onb-location-state is-error';
-          locationBtn.disabled = false;
-        },
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
-      );
-    });
+    if (step.bind) step.bind(state.root);
   }
 
   /* ------------------------------------------------------------- lifecycle */
@@ -240,6 +289,7 @@
       state.root.remove();
       state.root = null;
     }
+
     // Re-run the home widget so it picks up the location just granted, and let
     // the page tour start now that the wizard is out of the way.
     if (typeof initHomePrayerWidget === 'function') {
@@ -256,14 +306,14 @@
     if (state.root) return;
 
     var root = document.createElement('div');
-    root.className = 'onb-overlay';
+    root.className = 'onb-screen';
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-modal', 'true');
     root.setAttribute('aria-label', 'إعداد التطبيق');
     root.innerHTML =
-      '<div class="onb-card">' +
-      '  <button type="button" class="onb-skip" id="onbSkip">تخطي</button>' +
-      '  <div class="onb-body"></div>' +
+      '<button type="button" class="onb-skip" id="onbSkip">تخطي</button>' +
+      '<div class="onb-body"></div>' +
+      '<div class="onb-footer">' +
       '  <div class="onb-dots"></div>' +
       '  <div class="onb-actions">' +
       '    <button type="button" class="onb-btn" id="onbBack">السابق</button>' +
@@ -281,7 +331,7 @@
       if (state.index > 0) { state.index -= 1; render(); }
     });
     root.querySelector('#onbNext').addEventListener('click', function () {
-      if (state.index < TOTAL_STEPS - 1) { state.index += 1; render(); }
+      if (state.index < STEPS.length - 1) { state.index += 1; render(); }
       else finish();
     });
 
