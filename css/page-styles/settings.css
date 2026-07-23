@@ -615,3 +615,169 @@
             color: var(--primary-color);
             font-weight: var(--weight-semibold);
         }
+
+        /* Explanatory copy above a group of controls. */
+        .section-note {
+            margin: var(--space-3) 0 var(--space-2);
+            font-size: var(--text-xs);
+            line-height: var(--leading-snug);
+            color: var(--text-muted);
+        }
+
+        /* Which prayers to be reminded of ------------------------------------ */
+        .prayer-pick {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+
+        .prayer-pick-chip {
+            min-height: 40px;
+            padding-inline: var(--space-4);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            background: var(--surface-2);
+            color: var(--text-secondary);
+            font: inherit;
+            font-size: var(--text-base);
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s, color 0.15s;
+        }
+
+        .prayer-pick-chip.is-active {
+            border-color: var(--primary-color);
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary-dark);
+            font-weight: var(--weight-semibold);
+        }
+
+        .prayer-pick-chip:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        /* Delivery-capability notice. Says plainly whether reminders will
+           arrive with the app closed, which genuinely varies by browser. */
+        .notify-status {
+            margin-block: var(--space-3);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--surface-2);
+            font-size: var(--text-xs);
+            line-height: var(--leading-snug);
+            color: var(--text-secondary);
+        }
+
+        .notify-status:empty { display: none; }
+
+        .notify-status.is-ok {
+            border-color: color-mix(in srgb, var(--success) 40%, transparent);
+            background: var(--success-surface);
+            color: var(--success);
+        }
+
+        .notify-status.is-warn {
+            border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+            background: var(--warning-surface);
+            color: var(--warning);
+        }
+
+        /* Offline juz downloads ---------------------------------------------- */
+        .juz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: var(--space-2);
+            margin-block-start: var(--space-4);
+        }
+
+        .juz-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: var(--space-2) 4px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--surface-1);
+            color: var(--text-color);
+            font: inherit;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .juz-chip:hover { border-color: var(--primary-color); }
+        .juz-chip:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        .juz-chip-num {
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .juz-chip-state {
+            font-size: var(--text-2xs);
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+            min-height: 1em;
+        }
+
+        .juz-chip.is-done {
+            border-color: var(--success);
+            background: var(--success-surface);
+        }
+
+        .juz-chip.is-done .juz-chip-num,
+        .juz-chip.is-done .juz-chip-state { color: var(--success); }
+
+        .juz-chip.is-partial {
+            border-color: var(--warning);
+        }
+
+        .juz-chip.is-partial .juz-chip-state { color: var(--warning); }
+
+        .juz-chip.is-loading {
+            border-color: var(--primary-color);
+            background: rgba(var(--primary-rgb), 0.07);
+        }
+
+        /* Collapsible sub-section (the 30-juz picker). */
+        .collapse-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            width: 100%;
+            min-height: var(--tap-target);
+            margin-block-start: var(--space-3);
+            padding: var(--space-3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--surface-2);
+            color: var(--text-color);
+            font: inherit;
+            font-size: var(--text-base);
+            font-weight: var(--weight-medium);
+            text-align: start;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .collapse-toggle:hover { border-color: var(--primary-color); }
+        .collapse-toggle:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        .collapse-toggle-meta {
+            margin-inline-start: auto;
+            font-size: var(--text-xs);
+            font-weight: var(--weight-semibold);
+            color: var(--primary-color);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .collapse-toggle-icon {
+            flex: 0 0 auto;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .collapse-toggle.is-open .collapse-toggle-icon { transform: rotate(180deg); }
+
+        /* `display: grid` on .juz-grid outranks the UA [hidden] rule. */
+        .juz-grid[hidden] { display: none; }

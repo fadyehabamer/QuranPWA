@@ -236,9 +236,116 @@
             </div>
 
             <div id="notificationSettings" style="display: none;">
+                <div class="setting-item">
+                    <div class="setting-label" id="prayerAlertsLabel">
+                        <span>تنبيهات الصلاة</span>
+                        <span class="setting-desc" id="prayerAlertsDesc">تذكير عند دخول وقت كل صلاة</span>
+                    </div>
+                    <button type="button" class="toggle-switch" id="prayerAlertsToggle" role="switch"
+                        aria-checked="false" aria-labelledby="prayerAlertsLabel"
+                        onclick="togglePrayerAlerts()">
+                        <span class="toggle-slider" aria-hidden="true"></span>
+                    </button>
+                </div>
+
+                <div id="prayerAlertsOptions" style="display: none;">
+                    <div class="setting-item setting-item--stacked">
+                        <div class="setting-label" id="prayerPickLabel">
+                            <span>الصلوات المنبَّه لها</span>
+                            <span class="setting-desc">اختر ما تريد التنبيه عليه</span>
+                        </div>
+                        <div class="prayer-pick" role="group" aria-labelledby="prayerPickLabel"
+                            id="prayerPickGroup"></div>
+                    </div>
+
+                    <div class="setting-item setting-item--stacked">
+                        <div class="setting-label" id="prayerOffsetLabel">
+                            <span>موعد التنبيه</span>
+                            <span class="setting-desc">قبل الأذان بكم دقيقة؟</span>
+                        </div>
+                        <div class="segmented" role="group" aria-labelledby="prayerOffsetLabel"
+                            id="prayerOffsetGroup">
+                            <button type="button" class="segmented-option" data-offset="0"
+                                onclick="setPrayerOffset(0)" aria-pressed="true"><span>عند الأذان</span></button>
+                            <button type="button" class="segmented-option" data-offset="5"
+                                onclick="setPrayerOffset(5)" aria-pressed="false"><span>٥ د</span></button>
+                            <button type="button" class="segmented-option" data-offset="10"
+                                onclick="setPrayerOffset(10)" aria-pressed="false"><span>١٠ د</span></button>
+                            <button type="button" class="segmented-option" data-offset="15"
+                                onclick="setPrayerOffset(15)" aria-pressed="false"><span>١٥ د</span></button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label" id="iqamaLabel">
+                            <span>تذكير بعد الأذان</span>
+                            <span class="setting-desc">سؤال بعد ١٥ دقيقة: هل صليت؟</span>
+                        </div>
+                        <button type="button" class="toggle-switch" id="iqamaToggle" role="switch"
+                            aria-checked="false" aria-labelledby="iqamaLabel" onclick="toggleIqamaReminder()">
+                            <span class="toggle-slider" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label" id="khatmaAlertLabel">
+                        <span>تذكير الختمة</span>
+                        <span class="setting-desc">تذكير يومي في الثامنة مساءً بوردك</span>
+                    </div>
+                    <button type="button" class="toggle-switch" id="khatmaAlertToggle" role="switch"
+                        aria-checked="false" aria-labelledby="khatmaAlertLabel"
+                        onclick="toggleKhatmaReminder()">
+                        <span class="toggle-slider" aria-hidden="true"></span>
+                    </button>
+                </div>
+
+                <div class="notify-status" id="notifyStatus"></div>
+
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>تنبيه تجريبي</span>
+                        <span class="setting-desc">تأكد من وصول التنبيهات إلى جهازك</span>
+                    </div>
+                    <button type="button" class="font-size-btn" onclick="testNotification()"
+                        aria-label="إرسال تنبيه تجريبي"><i class="bi bi-send-fill" aria-hidden="true"></i></button>
+                </div>
+
                 <div class="notification-list" id="notificationList"></div>
-                <button class="add-notification-btn" onclick="showAddNotification()">+ إضافة تنبيه جديد</button>
+                <button class="add-notification-btn" onclick="showAddNotification()">+ إضافة تذكير مخصص</button>
             </div>
+        </div>
+
+        <!-- Offline Quran -->
+        <div class="settings-section">
+            <h2 class="settings-section-title"><i class="bi bi-cloud-arrow-down-fill" aria-hidden="true"></i>القراءة بلا إنترنت</h2>
+
+            <p class="section-note">حمّل أجزاء المصحف لتقرأها بلا اتصال. الأجزاء المحمّلة لا تُحذف عند مسح
+                ذاكرة التخزين المؤقت.</p>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>المساحة المستخدمة</span>
+                    <span class="setting-desc" id="offlineUsageDesc">جاري الحساب…</span>
+                </div>
+                <button type="button" class="font-size-btn font-size-btn--danger" onclick="removeAllOffline()"
+                    aria-label="حذف كل الأجزاء المحمّلة"><i class="bi bi-trash-fill" aria-hidden="true"></i></button>
+            </div>
+
+            <button type="button" class="add-notification-btn" onclick="downloadAllJuz()" id="downloadAllBtn">
+                <i class="bi bi-download" aria-hidden="true"></i> تحميل المصحف كاملاً
+            </button>
+
+            <!-- Thirty chips is a lot of page to scroll past for anyone not
+                 managing downloads, so the list is collapsed by default. -->
+            <button type="button" class="collapse-toggle" id="juzToggle" aria-expanded="false"
+                aria-controls="juzGrid" onclick="toggleJuzGrid()">
+                <span>اختيار أجزاء محددة</span>
+                <span class="collapse-toggle-meta" id="juzToggleMeta"></span>
+                <i class="bi bi-chevron-down collapse-toggle-icon" aria-hidden="true"></i>
+            </button>
+
+            <div class="juz-grid" id="juzGrid" hidden></div>
         </div>
 
         <!-- Ramadan Settings -->
@@ -350,11 +457,17 @@
     <!-- Bottom Navigation -->
         <app-bottom-nav current="settings"></app-bottom-nav>
 
+    <script src="js/prayer-core.js"></script>
+    <script src="js/notify-store.js"></script>
     <script src="js/common.js"></script>
+        <script src="js/data/surahs.js"></script>
+    <script src="js/data/quran-index.js"></script>
+    <script src="js/offline-quran.js"></script>
         <script src="js/page-scripts/settings.js"></script>
     <script src="js/native-ui.js"></script>
     <script src="js/tour.js"></script>
     <script src="js/tours.js"></script>
+    <script src="js/notifications.js"></script>
 </body>
 
 </html>

@@ -213,6 +213,7 @@ let deferredPrompt;
                     document.getElementById('notificationSettings').style.display = 'block';
                     localStorage.setItem('notificationsEnabled', 'true');
                     scheduleNotifications();
+                    await updateNotifySetting({ enabled: true });
                 } else {
                     setSwitchState(toggle, false);
                     showModal({
@@ -225,7 +226,274 @@ let deferredPrompt;
             } else {
                 document.getElementById('notificationSettings').style.display = 'none';
                 localStorage.setItem('notificationsEnabled', 'false');
+                await updateNotifySetting({ enabled: false });
             }
+        }
+
+        /* ==================================================================
+           Prayer, iqama and khatma reminders
+           ================================================================== */
+
+        // Mirror of the stored settings, so the toggles can render without an
+        // await on every repaint.
+        let notifySettings = null;
+
+        async function updateNotifySetting(patch) {
+            if (!window.NotifyStore) return;
+
+            notifySettings = Object.assign({}, notifySettings || window.NotifyStore.DEFAULT_SETTINGS, patch);
+            await window.NotifyStore.setSettings(notifySettings);
+            renderNotifySettings();
+
+            // Rebuilding is what actually (re)installs the browser-side
+            // triggers, so every change has to go through it.
+            if (window.AppNotifications) {
+                const result = await window.AppNotifications.refresh();
+                renderNotifyStatus(result);
+            }
+        }
+
+        function togglePrayerAlerts() {
+            const toggle = document.getElementById('prayerAlertsToggle');
+            const on = toggle.getAttribute('aria-checked') !== 'true';
+            const prayers = { Fajr: on, Dhuhr: on, Asr: on, Maghrib: on, Isha: on };
+            updateNotifySetting({ prayers });
+        }
+
+        function togglePrayer(key) {
+            const current = (notifySettings || window.NotifyStore.DEFAULT_SETTINGS).prayers;
+            const prayers = Object.assign({}, current);
+            prayers[key] = !prayers[key];
+            updateNotifySetting({ prayers });
+        }
+
+        function setPrayerOffset(minutes) {
+            updateNotifySetting({ offsetMinutes: minutes });
+        }
+
+        function toggleIqamaReminder() {
+            const toggle = document.getElementById('iqamaToggle');
+            updateNotifySetting({ iqamaReminder: toggle.getAttribute('aria-checked') !== 'true' });
+        }
+
+        function toggleKhatmaReminder() {
+            const toggle = document.getElementById('khatmaAlertToggle');
+            updateNotifySetting({ khatma: toggle.getAttribute('aria-checked') !== 'true' });
+        }
+
+        function renderNotifySettings() {
+            const settings = notifySettings || (window.NotifyStore || {}).DEFAULT_SETTINGS;
+            if (!settings) return;
+
+            const labels = (window.AppNotifications || {}).PRAYER_LABELS || {};
+            const anyPrayer = Object.keys(settings.prayers).some(key => settings.prayers[key]);
+
+            setSwitchState(document.getElementById('prayerAlertsToggle'), anyPrayer);
+            const options = document.getElementById('prayerAlertsOptions');
+            if (options) options.style.display = anyPrayer ? 'block' : 'none';
+
+            const group = document.getElementById('prayerPickGroup');
+            if (group) {
+                group.innerHTML = Object.keys(labels).map(key => {
+                    const on = Boolean(settings.prayers[key]);
+                    return `<button type="button" class="prayer-pick-chip${on ? ' is-active' : ''}"
+                        data-prayer="${key}" aria-pressed="${on}" onclick="togglePrayer('${key}')">
+                        ${labels[key]}
+                    </button>`;
+                }).join('');
+            }
+
+            document.querySelectorAll('#prayerOffsetGroup [data-offset]').forEach(button => {
+                const isActive = Number(button.getAttribute('data-offset')) === settings.offsetMinutes;
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-pressed', String(isActive));
+            });
+
+            setSwitchState(document.getElementById('iqamaToggle'), Boolean(settings.iqamaReminder));
+            setSwitchState(document.getElementById('khatmaAlertToggle'), Boolean(settings.khatma));
+        }
+
+        // Says plainly how reminders will be delivered. Without a push server
+        // this genuinely differs by browser, and quietly promising delivery
+        // that will not happen is worse than saying so.
+        function renderNotifyStatus(result) {
+            const element = document.getElementById('notifyStatus');
+            if (!element || !window.AppNotifications) return;
+
+            if (!readSavedLocationName()) {
+                element.className = 'notify-status is-warn';
+                element.textContent = 'حدّد موقعك من صفحة المواقيت أولاً حتى تُحسب أوقات التنبيه.';
+                return;
+            }
+
+            const count = result && typeof result.count === 'number' ? result.count : null;
+            const scheduled = count === null ? '' : ` (${count} تنبيهاً خلال ٤٨ ساعة)`;
+
+            if (window.AppNotifications.supportsTriggers()) {
+                element.className = 'notify-status is-ok';
+                element.textContent = `التنبيهات مجدولة وستصل حتى لو كان التطبيق مغلقاً${scheduled}.`;
+            } else {
+                element.className = 'notify-status is-warn';
+                element.textContent = `متصفحك لا يدعم جدولة التنبيهات في الخلفية، لذا قد تصل عند فتح التطبيق${scheduled}. ثبّت التطبيق على الشاشة الرئيسية لتحسين ذلك.`;
+            }
+        }
+
+        async function testNotification() {
+            if (!window.AppNotifications) return;
+
+            const sent = await window.AppNotifications.sendTestNotification();
+            if (!sent) {
+                showModal({
+                    type: 'warning',
+                    icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
+                    title: 'غير مسموح',
+                    message: 'يجب السماح بالإشعارات من إعدادات الجهاز أولاً.'
+                });
+            }
+        }
+
+        /* ==================================================================
+           Offline Quran downloads
+           ================================================================== */
+
+        let juzBusy = false;
+
+        function formatOfflineUsage(info) {
+            if (!info.surahs) return 'لم تُحمَّل أي أجزاء بعد';
+            return `${formatBytes(info.bytes)} • ${info.surahs} سورة`;
+        }
+
+        async function renderOfflineUsage() {
+            const desc = document.getElementById('offlineUsageDesc');
+            if (!desc || !window.OfflineQuran) return;
+            try {
+                desc.textContent = formatOfflineUsage(await window.OfflineQuran.usage());
+            } catch (_error) {
+                desc.textContent = 'غير متاح';
+            }
+        }
+
+        function toggleJuzGrid() {
+            const grid = document.getElementById('juzGrid');
+            const toggle = document.getElementById('juzToggle');
+            if (!grid || !toggle) return;
+
+            const willOpen = grid.hidden;
+            grid.hidden = !willOpen;
+            toggle.setAttribute('aria-expanded', String(willOpen));
+            toggle.classList.toggle('is-open', willOpen);
+        }
+
+        async function renderJuzGrid() {
+            const grid = document.getElementById('juzGrid');
+            if (!grid || !window.OfflineQuran) return;
+
+            const statuses = await window.OfflineQuran.allStatus();
+
+            const meta = document.getElementById('juzToggleMeta');
+            if (meta) {
+                const complete = statuses.filter(status => status.complete).length;
+                meta.textContent = complete ? `${complete} / 30` : '';
+            }
+            grid.innerHTML = statuses.map((status, index) => {
+                const juz = index + 1;
+                const percent = status.total ? Math.round((status.done / status.total) * 100) : 0;
+                const partial = !status.complete && status.done > 0;
+                const classes = ['juz-chip'];
+                if (status.complete) classes.push('is-done');
+                if (partial) classes.push('is-partial');
+                return `
+                    <button type="button" class="${classes.join(' ')}" id="juzChip${juz}"
+                        aria-pressed="${status.complete}" onclick="toggleJuzDownload(${juz})">
+                        <span class="juz-chip-num">${juz}</span>
+                        <span class="juz-chip-state" id="juzState${juz}">${
+                            status.complete ? '<i class="bi bi-check-lg" aria-hidden="true"></i>'
+                                : partial ? `${percent}%`
+                                    : '<i class="bi bi-download" aria-hidden="true"></i>'
+                        }</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        async function toggleJuzDownload(juzNumber) {
+            if (juzBusy || !window.OfflineQuran) return;
+
+            const status = await window.OfflineQuran.juzStatus(juzNumber);
+
+            if (status.complete) {
+                await window.OfflineQuran.removeJuz(juzNumber);
+                await renderJuzGrid();
+                await renderOfflineUsage();
+                return;
+            }
+
+            juzBusy = true;
+            const state = document.getElementById(`juzState${juzNumber}`);
+            const chip = document.getElementById(`juzChip${juzNumber}`);
+            if (chip) chip.classList.add('is-loading');
+
+            const result = await window.OfflineQuran.downloadJuz(juzNumber, (done, total) => {
+                if (state) state.textContent = `${Math.round((done / total) * 100)}%`;
+            });
+
+            juzBusy = false;
+            await renderJuzGrid();
+            await renderOfflineUsage();
+
+            if (!result.ok) {
+                showModal({
+                    type: 'error',
+                    icon: '<i class="bi bi-wifi-off"></i>',
+                    title: 'تعذّر التحميل',
+                    message: 'انقطع الاتصال أثناء التحميل. ما تم تحميله محفوظ، ويمكنك المتابعة لاحقاً.'
+                });
+            }
+        }
+
+        async function downloadAllJuz() {
+            if (juzBusy || !window.OfflineQuran) return;
+
+            juzBusy = true;
+            const button = document.getElementById('downloadAllBtn');
+            const original = button ? button.innerHTML : '';
+
+            const result = await window.OfflineQuran.downloadAll((juz) => {
+                if (button) button.textContent = `جاري التحميل… الجزء ${juz} من ٣٠`;
+            });
+
+            juzBusy = false;
+            if (button) button.innerHTML = original;
+            await renderJuzGrid();
+            await renderOfflineUsage();
+
+            showModal(result.ok ? {
+                type: 'success',
+                icon: '<i class="bi bi-check-circle-fill"></i>',
+                title: 'اكتمل التحميل',
+                message: 'المصحف كاملاً متاح الآن بلا إنترنت.'
+            } : {
+                type: 'error',
+                icon: '<i class="bi bi-wifi-off"></i>',
+                title: 'توقّف التحميل',
+                message: `انقطع الاتصال عند الجزء ${result.stoppedAt}. ما تم تحميله محفوظ.`
+            });
+        }
+
+        function removeAllOffline() {
+            showModal({
+                type: 'warning',
+                icon: '<i class="bi bi-trash-fill"></i>',
+                title: 'حذف الأجزاء المحمّلة',
+                message: 'سيتم حذف كل ما حمّلته للقراءة بلا إنترنت. هل تريد المتابعة؟',
+                confirmText: 'حذف',
+                cancelText: 'إلغاء',
+                onConfirm: async () => {
+                    await window.OfflineQuran.removeAll();
+                    await renderJuzGrid();
+                    await renderOfflineUsage();
+                }
+            });
         }
 
         function showAddNotification() {
@@ -945,6 +1213,17 @@ let deferredPrompt;
             // Haptics default to on — the masbaha has always vibrated.
             const haptics = localStorage.getItem(HAPTICS_KEY) !== 'false';
             setSwitchState(document.getElementById('hapticsToggle'), haptics);
+
+            loadNotifySettings();
+            renderJuzGrid();
+            renderOfflineUsage();
+        }
+
+        async function loadNotifySettings() {
+            if (!window.NotifyStore) return;
+            notifySettings = await window.NotifyStore.getSettings();
+            renderNotifySettings();
+            renderNotifyStatus(null);
         }
 
         // Initialize

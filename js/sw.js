@@ -1,5 +1,15 @@
-const CACHE_NAME = 'quran-app-v23';
+importScripts('/js/notify-store.js');
+
+const CACHE_NAME = 'quran-app-v25';
 const OFFLINE_URL = '/offline.html';
+
+/* Surahs the reader has explicitly downloaded. Kept in its own cache so that:
+     - the activate handler's "delete everything that isn't CACHE_NAME" sweep
+       does not wipe a deliberate download on every app update, and
+     - "clear cache" can leave it alone, since it is user-chosen content and
+       not an incidental copy of something re-fetchable in a second. */
+const QURAN_OFFLINE_CACHE = 'quran-offline-v1';
+const PRESERVED_CACHES = [CACHE_NAME, QURAN_OFFLINE_CACHE];
 // Long enough for a slow-but-working connection, short enough that a dead
 // one falls back to cache before the user gives up.
 const NAVIGATION_TIMEOUT_MS = 4000;
@@ -44,6 +54,9 @@ const APP_SHELL_URLS = [
   '/js/data/surahs.js',
   '/js/data/quran-index.js',
   '/js/prayer-core.js',
+  '/js/notify-store.js',
+  '/js/notifications.js',
+  '/js/offline-quran.js',
   '/js/tour.js',
   '/js/tours.js',
   '/js/onboarding.js',
@@ -128,6 +141,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Layer 3 of reminder delivery: any time the worker is awake at all, flush
+  // whatever fell due while it was not. Throttled so this does not touch
+  // IndexedDB on every single request.
+  if (Date.now() - lastFlushAt > FLUSH_THROTTLE_MS) {
+    event.waitUntil(flushDueReminders().catch(() => { }));
+  }
+
   if (request.mode === 'navigate') {
     event.respondWith(handleNavigationRequest(request));
     return;
@@ -177,6 +197,8 @@ async function updateCache(request, response) {
 // For content that never changes. Cache hit = instant and offline-capable;
 // only a miss touches the network.
 async function cacheFirst(request) {
+  // caches.match() with no cacheName searches every cache, so an explicitly
+  // downloaded surah in QURAN_OFFLINE_CACHE is found here too.
   const cachedResponse = await caches.match(request, { ignoreSearch: true });
   if (cachedResponse) {
     return cachedResponse;
@@ -298,11 +320,12 @@ self.addEventListener('activate', event => {
       const cacheNames = await caches.keys();
       await Promise.all(
         cacheNames
-          .filter(cacheName => cacheName !== CACHE_NAME)
+          .filter(cacheName => !PRESERVED_CACHES.includes(cacheName))
           .map(cacheName => caches.delete(cacheName))
       );
 
       await self.clients.claim();
+      await flushDueReminders();
     })()
   );
 });
@@ -313,11 +336,21 @@ self.addEventListener('message', event => {
     return;
   }
 
+  if (event.data && event.data.type === 'FLUSH_REMINDERS') {
+    event.waitUntil(flushDueReminders());
+    return;
+  }
+
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
       caches.keys().then(cacheNames => {
+        // Downloaded surahs are deliberate user content, not incidental
+        // caching, so "clear cache" leaves them in place. They have their own
+        // delete control in settings.
         return Promise.all(
-          cacheNames.map(cacheName => caches.delete(cacheName))
+          cacheNames
+            .filter(cacheName => cacheName !== QURAN_OFFLINE_CACHE)
+            .map(cacheName => caches.delete(cacheName))
         );
       }).then(() => {
         event.ports[0].postMessage({ success: true });
@@ -326,4 +359,96 @@ self.addEventListener('message', event => {
       })
     );
   }
+});
+
+/* ==========================================================================
+   Reminder delivery
+
+   The worker holds no prayer-time logic — the page writes absolute timestamps
+   into IndexedDB and this only decides what is due. See js/notifications.js
+   for why delivery is layered.
+   ========================================================================== */
+
+// Anything overdue by more than this is stale: firing "حان وقت الفجر" at noon
+// is worse than staying silent.
+const REMINDER_STALE_MS = 30 * 60 * 1000;
+
+// The fetch handler runs constantly; checking IndexedDB on every request would
+// be wasteful, so opportunistic flushes are rate limited.
+const FLUSH_THROTTLE_MS = 60 * 1000;
+let lastFlushAt = 0;
+
+async function flushDueReminders() {
+  if (!self.NotifyStore) return;
+
+  // No permission check here on purpose. `Notification.permission` is a Window
+  // attribute — inside a ServiceWorkerGlobalScope it reads `undefined`, so
+  // guarding on it disabled every flush permanently. showNotification() simply
+  // rejects when permission is missing, which the per-item catch handles.
+
+  lastFlushAt = Date.now();
+
+  const settings = await self.NotifyStore.getSettings();
+  if (!settings.enabled) return;
+
+  const schedule = await self.NotifyStore.getSchedule();
+  if (!schedule.length) return;
+
+  const now = Date.now();
+  const remaining = [];
+
+  for (const item of schedule) {
+    if (item.at > now) {
+      remaining.push(item);
+      continue;
+    }
+
+    // Due or overdue. Drop it from the schedule either way so it cannot fire
+    // twice on the next wake-up.
+    const overdueBy = now - item.at;
+    if (overdueBy > REMINDER_STALE_MS) continue;
+
+    try {
+      await self.registration.showNotification(item.title, {
+        body: item.body,
+        tag: 'quran-reminder-' + item.id,
+        icon: '/assets/icons/icon-192.png',
+        badge: '/assets/icons/icon-192.png',
+        data: { kind: item.kind, prayer: item.prayer || null }
+      });
+    } catch (_error) {
+      // Could not show it; do not retry forever.
+    }
+  }
+
+  await self.NotifyStore.setSchedule(remaining);
+}
+
+// Roughly twice a day where supported, so a closed app still gets flushed.
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'quran-reminders') {
+    event.waitUntil(flushDueReminders());
+  }
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+
+  const kind = event.notification.data && event.notification.data.kind;
+  const target = kind === 'prayer' || kind === 'iqama' ? '/prayer-times.html'
+    : kind === 'khatma' ? '/khatma.html'
+      : '/index.html';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      // Reuse an open window rather than stacking up new ones.
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.navigate(target);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(target);
+    })
+  );
 });

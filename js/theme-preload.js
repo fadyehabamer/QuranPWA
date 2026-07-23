@@ -72,13 +72,29 @@
       tuned = mix(base, BLACK, 0.25);
     }
 
-    // Mid-tone accents (e.g. blue-grey) can fail against BOTH black and white
-    // — #607D8B measured 4.37 on white and 4.33 on ink. Nudge the fill away
-    // from the midpoint until one foreground clears 4.5:1.
-    var toward = isDark ? WHITE : BLACK;
-    for (var step = 0; step < 12; step++) {
-      if (Math.max(contrast(tuned, INK), contrast(tuned, WHITE)) >= 4.5) break;
-      tuned = mix(tuned, toward, 0.08);
+    // White is the intended label colour on an accent fill — a black-on-orange
+    // button reads as a warning, not as the primary action. So rather than
+    // picking whichever foreground happens to measure better, DEEPEN THE FILL
+    // until white is legible on it.
+    //
+    // The one case this cannot apply to is a dark accent in dark mode: it has
+    // just been lifted toward white so it stays visible against the dark
+    // canvas, and darkening it again would undo that. There, the measured
+    // choice still stands and the label may come out near-black.
+    var wasLifted = isDark && lum < 0.22;
+
+    if (!wasLifted) {
+      for (var step = 0; step < 20; step++) {
+        if (contrast(tuned, WHITE) >= 4.5) break;
+        tuned = mix(tuned, BLACK, 0.06);
+      }
+    } else {
+      // Mid-tone accents can fail against BOTH black and white — #607D8B
+      // measured 4.37 on white and 4.33 on ink. Nudge off the midpoint.
+      for (var lift = 0; lift < 12; lift++) {
+        if (Math.max(contrast(tuned, INK), contrast(tuned, WHITE)) >= 4.5) break;
+        tuned = mix(tuned, WHITE, 0.08);
+      }
     }
 
     root.style.setProperty('--primary-color', toHex(tuned));
@@ -86,12 +102,11 @@
     root.style.setProperty('--primary-dark', toHex(mix(tuned, BLACK, 0.22)));
     root.style.setProperty('--primary-rgb', tuned.map(Math.round).join(', '));
 
-    // Text on the accent: measure both candidates and take the better one.
-    // A fixed luminance cutoff got this wrong for mid-tone accents — a lifted
-    // green measured 2.87:1 against white but 6.2:1 against near-black.
+    // White wherever the fill was deepened to earn it; measured only in the
+    // lifted dark-mode case above, where white genuinely cannot work.
     root.style.setProperty(
       '--on-primary',
-      contrast(tuned, INK) >= contrast(tuned, WHITE) ? toHex(INK) : '#ffffff'
+      (!wasLifted || contrast(tuned, WHITE) >= contrast(tuned, INK)) ? '#ffffff' : toHex(INK)
     );
   }
 
