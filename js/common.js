@@ -2078,105 +2078,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Prayer Utils (Extracted for reuse)
-function formatTime(time24) {
-    if (!time24) return '';
-    const [hours, minutes] = time24.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'م' : 'ص';
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
-}
-
-function calculateRemainingTime(prayerTime) {
-    const now = new Date();
-    const [hours, minutes] = prayerTime.split(':');
-    const prayerDate = new Date();
-    prayerDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-    if (prayerDate <= now) prayerDate.setDate(prayerDate.getDate() + 1);
-    const diff = prayerDate - now;
-    const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
-    const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return hoursLeft > 0 ? `${hoursLeft} س و ${minutesLeft} د` : `${minutesLeft} د`;
-}
-
-function getNextPrayer(timings) {
-    const now = new Date();
-    const currentTime = now.getHours() * 60 + now.getMinutes();
-    const prayers = [
-        { name: 'Fajr', label: 'الفجر', time: timings.Fajr },
-        { name: 'Dhuhr', label: 'الظهر', time: timings.Dhuhr },
-        { name: 'Asr', label: 'العصر', time: timings.Asr },
-        { name: 'Maghrib', label: 'المغرب', time: timings.Maghrib },
-        { name: 'Isha', label: 'العشاء', time: timings.Isha }
-    ];
-    for (const prayer of prayers) {
-        const [h, m] = prayer.time.split(':');
-        if ((parseInt(h) * 60 + parseInt(m)) > currentTime) return prayer;
-    }
-    return { ...prayers[0], tomorrow: true };
-}
-
-// Time-of-day phase for the prayer hero's sky gradient. Values match the
-// data-phase selectors in css/page-styles/home.css.
-function prayerPhaseForHour(hour) {
-    if (hour < 4) return 'night';
-    if (hour < 6) return 'dawn';
-    if (hour < 11) return 'morning';
-    if (hour < 15) return 'noon';
-    if (hour < 17) return 'afternoon';
-    if (hour < 19) return 'sunset';
-    return 'night';
-}
-
-function formatRemainingMinutes(mins) {
-    const total = Math.max(0, Math.round(mins));
-    const h = Math.floor(total / 60);
-    const m = total % 60;
-    if (h > 0) return `متبقٍّ ${h} س و ${m} د`;
-    return `متبقٍّ ${m} د`;
-}
-
-// Resolves the prayer we are heading toward, the one we just left, and how far
-// through that window we are now — so the hero can draw a timeline and an
-// accurate countdown that wraps correctly across midnight.
-function getPrayerWindow(timings) {
-    const order = [
-        { key: 'Fajr', label: 'الفجر' },
-        { key: 'Dhuhr', label: 'الظهر' },
-        { key: 'Asr', label: 'العصر' },
-        { key: 'Maghrib', label: 'المغرب' },
-        { key: 'Isha', label: 'العشاء' }
-    ];
-    const toMin = (t) => {
-        const [h, m] = String(t).split(':').map(Number);
-        return h * 60 + m;
-    };
-    const now = new Date();
-    const cur = now.getHours() * 60 + now.getMinutes();
-    const times = order.map(p => ({ ...p, min: toMin(timings[p.key]) }));
-
-    let nextIdx = times.findIndex(p => p.min > cur);
-    let next, nextMin, prevMin;
-
-    if (nextIdx === -1) {
-        // Past Isha: next is tomorrow's Fajr, previous window is today's Isha.
-        next = { ...times[0], tomorrow: true };
-        nextMin = times[0].min + 1440;
-        prevMin = times[times.length - 1].min;
-        nextIdx = 0;
-    } else {
-        next = times[nextIdx];
-        nextMin = next.min;
-        prevMin = nextIdx === 0 ? times[times.length - 1].min - 1440 : times[nextIdx - 1].min;
-    }
-
-    const span = Math.max(1, nextMin - prevMin);
-    const fraction = Math.min(1, Math.max(0, (cur - prevMin) / span));
-    const remainingMin = Math.max(0, nextMin - cur);
-    return { next, fraction, remainingMin };
-}
-
+// The prayer maths that used to live here (formatTime, calculateRemainingTime, getNextPrayer,
+// prayerPhaseForHour, formatRemainingMinutes, getPrayerWindow) was a second,
+// device-local copy that still had the timezone/UTC bugs prayer-times.js had
+// already fixed. It now lives once in js/prayer-core.js (window.PrayerEngine),
+// which both this widget and the prayer-times page delegate to.
 function initHadith() {
     const HADITHS = [
         "قال رسول الله صلى الله عليه وسلم: (خيركم من تعلم القرآن وعلمه)",
@@ -2258,47 +2164,63 @@ async function initHomePrayerWidget() {
         maximumAge: 300000
     });
 
-    async function updatePrayerUI(loc) {
-        try {
-            const prayerNames = { Fajr: 'الفجر', Dhuhr: 'الظهر', Asr: 'العصر', Maghrib: 'المغرب', Isha: 'العشاء' };
-            const today = new Date().toISOString().split('T')[0];
-            const response = await fetch(`https://api.aladhan.com/v1/timings/${today}?latitude=${loc.latitude}&longitude=${loc.longitude}&method=2`);
-            const data = await response.json();
+    // Paints the hero from already-fetched timings. Split out from the fetch so
+    // the countdown/timeline can re-tick every minute without re-hitting the API.
+    function renderPrayerHero(timings, timezone) {
+        const prayerNames = { Fajr: 'الفجر', Dhuhr: 'الظهر', Asr: 'العصر', Maghrib: 'المغرب', Isha: 'العشاء' };
+        const win = PrayerEngine.getDailyWindow(timings, timezone);
 
-            if (data.code === 200) {
-                const timings = data.data.timings;
-                if (locationEl) {
-                    locationEl.textContent = localStorage.getItem('locationText') || 'موقعك المكتشف';
-                }
+        const hero = document.getElementById('homePrayerWidget');
+        if (hero) hero.setAttribute('data-phase', PrayerEngine.phaseForNow(timezone));
 
-                const win = getPrayerWindow(timings);
+        const nameEl = document.getElementById('phNextName');
+        const timeEl = document.getElementById('phNextTime');
+        const countdownEl = document.getElementById('phCountdown');
+        const fillEl = document.getElementById('phFill');
+        if (nameEl) nameEl.textContent = win.next.label;
+        if (timeEl) timeEl.textContent = PrayerEngine.formatTime(timings[win.next.key]);
+        if (countdownEl) countdownEl.textContent = PrayerEngine.formatRemainingMinutes(win.remainingMin);
+        if (fillEl) fillEl.style.width = `${Math.round(win.fraction * 100)}%`;
 
-                // Hero sky + next-prayer focus.
-                const hero = document.getElementById('homePrayerWidget');
-                if (hero) hero.setAttribute('data-phase', prayerPhaseForHour(new Date().getHours()));
-
-                const nameEl = document.getElementById('phNextName');
-                const timeEl = document.getElementById('phNextTime');
-                const countdownEl = document.getElementById('phCountdown');
-                const fillEl = document.getElementById('phFill');
-                if (nameEl) nameEl.textContent = win.next.label;
-                if (timeEl) timeEl.textContent = formatTime(timings[win.next.key]);
-                if (countdownEl) countdownEl.textContent = formatRemainingMinutes(win.remainingMin);
-                if (fillEl) fillEl.style.width = `${Math.round(win.fraction * 100)}%`;
-
-                // Five prayer chips.
-                let html = '';
-                Object.keys(prayerNames).forEach(key => {
-                    const isActive = win.next.key === key;
-                    html += `
+        let html = '';
+        Object.keys(prayerNames).forEach(key => {
+            const isActive = win.next.key === key;
+            html += `
                         <div class="pw-item ${isActive ? 'active' : ''}">
                             <div class="pw-name">${prayerNames[key]}</div>
                             <div class="pw-time">${timings[key]}</div>
                         </div>
                     `;
-                });
-                if (body) body.innerHTML = html;
+        });
+        if (body) body.innerHTML = html;
+    }
+
+    async function updatePrayerUI(loc) {
+        try {
+            // PrayerEngine builds the date from local calendar parts (not the
+            // UTC toISOString this used to use, which fetched the previous
+            // day's timings east of Greenwich between midnight and ~03:00).
+            const data = await PrayerEngine.fetchTimings(loc.latitude, loc.longitude);
+            const timings = data.timings;
+            // Timings come back in the location's timezone; every comparison
+            // below is made in that zone rather than against the device clock.
+            const timezone = data.meta && data.meta.timezone;
+
+            if (locationEl) {
+                locationEl.textContent = localStorage.getItem('locationText') || 'موقعك المكتشف';
             }
+
+            renderPrayerHero(timings, timezone);
+
+            // Keep the countdown and timeline honest without re-fetching.
+            if (window.__prayerHeroTick) clearInterval(window.__prayerHeroTick);
+            window.__prayerHeroTick = setInterval(function () {
+                if (!document.getElementById('homePrayerWidget')) {
+                    clearInterval(window.__prayerHeroTick);
+                    return;
+                }
+                renderPrayerHero(timings, timezone);
+            }, 30000);
         } catch (e) {
             if (body) {
                 body.innerHTML = '<p style="grid-column:1/-1;font-size:12px;color:rgba(255,255,255,0.72);text-align:center;margin:0">فشل تحميل المواقيت</p>';

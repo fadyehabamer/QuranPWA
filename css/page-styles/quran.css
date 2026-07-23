@@ -1542,6 +1542,58 @@
             }
         }
 
+        /* Offline / failed-load state for the reader ----------------------- */
+        .reader-offline-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: var(--space-2);
+            padding: var(--space-10) var(--space-5);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+        }
+
+        .reader-offline-state i {
+            font-size: 40px;
+            color: var(--text-muted);
+        }
+
+        .reader-offline-state h3 {
+            margin: var(--space-2) 0 0;
+            font-size: var(--text-lg);
+            font-weight: var(--weight-bold);
+            color: var(--text-color);
+        }
+
+        .reader-offline-state p {
+            margin: 0;
+            max-width: 34ch;
+            font-size: var(--text-base);
+            line-height: var(--leading-normal);
+            color: var(--text-secondary);
+        }
+
+        .reader-offline-retry {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: var(--tap-target);
+            margin-block-start: var(--space-3);
+            padding: 0 var(--space-5);
+            border: none;
+            border-radius: var(--radius-full);
+            background: var(--primary-color);
+            color: var(--on-primary);
+            font: inherit;
+            font-weight: var(--weight-bold);
+            cursor: pointer;
+        }
+
+        .reader-offline-retry:hover { filter: brightness(1.06); }
+
         /* Just enough breathing room after the last ayah. The old 120/140px
            was sized to clear a floating nav rail + bottom bar that are hidden
            in the reader on mobile, so it read as a large empty gap. */

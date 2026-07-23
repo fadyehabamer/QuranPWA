@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quran-app-v19';
+const CACHE_NAME = 'quran-app-v20';
 const OFFLINE_URL = '/offline.html';
 // Long enough for a slow-but-working connection, short enough that a dead
 // one falls back to cache before the user gives up.
@@ -41,7 +41,8 @@ const APP_SHELL_URLS = [
   '/css/page-styles/bio.css',
   '/js/common.js',
   '/js/page-scripts/index.js',
-  '/js/page-scripts/quran-data.js',
+  '/js/data/surahs.js',
+  '/js/prayer-core.js',
   '/js/page-scripts/quran.js',
   '/js/page-scripts/khatma.js',
   '/js/page-scripts/azkar.js',
@@ -62,6 +63,9 @@ const APP_SHELL_URLS = [
 ];
 
 const QURAN_API_HOST = 'api.alquran.cloud';
+// Immutable scripture endpoints (surah/ayah/juz/page text + tafsir editions).
+// Deliberately excludes /search/, which must stay live.
+const QURAN_TEXT_PATH = /^\/v1\/(surah|ayah|juz|page)\//;
 const STREAM_HOST_BLOCKLIST = [
   'mp3quran.net',
   'radiojar.com',
@@ -123,7 +127,15 @@ self.addEventListener('fetch', event => {
   }
 
   if (url.hostname === QURAN_API_HOST) {
-    event.respondWith(networkFirst(request));
+    // Quran text is immutable: a surah's Uthmani script never changes. Serving
+    // it cache-first makes re-reads instant and works with no connection at
+    // all, instead of waiting on a network round-trip every time.
+    // Search results are live, so they stay network-first.
+    if (QURAN_TEXT_PATH.test(url.pathname)) {
+      event.respondWith(cacheFirst(request));
+    } else {
+      event.respondWith(networkFirst(request));
+    }
     return;
   }
 
@@ -153,6 +165,28 @@ async function updateCache(request, response) {
 
   const cache = await caches.open(CACHE_NAME);
   await cache.put(request, response);
+}
+
+// For content that never changes. Cache hit = instant and offline-capable;
+// only a miss touches the network.
+async function cacheFirst(request) {
+  const cachedResponse = await caches.match(request, { ignoreSearch: true });
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  try {
+    const networkResponse = await fetch(request);
+    await updateCache(request, networkResponse.clone());
+    return networkResponse;
+  } catch (_error) {
+    // Shaped like the API's own envelope so callers can detect it by `code`
+    // rather than choking on an HTML/text body in response.json().
+    return new Response(JSON.stringify({ code: 503, status: 'OFFLINE', data: null }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }
 
 async function networkFirst(request) {

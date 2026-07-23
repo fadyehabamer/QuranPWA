@@ -539,156 +539,17 @@ let userLocation = null;
         }
 
         // Fetch prayer times from Aladhan API
-        async function fetchPrayerTimes(latitude, longitude) {
-            // toISOString() returns the UTC date. East of Greenwich that rolls
-            // over early: at 01:00 local in UTC+3 the UTC date is still
-            // yesterday, so the app fetched the WRONG DAY's timings every
-            // night between midnight and 03:00. Build the date from local
-            // calendar parts instead.
-            const today = new Date();
-            const date = [
-                today.getFullYear(),
-                String(today.getMonth() + 1).padStart(2, '0'),
-                String(today.getDate()).padStart(2, '0')
-            ].join('-');
-
-            const url = `https://api.aladhan.com/v1/timings/${date}?latitude=${latitude}&longitude=${longitude}&method=2`;
-
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (data.code !== 200) {
-                throw new Error('Failed to fetch prayer times');
-            }
-
-            return data.data;
-        }
-
-        // Format time from 24h to 12h with AM/PM
-        function formatTime(time24) {
-            const [hours, minutes] = time24.split(':');
-            const hour = parseInt(hours);
-            const ampm = hour >= 12 ? 'م' : 'ص';
-            const hour12 = hour % 12 || 12;
-            return `${hour12}:${minutes} ${ampm}`;
-        }
-
-        // Calculate remaining time to next prayer
-        function calculateRemainingTime(prayerTime, timezone) {
-            // Measured in the timings' own timezone, matching getNextPrayer.
-            // Using the device clock here made the countdown disagree with the
-            // prayer it was counting down to whenever the two differed.
-            const [hours, minutes] = String(prayerTime).split(':');
-            const target = parseInt(hours, 10) * 60 + parseInt(minutes, 10);
-            const current = minutesNowAt(timezone);
-
-            // Wrap to tomorrow when the time has already passed today.
-            const minutesLeftTotal = ((target - current) % 1440 + 1440) % 1440;
-
-            const hoursLeft = Math.floor(minutesLeftTotal / 60);
-            const minutesLeft = minutesLeftTotal % 60;
-
-            if (hoursLeft > 0) {
-                return `${hoursLeft} ساعة و ${minutesLeft} دقيقة`;
-            } else if (minutesLeft > 0) {
-                return `${minutesLeft} دقيقة`;
-            } else {
-                return 'الآن';
-            }
-        }
-
-        // Calculate Tahajjud time (last third of the night)
-        function calculateTahajjudTime(timings) {
-            const fajrTime = timings.Fajr;
-            const ishaTime = timings.Isha;
-
-            // Convert times to minutes since midnight
-            const timeToMinutes = (time) => {
-                const [hours, minutes] = time.split(':').map(Number);
-                return hours * 60 + minutes;
-            };
-
-            const fajrMinutes = timeToMinutes(fajrTime);
-            const ishaMinutes = timeToMinutes(ishaTime);
-
-            // Calculate night duration (from Isha to Fajr)
-            let nightDuration = fajrMinutes - ishaMinutes;
-            if (nightDuration < 0) nightDuration += 24 * 60; // Handle overnight
-
-            // Last third of the night starts at: Fajr - (night duration / 3).
-            // This can go negative when Fajr is early (it crosses back over
-            // midnight), which produced times like "-2:35". Wrap into 0..1439.
-            const lastThirdStart = ((fajrMinutes - Math.floor(nightDuration / 3)) % 1440 + 1440) % 1440;
-
-            const hours = Math.floor(lastThirdStart / 60);
-            const minutes = lastThirdStart % 60;
-
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        }
-
-        /**
-         * Minutes since midnight *at the location the timings belong to*.
-         *
-         * The Aladhan response is in the target location's timezone, but the
-         * comparison used the device clock. Anyone reading times for a place
-         * in a different timezone than their phone got the wrong "next
-         * prayer" — the whole schedule was shifted against their clock.
-         */
-        function minutesNowAt(timezone) {
-            const now = new Date();
-            if (!timezone) return now.getHours() * 60 + now.getMinutes();
-            try {
-                const parts = new Intl.DateTimeFormat('en-GB', {
-                    timeZone: timezone,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
-                }).formatToParts(now);
-                const h = Number(parts.find(p => p.type === 'hour').value);
-                const m = Number(parts.find(p => p.type === 'minute').value);
-                return h * 60 + m;
-            } catch (_e) {
-                // Unknown/invalid IANA zone — fall back to the device clock.
-                return now.getHours() * 60 + now.getMinutes();
-            }
-        }
-
-        // Get next prayer
-        function getNextPrayer(timings, timezone) {
-            const currentTime = minutesNowAt(timezone);
-            const tahajjudTime = calculateTahajjudTime(timings);
-
-            const toMinutes = (t) => {
-                const [h, m] = String(t).split(':');
-                return parseInt(h, 10) * 60 + parseInt(m, 10);
-            };
-
-            // Tahajjud falls after midnight, so in a fixed list it sat *last*
-            // while its clock time was the *earliest*. The scan returned the
-            // first entry later than now, so Tahajjud could never be selected:
-            // between midnight and Fajr the loop matched Fajr and skipped it.
-            // Sorting by actual clock time is what makes the scan correct.
-            const prayers = [
-                { name: 'Fajr', time: timings.Fajr },
-                { name: 'Dhuhr', time: timings.Dhuhr },
-                { name: 'Asr', time: timings.Asr },
-                { name: 'Maghrib', time: timings.Maghrib },
-                { name: 'Isha', time: timings.Isha },
-                { name: 'Tahajjud', time: tahajjudTime }
-            ]
-                .map(p => ({ ...p, minutes: toMinutes(p.time) }))
-                .sort((a, b) => a.minutes - b.minutes);
-
-            for (const prayer of prayers) {
-                if (prayer.minutes > currentTime) {
-                    return prayer;
-                }
-            }
-
-            // Everything today has passed — the next one is tomorrow's first.
-            const first = prayers[0];
-            return { name: first.name, time: first.time, minutes: first.minutes, tomorrow: true };
-        }
+        /* These helpers now live once in js/prayer-core.js (window.PrayerEngine)
+           and are shared with the home prayer widget in common.js. The logic is
+           unchanged — it was extracted from this file, which held the correct,
+           timezone-aware versions. Same names/signatures, so the code below is
+           untouched. */
+        const fetchPrayerTimes = (latitude, longitude) => PrayerEngine.fetchTimings(latitude, longitude);
+        const formatTime = (time24) => PrayerEngine.formatTime(time24);
+        const calculateRemainingTime = (prayerTime, timezone) => PrayerEngine.calculateRemainingTime(prayerTime, timezone);
+        const calculateTahajjudTime = (timings) => PrayerEngine.calculateTahajjudTime(timings);
+        const minutesNowAt = (timezone) => PrayerEngine.minutesNowAt(timezone);
+        const getNextPrayer = (timings, timezone) => PrayerEngine.getNextPrayer(timings, timezone);
 
         // Update remaining time display
         function updateRemainingTime() {

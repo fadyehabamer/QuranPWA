@@ -154,122 +154,8 @@ let totalPages = 0;
             'الإخلاص', 'الفلق', 'الناس'
         ];
 
-        const surahInfo = [
-            { name: 'الفاتحة', verses: 7, type: 'مكية' },
-            { name: 'البقرة', verses: 286, type: 'مدنية' },
-            { name: 'آل عمران', verses: 200, type: 'مدنية' },
-            { name: 'النساء', verses: 176, type: 'مدنية' },
-            { name: 'المائدة', verses: 120, type: 'مدنية' },
-            { name: 'الأنعام', verses: 165, type: 'مكية' },
-            { name: 'الأعراف', verses: 206, type: 'مكية' },
-            { name: 'الأنفال', verses: 75, type: 'مدنية' },
-            { name: 'التوبة', verses: 129, type: 'مدنية' },
-            { name: 'يونس', verses: 109, type: 'مكية' },
-            { name: 'هود', verses: 123, type: 'مكية' },
-            { name: 'يوسف', verses: 111, type: 'مكية' },
-            { name: 'الرعد', verses: 43, type: 'مدنية' },
-            { name: 'ابراهيم', verses: 52, type: 'مكية' },
-            { name: 'الحجر', verses: 99, type: 'مكية' },
-            { name: 'النحل', verses: 128, type: 'مكية' },
-            { name: 'الإسراء', verses: 111, type: 'مكية' },
-            { name: 'الكهف', verses: 110, type: 'مكية' },
-            { name: 'مريم', verses: 98, type: 'مكية' },
-            { name: 'طه', verses: 135, type: 'مكية' },
-            { name: 'الأنبياء', verses: 112, type: 'مكية' },
-            { name: 'الحج', verses: 78, type: 'مدنية' },
-            { name: 'المؤمنون', verses: 118, type: 'مكية' },
-            { name: 'النور', verses: 64, type: 'مدنية' },
-            { name: 'الفرقان', verses: 77, type: 'مكية' },
-            { name: 'الشعراء', verses: 227, type: 'مكية' },
-            { name: 'النمل', verses: 93, type: 'مكية' },
-            { name: 'القصص', verses: 88, type: 'مكية' },
-            { name: 'العنكبوت', verses: 69, type: 'مكية' },
-            { name: 'الروم', verses: 60, type: 'مكية' },
-            { name: 'لقمان', verses: 34, type: 'مكية' },
-            { name: 'السجدة', verses: 30, type: 'مكية' },
-            { name: 'الأحزاب', verses: 73, type: 'مدنية' },
-            { name: 'سبإ', verses: 54, type: 'مكية' },
-            { name: 'فاطر', verses: 45, type: 'مكية' },
-            { name: 'يس', verses: 83, type: 'مكية' },
-            { name: 'الصافات', verses: 182, type: 'مكية' },
-            { name: 'ص', verses: 88, type: 'مكية' },
-            { name: 'الزمر', verses: 75, type: 'مكية' },
-            { name: 'غافر', verses: 85, type: 'مكية' },
-            { name: 'فصلت', verses: 54, type: 'مكية' },
-            { name: 'الشورى', verses: 53, type: 'مكية' },
-            { name: 'الزخرف', verses: 89, type: 'مكية' },
-            { name: 'الدخان', verses: 59, type: 'مكية' },
-            { name: 'الجاثية', verses: 37, type: 'مكية' },
-            { name: 'الأحقاف', verses: 35, type: 'مكية' },
-            { name: 'محمد', verses: 38, type: 'مدنية' },
-            { name: 'الفتح', verses: 29, type: 'مدنية' },
-            { name: 'الحجرات', verses: 18, type: 'مدنية' },
-            { name: 'ق', verses: 45, type: 'مكية' },
-            { name: 'الذاريات', verses: 60, type: 'مكية' },
-            { name: 'الطور', verses: 49, type: 'مكية' },
-            { name: 'النجم', verses: 62, type: 'مكية' },
-            { name: 'القمر', verses: 55, type: 'مكية' },
-            { name: 'الرحمن', verses: 78, type: 'مكية' },
-            { name: 'الواقعة', verses: 96, type: 'مكية' },
-            { name: 'الحديد', verses: 29, type: 'مدنية' },
-            { name: 'المجادلة', verses: 22, type: 'مدنية' },
-            { name: 'الحشر', verses: 24, type: 'مدنية' },
-            { name: 'الممتحنة', verses: 13, type: 'مدنية' },
-            { name: 'الصف', verses: 14, type: 'مدنية' },
-            { name: 'الجمعة', verses: 11, type: 'مدنية' },
-            { name: 'المنافقون', verses: 11, type: 'مدنية' },
-            { name: 'التغابن', verses: 18, type: 'مدنية' },
-            { name: 'الطلاق', verses: 12, type: 'مدنية' },
-            { name: 'التحريم', verses: 12, type: 'مدنية' },
-            { name: 'الملك', verses: 30, type: 'مكية' },
-            { name: 'القلم', verses: 52, type: 'مكية' },
-            { name: 'الحاقة', verses: 52, type: 'مكية' },
-            { name: 'المعارج', verses: 44, type: 'مكية' },
-            { name: 'نوح', verses: 28, type: 'مكية' },
-            { name: 'الجن', verses: 28, type: 'مكية' },
-            { name: 'المزمل', verses: 20, type: 'مكية' },
-            { name: 'المدثر', verses: 56, type: 'مكية' },
-            { name: 'القيامة', verses: 40, type: 'مكية' },
-            { name: 'الانسان', verses: 31, type: 'مدنية' },
-            { name: 'المرسلات', verses: 50, type: 'مكية' },
-            { name: 'النبإ', verses: 40, type: 'مكية' },
-            { name: 'النازعات', verses: 46, type: 'مكية' },
-            { name: 'عبس', verses: 42, type: 'مكية' },
-            { name: 'التكوير', verses: 29, type: 'مكية' },
-            { name: 'الإنفطار', verses: 19, type: 'مكية' },
-            { name: 'المطففين', verses: 36, type: 'مكية' },
-            { name: 'الإنشقاق', verses: 25, type: 'مكية' },
-            { name: 'البروج', verses: 22, type: 'مكية' },
-            { name: 'الطارق', verses: 17, type: 'مكية' },
-            { name: 'الأعلى', verses: 19, type: 'مكية' },
-            { name: 'الغاشية', verses: 26, type: 'مكية' },
-            { name: 'الفجر', verses: 30, type: 'مكية' },
-            { name: 'البلد', verses: 20, type: 'مكية' },
-            { name: 'الشمس', verses: 15, type: 'مكية' },
-            { name: 'الليل', verses: 21, type: 'مكية' },
-            { name: 'الضحى', verses: 11, type: 'مكية' },
-            { name: 'الشرح', verses: 8, type: 'مكية' },
-            { name: 'التين', verses: 8, type: 'مكية' },
-            { name: 'العلق', verses: 19, type: 'مكية' },
-            { name: 'القدر', verses: 5, type: 'مكية' },
-            { name: 'البينة', verses: 8, type: 'مدنية' },
-            { name: 'الزلزلة', verses: 8, type: 'مدنية' },
-            { name: 'العاديات', verses: 11, type: 'مكية' },
-            { name: 'القارعة', verses: 11, type: 'مكية' },
-            { name: 'التكاثر', verses: 8, type: 'مكية' },
-            { name: 'العصر', verses: 3, type: 'مكية' },
-            { name: 'الهمزة', verses: 9, type: 'مكية' },
-            { name: 'الفيل', verses: 5, type: 'مكية' },
-            { name: 'قريش', verses: 4, type: 'مكية' },
-            { name: 'الماعون', verses: 7, type: 'مكية' },
-            { name: 'الكوثر', verses: 3, type: 'مكية' },
-            { name: 'الكافرون', verses: 6, type: 'مكية' },
-            { name: 'النصر', verses: 3, type: 'مدنية' },
-            { name: 'المسد', verses: 5, type: 'مكية' },
-            { name: 'الإخلاص', verses: 4, type: 'مكية' },
-            { name: 'الفلق', verses: 5, type: 'مكية' },
-            { name: 'الناس', verses: 6, type: 'مكية' }
-        ];
+        const surahInfo = window.QURAN_SURAHS;
+        const surahToJuz = window.QURAN_SURAH_TO_JUZ;
 
         function escapeHtml(value) {
             return String(value || '')
@@ -501,9 +387,10 @@ let totalPages = 0;
 
         async function openSurahAtPage(surahNumber, pageIndex = null, ayahNumberInSurah = null) {
             showSurahReader();
-            await loadSurah(surahNumber);
+            const loaded = await loadSurah(surahNumber);
 
-            if (totalPages <= 0) {
+            // Bail on failure so the offline/error state stays on screen.
+            if (!loaded || totalPages <= 0) {
                 return;
             }
 
@@ -1025,9 +912,32 @@ let totalPages = 0;
                 updateNavigation();
                 loadPlaybackPosition();
                 resetMemorizationCoachForPage();
+                return true;
             } catch (error) {
                 console.error('Error:', error);
-                content.innerHTML = '<div class="loading" style="color: red;"><p>خطأ في التحميل</p></div>';
+                // Drop the previous surah's pages. Without this the caller sees
+                // a non-zero totalPages and re-renders the OLD surah's text
+                // over this message — silently showing the wrong surah.
+                textPages = [];
+                mushafPages = [];
+                currentSurahAyahs = [];
+                totalPages = 0;
+                // Surahs already opened once are served from cache and work with
+                // no connection, so an offline failure means this particular
+                // surah was never downloaded — say that instead of "error".
+                const offline = !navigator.onLine;
+                content.innerHTML = `
+                    <div class="reader-offline-state">
+                        <i class="bi ${offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'}" aria-hidden="true"></i>
+                        <h3>${offline ? 'لا يوجد اتصال بالإنترنت' : 'تعذّر تحميل السورة'}</h3>
+                        <p>${offline
+                            ? 'هذه السورة لم تُحمَّل من قبل. السور التي قرأتها سابقاً متاحة بدون إنترنت.'
+                            : 'حدث خطأ أثناء التحميل. تحقق من الاتصال وحاول مرة أخرى.'}</p>
+                        <button type="button" class="reader-offline-retry" onclick="loadSurah(${surahNumber})">
+                            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> إعادة المحاولة
+                        </button>
+                    </div>`;
+                return false;
             }
         }
 
