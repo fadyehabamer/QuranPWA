@@ -114,16 +114,20 @@
     if (!window.NotifyStore || !window.PrayerEngine) return null;
 
     var settings = await window.NotifyStore.getSettings();
-    if (!settings.enabled) return [];
     if (permission() !== 'granted') return [];
+
+    var now = Date.now();
+    var items = buildCustomReminders(now);
+    var failedDays = [];
+
+    if (!settings.enabled) {
+      return { items: items, failedDays: failedDays };
+    }
 
     // No location: nothing can be computed, but a previously built schedule is
     // still valid, so leave it alone.
     var location = readSavedLocation();
     if (!location) return null;
-
-    var now = Date.now();
-    var items = [];
 
     // Today and tomorrow. Two requests, both cached by the service worker.
     for (var offset = 0; offset <= 1; offset += 1) {
@@ -133,8 +137,9 @@
           location.latitude, location.longitude, undefined, offset
         );
       } catch (_e) {
-        // Offline. Keep whatever the other day produced; if neither day
-        // resolved, the caller sees an empty list and keeps the old schedule.
+        // Offline. Keep whatever the other day produced; refresh() merges the
+        // previously scheduled items for this day back in.
+        failedDays.push(offset);
         continue;
       }
 
@@ -188,7 +193,52 @@
     }
 
     items.sort(function (a, b) { return a.at - b.at; });
-    return items;
+    return { items: items, failedDays: failedDays };
+  }
+
+  /**
+   * User-defined reminders from the settings page ("notifications" in
+   * localStorage: [{ time: 'HH:MM', days: [0..6] }]). These used to be fired
+   * by a setTimeout on the settings page, so they only ever went off while
+   * that page stayed open, ignored the chosen days, and stacked up duplicates.
+   * Folding them into the same schedule gives them the trigger / worker
+   * delivery the prayer reminders get.
+   */
+  function buildCustomReminders(now) {
+    var enabled = false;
+    var list = [];
+    try {
+      enabled = localStorage.getItem('notificationsEnabled') === 'true';
+      list = JSON.parse(localStorage.getItem('notifications') || '[]');
+    } catch (_e) { return []; }
+    if (!enabled || !Array.isArray(list)) return [];
+
+    var out = [];
+    list.forEach(function (entry, index) {
+      if (!entry || typeof entry.time !== 'string') return;
+      var pieces = entry.time.split(':');
+      var hour = parseInt(pieces[0], 10);
+      var minute = parseInt(pieces[1], 10);
+      if (!Number.isInteger(hour) || !Number.isInteger(minute)) return;
+      var days = Array.isArray(entry.days) ? entry.days.map(Number) : [];
+
+      for (var offset = 0; offset <= 1; offset += 1) {
+        var parts = dayParts(offset);
+        var date = new Date(parts.year, parts.month, parts.day, hour, minute, 0, 0);
+        if (days.length && days.indexOf(date.getDay()) === -1) continue;
+        var at = date.getTime();
+        if (at > now && at < now + HORIZON_MS) {
+          out.push({
+            id: 'custom-' + index + '-' + parts.year + '-' + parts.month + '-' + parts.day,
+            at: at,
+            kind: 'custom',
+            title: 'القرآن الكريم',
+            body: 'حان وقت قراءة القرآن والأذكار'
+          });
+        }
+      }
+    });
+    return out;
   }
 
   // A single daily nudge at 20:00 device time, only while a khatma plan is
@@ -268,31 +318,79 @@
    * Recompute and install everything. Safe to call on every app start — it is
    * idempotent, and the schedule is keyed by day so re-runs do not duplicate.
    */
-  async function refresh() {
-    if (!window.NotifyStore) return { count: 0, skipped: true };
+  // Skip a rebuild when nothing that feeds it has changed. This runs on every
+  // page open; without it each navigation cost two timing requests plus a
+  // close-and-reshow of every pending trigger.
+  var REFRESH_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
-    var items = await buildSchedule();
+  function refreshKey(settings) {
+    var location = readSavedLocation();
+    var extra = '';
+    try {
+      extra = [
+        localStorage.getItem('prayerMethod'),
+        localStorage.getItem('prayerSchool'),
+        localStorage.getItem('notificationsEnabled'),
+        localStorage.getItem('notifications'),
+        localStorage.getItem('khatmaPlanV1') ? '1' : '0'
+      ].join('|');
+    } catch (_e) { /* ignore */ }
+    return JSON.stringify([settings, location, permission(), extra]);
+  }
+
+  async function refresh(options) {
+    if (!window.NotifyStore) return { count: 0, skipped: true };
+    var force = Boolean(options && options.force);
+
+    var settings = await window.NotifyStore.getSettings();
+    var key = refreshKey(settings);
+    var last = await window.NotifyStore.get('lastRefresh', null);
+    if (!force && last && last.key === key && (Date.now() - last.at) < REFRESH_MIN_INTERVAL_MS) {
+      var current = await window.NotifyStore.getSchedule();
+      return { count: current.length, skipped: true, unchanged: true };
+    }
+
+    var built = await buildSchedule();
 
     // Could not compute (wrong page, no location, fully offline): leave the
     // existing schedule in place rather than clearing it.
-    if (items === null) {
+    if (built === null) {
       var existing = await window.NotifyStore.getSchedule();
       return { count: existing.length, skipped: true };
     }
 
+    var items = built.items;
+    var previous = await window.NotifyStore.getSchedule();
+    var now = Date.now();
+
+    // A day whose request failed keeps whatever was scheduled for it last
+    // time, instead of silently dropping tomorrow's reminders (and cancelling
+    // their triggers below) because the network hiccuped once.
+    if (built.failedDays.length) {
+      var ids = {};
+      items.forEach(function (item) { ids[item.id] = true; });
+      previous.forEach(function (item) {
+        if (item.at > now && !ids[item.id]) items.push(item);
+      });
+      items.sort(function (a, b) { return a.at - b.at; });
+    }
+
     // Every day resolved to nothing while reminders are ON usually means the
     // network was down, not that there is genuinely nothing to fire.
-    var settings = await window.NotifyStore.getSettings();
     if (!items.length && settings.enabled) {
-      var kept = await window.NotifyStore.getSchedule();
-      var stillAhead = kept.filter(function (item) { return item.at > Date.now(); });
+      var stillAhead = previous.filter(function (item) { return item.at > now; });
       if (stillAhead.length) return { count: stillAhead.length, skipped: true };
     }
 
-    await window.NotifyStore.setSchedule(items);
-
     var usedTriggers = await installTriggers(items);
     if (!usedTriggers) await registerPeriodicSync();
+
+    // With triggers the browser owns delivery. Leaving the same items in the
+    // worker's catch-up list as well made every reminder fire twice: once on
+    // time, then again from flushDueReminders() when the app was next opened
+    // within 30 minutes.
+    await window.NotifyStore.setSchedule(usedTriggers ? [] : items);
+    await window.NotifyStore.set('lastRefresh', { at: now, key: key });
 
     // Ask the worker to flush anything already due (app was closed over it).
     if (navigator.serviceWorker && navigator.serviceWorker.controller) {

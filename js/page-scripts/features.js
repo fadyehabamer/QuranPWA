@@ -20,43 +20,7 @@ function hexToRgb(hex) {
         }
 
         function loadThemeSettings() {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-
-            const color = localStorage.getItem('primaryColor');
-            const selectedColor = color || '#1B5E20';
-            const rgb = hexToRgb(selectedColor);
-
-            document.documentElement.style.setProperty('--primary-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
-
-            if (color) {
-                const lightColor = adjustColor(color, 30);
-                document.documentElement.style.setProperty('--primary-color', color);
-                document.documentElement.style.setProperty('--primary-light', lightColor);
-
-                const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`;
-                const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
-                document.documentElement.style.setProperty('--shadow', shadowLight);
-                document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
-            }
-
-            const fontSize = localStorage.getItem('fontSize');
-            if (fontSize !== null) {
-                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
-                const baseSize = fontSizes[parseInt(fontSize, 10)] || 16;
-                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
-                document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
-                document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px');
-            }
-
-            const fontWeight = localStorage.getItem('fontWeight');
-            if (fontWeight !== null) {
-                const fontWeights = [300, 400, 500, 600, 700];
-                const selectedWeight = fontWeights[parseInt(fontWeight, 10)] || 400;
-                document.documentElement.style.setProperty('--font-weight', selectedWeight);
-            }
+            /* handled by js/theme-preload.js */
         }
 
         function updateFeatureStats() {
@@ -109,6 +73,3 @@ function hexToRgb(hex) {
         loadThemeSettings();
         updateFeatureStats();
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        }

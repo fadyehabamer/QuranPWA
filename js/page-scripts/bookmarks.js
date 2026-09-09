@@ -14,7 +14,7 @@ const surahInfo = window.QURAN_SURAHS;
                         <div class="empty-state-icon"><i class="bi bi-bookmark" aria-hidden="true" style="font-size: 80px;"></i></div>
                         <h3 class="empty-state-title">لا توجد مواضع محفوظة</h3>
                         <p class="empty-state-desc">لم تقم بحفظ أي موضع بعد.<br>اذهب إلى أي سورة واضغط على "حفظ الموضع" لحفظ مكان قراءتك.</p>
-                        <a href="quran.html" class="empty-state-btn"><i class="bi bi-book-fill" aria-hidden="true"></i> ابدأ القراءة</a>
+                        <a href="/quran" class="empty-state-btn"><i class="bi bi-book-fill" aria-hidden="true"></i> ابدأ القراءة</a>
                     </div>
                 `;
                 if (stats) stats.style.display = 'none';
@@ -266,8 +266,13 @@ const surahInfo = window.QURAN_SURAHS;
                 .replace(/'/g, '&#39;');
         }
 
+        function encodeForHandler(value) {
+            return encodeURIComponent(String(value || ''))
+                .replace(/[!'()*~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+        }
+
         function encodeBookmarkId(id) {
-            return encodeURIComponent(String(id || ''));
+            return encodeForHandler(id);
         }
 
         function decodeBookmarkId(encodedId) {
@@ -343,6 +348,8 @@ const surahInfo = window.QURAN_SURAHS;
 
             fillSelect(folderFilter, 'كل المجلدات', folders, bookmarkFilters.folder);
             fillSelect(tagFilter, 'كل الوسوم', tags, bookmarkFilters.tag);
+            if (folderFilter) bookmarkFilters.folder = folderFilter.value;
+            if (tagFilter) bookmarkFilters.tag = tagFilter.value;
         }
 
         function renderFoldersOverview(bookmarks) {
@@ -397,7 +404,7 @@ const surahInfo = window.QURAN_SURAHS;
             `;
 
             folders.forEach(([folder, count]) => {
-                const encodedFolder = encodeURIComponent(folder);
+                const encodedFolder = encodeForHandler(folder);
                 const activeClass = bookmarkFilters.folder === folder ? 'active' : '';
                 html += `
                     <button class="folder-overview-card ${activeClass}" type="button" onclick="setFolderFilterByEncoded('${encodedFolder}')">
@@ -492,11 +499,22 @@ const surahInfo = window.QURAN_SURAHS;
             return 'الآن';
         }
 
+        let filtersRenderTimer = null;
+
         function handleFiltersChange() {
-            bookmarkFilters.search = document.getElementById('bookmarkSearchInput')?.value || '';
+            const searchEl = document.getElementById('bookmarkSearchInput');
+            const searchValue = searchEl ? searchEl.value : '';
+            const searchChanged = searchValue !== bookmarkFilters.search;
+            bookmarkFilters.search = searchValue;
             bookmarkFilters.folder = document.getElementById('folderFilter')?.value || '';
             bookmarkFilters.tag = document.getElementById('tagFilter')?.value || '';
             bookmarkFilters.sort = document.getElementById('bookmarkSortSelect')?.value || 'recent';
+
+            clearTimeout(filtersRenderTimer);
+            if (searchChanged && document.activeElement === searchEl) {
+                filtersRenderTimer = setTimeout(renderBookmarks, 150);
+                return;
+            }
             renderBookmarks();
         }
 
@@ -534,8 +552,8 @@ const surahInfo = window.QURAN_SURAHS;
             }
 
             input.value = '';
-            bookmarkFilters.folder = folderName;
             renderBookmarks();
+            if (window.A11y) window.A11y.announce(`تم إنشاء مجلد «${folderName}». اختره من محرر أي موضع لنقله إليه.`);
         }
 
         function loadBookmark(encodedBookmarkId) {
@@ -547,7 +565,7 @@ const surahInfo = window.QURAN_SURAHS;
                 window.touchBookmarkVisitById(bookmarkId);
             }
 
-            window.location.href = `quran.html?surah=${bookmark.surah}&page=${bookmark.page}&bookmark=${encodeURIComponent(bookmark.id)}`;
+            window.location.href = `/quran?surah=${bookmark.surah}&page=${bookmark.page}&bookmark=${encodeURIComponent(bookmark.id)}`;
         }
 
         function saveBookmarkMeta(encodedBookmarkId) {
@@ -668,38 +686,7 @@ const surahInfo = window.QURAN_SURAHS;
         }
 // Load theme settings
         function loadThemeSettings() {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-
-            const color = localStorage.getItem('primaryColor');
-            if (color) {
-                const lightColor = adjustColor(color, 30);
-                document.documentElement.style.setProperty('--primary-color', color);
-                document.documentElement.style.setProperty('--primary-light', lightColor);
-
-                // Update shadow colors
-                const rgb = hexToRgb(color);
-                const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`;
-                const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
-                document.documentElement.style.setProperty('--shadow', shadowLight);
-                document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
-            }
-
-            const fontSize = localStorage.getItem('fontSize');
-            if (fontSize !== null) {
-                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
-                const baseSize = fontSizes[parseInt(fontSize)] || 16;
-                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
-            }
-
-            const fontWeight = localStorage.getItem('fontWeight');
-            if (fontWeight) {
-                const fontWeights = [300, 400, 500, 600, 700];
-                const weight = fontWeights[parseInt(fontWeight)];
-                document.documentElement.style.setProperty('--font-weight', weight);
-            }
+            /* handled by js/theme-preload.js */
         }
 
         function hexToRgb(hex) {
@@ -739,7 +726,8 @@ const surahInfo = window.QURAN_SURAHS;
             return `${v.surahNumber || v.surah}:${v.numberInSurah}`;
         }
 
-        function removeSavedVerse(key) {
+        function removeSavedVerse(encodedKey) {
+            const key = decodeURIComponent(String(encodedKey || ''));
             const next = loadSavedVersesList().filter(v => savedVerseKey(v) !== key);
             localStorage.setItem(SAVED_VERSES_KEY, JSON.stringify(next));
             renderSavedVerses();
@@ -762,8 +750,8 @@ const surahInfo = window.QURAN_SURAHS;
                 const key = savedVerseKey(v);
                 const ref = `${v.surah || ''} • آية ${v.numberInSurah}`;
                 const openHref = v.surahNumber
-                    ? `quran.html?surah=${v.surahNumber}&ayah=${v.numberInSurah}`
-                    : 'quran.html';
+                    ? `/quran?surah=${v.surahNumber}&ayah=${v.numberInSurah}`
+                    : '/quran';
                 return `
                     <div class="saved-verse-card glass-card">
                         <p class="saved-verse-text">${escapeHtml(v.text || '')}</p>
@@ -771,7 +759,7 @@ const surahInfo = window.QURAN_SURAHS;
                             <span class="saved-verse-ref">${escapeHtml(ref)}</span>
                             <div class="saved-verse-actions">
                                 <a class="saved-verse-open" href="${openHref}">فتح في المصحف</a>
-                                <button type="button" class="saved-verse-remove" onclick="removeSavedVerse('${key}')" aria-label="حذف الآية المحفوظة">
+                                <button type="button" class="saved-verse-remove" onclick="removeSavedVerse('${encodeForHandler(key)}')" aria-label="حذف الآية المحفوظة">
                                     <i class="bi bi-trash" aria-hidden="true"></i>
                                 </button>
                             </div>
@@ -790,9 +778,3 @@ const surahInfo = window.QURAN_SURAHS;
             renderSavedVerses();
         });
 
-        // Register service worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                .then(reg => console.log('SW registered'))
-                .catch(err => console.log('SW registration failed'));
-        }

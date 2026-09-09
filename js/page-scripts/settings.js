@@ -28,10 +28,14 @@ let deferredPrompt;
             const color = localStorage.getItem('primaryColor') || '#1B5E20';
             applyColor(color);
 
-            // Font size
-            const fontSize = localStorage.getItem('fontSize') || '1';
-            currentFontSizeIndex = parseInt(fontSize);
-            updateFontSize();
+            // Font size. A missing key means the CSS default (16px = "متوسط");
+            // this used to default to index 1 and then persist it, so merely
+            // opening Settings shrank every page to 14px.
+            const storedFontSize = parseInt(localStorage.getItem('fontSize'), 10);
+            currentFontSizeIndex = Number.isInteger(storedFontSize) && fontSizeValues[storedFontSize]
+                ? storedFontSize
+                : 2;
+            updateFontSize(false);
 
             // Font weight
             loadFontWeight();
@@ -43,7 +47,15 @@ let deferredPrompt;
                 document.getElementById('notificationSettings').style.display = 'block';
             }
 
-            notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+            try {
+                const parsed = JSON.parse(localStorage.getItem('notifications') || '[]');
+                notifications = Array.isArray(parsed)
+                    ? parsed.filter(item => item && typeof item.time === 'string')
+                        .map(item => ({ time: item.time, days: Array.isArray(item.days) ? item.days.map(Number) : [] }))
+                    : [];
+            } catch (_error) {
+                notifications = [];
+            }
             renderNotifications();
 
             // Ramadan settings section visibility
@@ -149,13 +161,13 @@ let deferredPrompt;
             }
         }
 
-        function updateFontSize() {
+        function updateFontSize(persist = true) {
             const baseSize = fontSizeValues[currentFontSizeIndex];
             document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
             document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
             document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px');
             document.getElementById('fontSizeDisplay').textContent = fontSizes[currentFontSizeIndex];
-            localStorage.setItem('fontSize', currentFontSizeIndex);
+            if (persist) localStorage.setItem('fontSize', currentFontSizeIndex);
         }
 
 
@@ -248,7 +260,7 @@ let deferredPrompt;
             // Rebuilding is what actually (re)installs the browser-side
             // triggers, so every change has to go through it.
             if (window.AppNotifications) {
-                const result = await window.AppNotifications.refresh();
+                const result = await window.AppNotifications.refresh({ force: true });
                 renderNotifyStatus(result);
             }
         }
@@ -388,7 +400,14 @@ let deferredPrompt;
             const grid = document.getElementById('juzGrid');
             if (!grid || !window.OfflineQuran) return;
 
-            const statuses = await window.OfflineQuran.allStatus();
+            let statuses;
+            try {
+                statuses = await window.OfflineQuran.allStatus();
+            } catch (_error) {
+                // No Cache API (plain http:// on a LAN, some private modes).
+                grid.innerHTML = '<p class="offline-unavailable">التحميل للقراءة بلا إنترنت غير متاح في هذا المتصفح.</p>';
+                return;
+            }
 
             const meta = document.getElementById('juzToggleMeta');
             if (meta) {
@@ -433,12 +452,17 @@ let deferredPrompt;
             const chip = document.getElementById(`juzChip${juzNumber}`);
             if (chip) chip.classList.add('is-loading');
 
-            const result = await window.OfflineQuran.downloadJuz(juzNumber, (done, total) => {
-                if (state) state.textContent = `${Math.round((done / total) * 100)}%`;
-            });
-
-            juzBusy = false;
-            await renderJuzGrid();
+            let result;
+            try {
+                result = await window.OfflineQuran.downloadJuz(juzNumber, (done, total) => {
+                    if (state) state.textContent = `${Math.round((done / total) * 100)}%`;
+                });
+            } catch (_error) {
+                result = { ok: false };
+            } finally {
+                juzBusy = false;
+            }
+            await renderJuzGrid().catch(() => { });
             await renderOfflineUsage();
 
             if (!result.ok) {
@@ -458,11 +482,16 @@ let deferredPrompt;
             const button = document.getElementById('downloadAllBtn');
             const original = button ? button.innerHTML : '';
 
-            const result = await window.OfflineQuran.downloadAll((juz) => {
-                if (button) button.textContent = `جاري التحميل… الجزء ${juz} من ٣٠`;
-            });
-
-            juzBusy = false;
+            let result;
+            try {
+                result = await window.OfflineQuran.downloadAll((juz) => {
+                    if (button) button.textContent = `جاري التحميل… الجزء ${juz} من ٣٠`;
+                });
+            } catch (_error) {
+                result = { ok: false, stoppedAt: '?' };
+            } finally {
+                juzBusy = false;
+            }
             if (button) button.innerHTML = original;
             await renderJuzGrid();
             await renderOfflineUsage();
@@ -531,7 +560,16 @@ let deferredPrompt;
                         localStorage.setItem('notifications', JSON.stringify(notifications));
                         renderNotifications();
                         scheduleNotifications();
+                        return;
                     }
+                    showModal({
+                        type: 'warning',
+                        icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
+                        title: 'لم يُضف التذكير',
+                        message: !time ? 'اختر وقتاً للتذكير أولاً.' : 'اختر يوماً واحداً على الأقل.',
+                        confirmText: 'حسناً',
+                        onConfirm: showAddNotification
+                    });
                 }
             });
         }
@@ -576,51 +614,18 @@ let deferredPrompt;
                     notifications.splice(index, 1);
                     localStorage.setItem('notifications', JSON.stringify(notifications));
                     renderNotifications();
+                    scheduleNotifications();
                 }
             });
         }
 
+        // Custom reminders are delivered by the shared scheduler
+        // (js/notifications.js) together with the prayer reminders, so they
+        // fire on the chosen days whether or not this page is still open.
         function scheduleNotifications() {
-            if (localStorage.getItem('notificationsEnabled') !== 'true') return;
-
-            const items = (notifications || []).map((notif, index) => {
-                const [hours, minutes] = (notif.time || '00:00').split(':');
-                return {
-                    id: index + 1,
-                    title: 'القرآن الكريم',
-                    body: 'حان وقت قراءة القرآن والأذكار',
-                    hour: parseInt(hours, 10) || 0,
-                    minute: parseInt(minutes, 10) || 0,
-                    days: Array.isArray(notif.days) ? notif.days : []
-                };
-            });
-
-            if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-            // Web notifications can't schedule recurring alerts without a push
-            // backend, so fire a one-shot reminder for any time still ahead today.
-            items.forEach((item) => {
-                const today = new Date();
-                const target = new Date(today.getFullYear(), today.getMonth(), today.getDate(),
-                    item.hour, item.minute);
-                const delay = target.getTime() - Date.now();
-                if (delay <= 0 || delay > 24 * 60 * 60 * 1000) return;
-                setTimeout(() => {
-                    try {
-                        if ('serviceWorker' in navigator) {
-                            navigator.serviceWorker.ready.then((reg) => {
-                                reg.showNotification(item.title, {
-                                    body: item.body,
-                                    icon: '/assets/icons/icon-192.png',
-                                    badge: '/assets/icons/icon-192.png'
-                                });
-                            });
-                        } else {
-                            new Notification(item.title, { body: item.body, icon: '/assets/icons/icon-192.png' });
-                        }
-                    } catch (_) {}
-                }, delay);
-            });
+            if (window.AppNotifications) {
+                window.AppNotifications.refresh({ force: true }).catch(() => { });
+            }
         }
 
         function saveSettings() {
@@ -761,20 +766,24 @@ let deferredPrompt;
                         // Timeout after 5 seconds
                         setTimeout(() => reject(new Error('Timeout')), 5000);
                     });
-                } else {
-                    // Fallback: clear caches directly
+                } else if (window.caches) {
+                    // Fallback: clear caches directly, but keep the surahs the
+                    // user deliberately downloaded (the worker path does too).
+                    const offlineCache = window.OfflineQuran ? window.OfflineQuran.CACHE_NAME : null;
                     const cacheNames = await caches.keys();
                     await Promise.all(
-                        cacheNames.map(cacheName => caches.delete(cacheName))
+                        cacheNames
+                            .filter(cacheName => cacheName !== offlineCache)
+                            .map(cacheName => caches.delete(cacheName))
                     );
                 }
 
-                // Clear localStorage (except for user preferences)
-                const keysToKeep = ['darkMode', 'primaryColor', 'fontSize', 'fontWeight', 'notificationsEnabled', 'notifications', 'ramadanStartDate'];
-                const allKeys = Object.keys(localStorage);
-
-                allKeys.forEach(key => {
-                    if (!keysToKeep.includes(key)) {
+                // Only cached copies of re-fetchable content. This used to be an
+                // allow-list of seven preference keys, which deleted bookmarks,
+                // the khatma plan, habit logs, azkar counts and the reader
+                // position — the opposite of what the button promises.
+                Object.keys(localStorage).forEach(key => {
+                    if (BACKUP_EXCLUDED_PREFIXES.some(prefix => key.startsWith(prefix))) {
                         localStorage.removeItem(key);
                     }
                 });

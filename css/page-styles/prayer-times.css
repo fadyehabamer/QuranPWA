@@ -918,7 +918,9 @@
         }
 
         .country-list {
-            max-height: 400px;
+            /* The panel is capped at 80vh; a fixed 400px list overflowed it on
+               landscape phones and the bottom entries were unreachable. */
+            max-height: min(400px, 50vh);
             overflow-y: auto;
             padding: 0;
         }
@@ -1058,8 +1060,8 @@
 
         .day-nav-btn {
             flex: 0 0 auto;
-            width: 40px;
-            height: 40px;
+            width: var(--tap-target, 44px);
+            height: var(--tap-target, 44px);
             display: grid;
             place-items: center;
             border: 1px solid var(--border-color);
@@ -1360,3 +1362,27 @@
         @media (prefers-reduced-motion: reduce) {
             .qibla-guidance { transition: none; }
         }
+
+/* ---- Location hint + inline day error ---------------------------------- */
+.location-hint {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    text-align: center;
+}
+
+.prayer-grid-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-6) var(--space-4);
+    color: var(--text-secondary);
+    text-align: center;
+    font-size: var(--text-sm);
+}
+
+.prayer-grid-error i {
+    font-size: 1.6rem;
+}

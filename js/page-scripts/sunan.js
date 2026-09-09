@@ -102,6 +102,15 @@ const sunanData = {
             list.classList.add('active');
             document.getElementById('headerTitle').textContent = category.title;
             document.getElementById('backBtn').style.display = 'block';
+            window.scrollTo(0, 0);
+
+            // Same URL for both views, so the browser/hardware Back button
+            // used to leave the page instead of returning to the grid.
+            if (!(history.state && history.state.sunanView)) {
+                history.pushState({ sunanView: categoryKey }, '');
+            } else {
+                history.replaceState({ sunanView: categoryKey }, '');
+            }
         }
 
         function showCategories() {
@@ -109,25 +118,19 @@ const sunanData = {
             document.getElementById('categoryGrid').style.display = 'grid';
             document.getElementById('headerTitle').textContent = 'سنن النبي ﷺ';
             document.getElementById('backBtn').style.display = 'none';
+            window.scrollTo(0, 0);
+            if (history.state && history.state.sunanView) history.back();
         }
-// Load theme settings
-        (function () {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
 
-            const color = localStorage.getItem('primaryColor');
-            if (color) {
-                const num = parseInt(color.replace('#', ''), 16);
-                const amt = Math.round(2.55 * 30);
-                const R = (num >> 16) + amt;
-                const G = (num >> 8 & 0x00FF) + amt;
-                const B = (num & 0x0000FF) + amt;
-                const lightColor = '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + (G < 255 ? G < 1 ? 0 : G :
-                    255) * 0x100 + (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
-                document.documentElement.style.setProperty('--primary-color', color);
-                document.documentElement.style.setProperty('--primary-light', lightColor);
+        window.addEventListener('popstate', () => {
+            if (document.getElementById('sunanList').classList.contains('active')) {
+                document.getElementById('sunanList').classList.remove('active');
+                document.getElementById('categoryGrid').style.display = 'grid';
+                document.getElementById('headerTitle').textContent = 'سنن النبي ﷺ';
+                document.getElementById('backBtn').style.display = 'none';
+                window.scrollTo(0, 0);
             }
-        })();
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        }
+        });
+/* Theme, accent colour and font preferences are applied before first paint by
+   js/theme-preload.js. The block that used to live here re-set --primary-color
+   to the raw stored hex, undoing the contrast tuning. */

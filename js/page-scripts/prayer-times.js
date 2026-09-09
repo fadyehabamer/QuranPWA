@@ -502,6 +502,7 @@ let userLocation = null;
                 if (orientationTiltPoor && sample.source !== 'webkit') {
                     headingUnstableUntilTs = now + CALIBRATION_HINT_HOLD_MS;
                     headingUnstableReason = 'ثبّت الهاتف على سطح غير معدني ومستوٍ';
+                    orientationLastUpdateTs = now;
                     updateQiblaDisplay();
                     return;
                 }
@@ -515,6 +516,7 @@ let userLocation = null;
                 if (jump > MAX_HEADING_JUMP_DEG && dt < OUTLIER_IGNORE_WINDOW_MS) {
                     headingUnstableUntilTs = now + CALIBRATION_HINT_HOLD_MS;
                     headingUnstableReason = 'القراءة غير مستقرة، أعد المعايرة بحركة 8';
+                    orientationLastUpdateTs = now;
                     updateQiblaDisplay();
                     return;
                 }
@@ -773,16 +775,28 @@ let userLocation = null;
             if (todayBtn) todayBtn.style.display = dayOffset === 0 ? 'none' : 'inline-flex';
         }
 
+        // Two quick taps used to start two fetches and whichever finished last
+        // painted the grid, sometimes under the other day's date label. Each
+        // load takes a token and only the latest one may render; days already
+        // fetched are kept so stepping back is instant and works offline.
+        let loadSeq = 0;
+        const dayCache = new Map();
+        // Local calendar date the on-screen "today" was fetched for.
+        let loadedDateKey = '';
+
+        function localDateKey() {
+            const d = new Date();
+            return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        }
+
+        function cacheKeyFor(offset) {
+            return `${userLocation.latitude},${userLocation.longitude}|${localDateKey()}|${offset}`;
+        }
+
         async function stepDay(delta) {
             if (!userLocation) return;
-            const previous = dayOffset;
             dayOffset += delta;
-            const ok = await refreshForCurrentDay();
-            // A failed fetch must not strand the reader on a day with no data.
-            if (!ok) {
-                dayOffset = previous;
-                await refreshForCurrentDay();
-            }
+            await refreshForCurrentDay();
         }
 
         async function goToToday() {
@@ -792,27 +806,118 @@ let userLocation = null;
 
         async function refreshForCurrentDay() {
             const grid = document.getElementById('prayerGrid');
-            if (grid) {
-                grid.innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
+            const token = ++loadSeq;
+            const offset = dayOffset;
+            const key = cacheKeyFor(offset);
+
+            let data = dayCache.get(key);
+            if (!data) {
+                if (grid) {
+                    grid.innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
+                }
+                try {
+                    data = await PrayerEngine.fetchTimings(
+                        userLocation.latitude, userLocation.longitude, undefined, offset
+                    );
+                    dayCache.set(key, data);
+                } catch (error) {
+                    console.error('Error loading prayer times for day offset', offset, error);
+                    if (token !== loadSeq) return false;
+                    renderDayNav(null);
+                    if (grid) {
+                        grid.innerHTML = `
+                            <div class="prayer-grid-error" role="alert">
+                                <i class="bi bi-wifi-off" aria-hidden="true"></i>
+                                <span>تعذّر تحميل مواقيت هذا اليوم. تحقق من الاتصال.</span>
+                                <button type="button" class="retry-btn" onclick="refreshForCurrentDay()">إعادة المحاولة</button>
+                            </div>`;
+                    }
+                    return false;
+                }
             }
 
-            try {
-                prayerTimes = await PrayerEngine.fetchTimings(
-                    userLocation.latitude, userLocation.longitude, undefined, dayOffset
-                );
+            // A newer request has since started; let it paint instead.
+            if (token !== loadSeq) return true;
+
+            prayerTimes = data;
+            if (offset === 0) loadedDateKey = localDateKey();
+            renderPrayerTimes(prayerTimes);
+            renderDayNav(prayerTimes);
+
+            // The live countdown only applies to today.
+            const nextSection = document.getElementById('nextPrayerSection');
+            if (nextSection) nextSection.style.display = offset === 0 ? 'block' : 'none';
+            if (offset === 0) updateRemainingTime();
+            return true;
+        }
+
+        /* The countdown text used to be the only thing refreshed by the timer;
+           the row highlighted as "next", the "الوقت الحالي" badge and the
+           forbidden-time rows stayed as first painted. Tick on the minute and
+           repaint the rows too, and re-fetch when the calendar date changes
+           (the page was left open, or the phone slept through midnight). */
+        function startLiveUpdates() {
+            if (updateInterval) clearInterval(updateInterval);
+            updateInterval = null;
+
+            const tick = () => {
+                if (!userLocation || dayOffset !== 0 || !prayerTimes) return;
+                if (loadedDateKey && loadedDateKey !== localDateKey()) {
+                    refreshForCurrentDay();
+                    return;
+                }
+                updateRemainingTime();
                 renderPrayerTimes(prayerTimes);
-                renderDayNav(prayerTimes);
+            };
 
-                // The live countdown only applies to today.
-                const nextSection = document.getElementById('nextPrayerSection');
-                if (nextSection) nextSection.style.display = dayOffset === 0 ? 'block' : 'none';
-                if (dayOffset === 0) updateRemainingTime();
-                return true;
-            } catch (error) {
-                console.error('Error loading prayer times for day offset', dayOffset, error);
-                if (grid) grid.innerHTML = '';
-                return false;
+            const msToNextMinute = 60000 - (Date.now() % 60000);
+            setTimeout(() => {
+                tick();
+                updateInterval = setInterval(tick, 60000);
+            }, msToNextMinute + 50);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState !== 'visible') return;
+            if (userLocation && dayOffset === 0 && loadedDateKey && loadedDateKey !== localDateKey()) {
+                refreshForCurrentDay();
+            } else {
+                updateRemainingTime();
+                if (prayerTimes && dayOffset === 0) renderPrayerTimes(prayerTimes);
             }
+        });
+
+        /* Turn coordinates into a city name for the label (and for the home
+           widget, which reads the same key). Optional: the times are already
+           on screen before this resolves. */
+        async function resolveLocationLabel(loc) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.latitude}&lon=${loc.longitude}&format=json&accept-language=ar`);
+                const data = await res.json();
+                const a = data && data.address;
+                const city = a && (a.city || a.town || a.village || a.state);
+                if (city) {
+                    localStorage.setItem('locationText', city);
+                    if (locationMethod === 'automatic') showLocationSelected(city);
+                }
+            } catch (_error) { /* keep the generic label */ }
+        }
+
+        function showLocationHint(text) {
+            const section = document.getElementById('locationSection');
+            let hint = document.getElementById('locationHint');
+            if (!text) {
+                if (hint) hint.remove();
+                return;
+            }
+            if (!hint && section) {
+                hint = document.createElement('p');
+                hint.id = 'locationHint';
+                hint.className = 'location-hint';
+                hint.setAttribute('role', 'status');
+                section.appendChild(hint);
+            }
+            if (hint) hint.textContent = text;
         }
 
         // Load prayer times
@@ -821,19 +926,36 @@ let userLocation = null;
                 document.getElementById('errorMessage').style.display = 'none';
                 document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
 
+                showLocationHint('');
+
                 // Get location based on method
                 if (locationMethod === 'automatic' && !userLocation && !lat && !lng) {
                     try {
                         userLocation = await getUserLocation();
-                        showLocationSelected('تم تحديد موقعك تلقائياً');
+                        // Persist it: the home widget, settings and the reminder
+                        // scheduler all read this key. It was never written from
+                        // here, so this page re-asked on every visit and
+                        // reminders never had a location to compute from.
+                        localStorage.setItem('userLocation', JSON.stringify(userLocation));
+                        clearCountrySelection();
+                        showLocationSelected(localStorage.getItem('locationText') || 'تم تحديد موقعك تلقائياً');
+                        resolveLocationLabel(userLocation);
                     } catch (geoError) {
                         console.error('Geolocation failed:', geoError);
-                        // If automatic fails, fall back to manual
-                        locationMethod = 'manual';
-                        openCountryModal();
+                        // Back to the two buttons, with the reason, rather than
+                        // an unexplained country picker and a stuck spinner.
+                        locationMethod = null;
+                        hideLocationLoading();
+                        document.getElementById('locationButtons').style.display = 'flex';
+                        document.getElementById('locationSelected').style.display = 'none';
+                        document.getElementById('prayerGrid').innerHTML = '';
+                        const denied = geoError && geoError.code === 1;
+                        showLocationHint(denied
+                            ? 'تم رفض إذن الموقع. اسمح به من إعدادات المتصفح أو اختر دولتك يدوياً.'
+                            : 'تعذّر تحديد موقعك. حاول مجدداً أو اختر دولتك يدوياً.');
                         return;
                     }
-                } else if (locationMethod === 'manual' && !lat && !lng) {
+                } else if (locationMethod === 'manual' && !lat && !lng && !userLocation) {
                     // Manual selection - country modal should be open
                     return;
                 } else if (lat && lng) {
@@ -846,27 +968,20 @@ let userLocation = null;
 
                 // A fresh load always lands on today.
                 dayOffset = 0;
+                dayCache.clear();
 
-                // Fetch prayer times
-                prayerTimes = await fetchPrayerTimes(userLocation.latitude, userLocation.longitude);
+                const ok = await refreshForCurrentDay();
+                if (!ok) throw new Error('timings unavailable');
 
-                // Render prayer times
-                renderPrayerTimes(prayerTimes);
-                renderDayNav(prayerTimes);
-
-                // Show next prayer section
-                document.getElementById('nextPrayerSection').style.display = 'block';
-                updateRemainingTime();
-
-                // Start updating remaining time every minute
-                if (updateInterval) clearInterval(updateInterval);
-                updateInterval = setInterval(updateRemainingTime, 60000);
+                startLiveUpdates();
 
             } catch (error) {
                 console.error('Error loading prayer times:', error);
 
                 hideLocationLoading();
-                showLocationSelected('حدث خطأ في تحميل مواقيت الصلاة');
+                // Keep the location label as it was; the error block below
+                // explains the failure and offers a working retry.
+                if (currentLocationLabel) showLocationSelected(currentLocationLabel);
                 document.getElementById('errorMessage').style.display = 'block';
                 document.getElementById('prayerGrid').innerHTML = '';
             }
@@ -889,6 +1004,9 @@ let userLocation = null;
             // Clear stored location data
             userLocation = null;
             locationMethod = null;
+            currentLocationLabel = '';
+            dayCache.clear();
+            showLocationHint('');
             clearCountrySelection();
             localStorage.removeItem('userLocation');
             localStorage.removeItem('locationText');
@@ -953,8 +1071,12 @@ let userLocation = null;
             }
         }
 
+        let currentLocationLabel = '';
+
         function showLocationSelected(text) {
             hideLocationLoading();
+            currentLocationLabel = text;
+            showLocationHint('');
             document.getElementById('locationText').textContent = text;
             document.getElementById('locationButtons').style.display = 'none';
             document.getElementById('locationSelected').style.display = 'flex';
@@ -962,26 +1084,8 @@ let userLocation = null;
 
         // Initialize
         (function () {
-            // Load theme settings
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
-
-            const color = localStorage.getItem('primaryColor');
-            if (color) {
-                document.documentElement.style.setProperty('--primary-color', color);
-            }
-
-            const fontSize = localStorage.getItem('fontSize');
-            if (fontSize !== null) {
-                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
-                const baseSize = fontSizes[parseInt(fontSize)] || 16;
-                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
-                document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
-            }
-
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js', { scope: '/' });
-            }
+            // Theme, accent and font size are applied by theme-preload.js;
+            // the service worker is registered by common.js.
 
             // Resume whatever location the app already knows, so this page does
             // not re-ask on every visit.
@@ -1024,8 +1128,9 @@ let userLocation = null;
         function hideCountryModal() {
             document.getElementById('countryModal').style.display = 'none';
 
-            // If no location method was set (user closed modal without selecting), reset to buttons
-            if (!locationMethod) {
+            // Closed without choosing and nothing is known yet: back to the
+            // two location buttons instead of a stranded spinner.
+            if (!userLocation) {
                 resetLocation();
             }
         }
@@ -1243,6 +1348,11 @@ let userLocation = null;
 
         function selectCountry(country) {
             saveCountrySelection(country);
+            // The home widget and the reminder scheduler read `userLocation`;
+            // without this they kept using the previous GPS fix while this
+            // page showed the chosen country — two schedules in one app.
+            localStorage.setItem('userLocation', JSON.stringify({ latitude: country.lat, longitude: country.lng }));
+            localStorage.setItem('locationText', country.name || '');
             closeCountryModal();
             document.getElementById('prayerGrid').innerHTML = '<div class="loading-spinner" role="status" aria-label="جاري التحميل"><i class="bi bi-clock-history" aria-hidden="true"></i></div>';
             loadPrayerTimes(country.lat, country.lng);

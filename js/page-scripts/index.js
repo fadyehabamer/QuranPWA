@@ -7,47 +7,10 @@ function hexToRgb(hex) {
             } : { r: 27, g: 94, b: 32 };
         }
 
-        // Load theme settings
-        (function () {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
+/* Theme, accent colour and font preferences are applied before first paint by
+   js/theme-preload.js. The block that used to live here re-set --primary-color
+   to the raw stored hex, undoing the contrast tuning. */
 
-            const color = localStorage.getItem('primaryColor');
-            const rgb = hexToRgb(color || '#1B5E20');
-            document.documentElement.style.setProperty('--primary-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
-
-            if (color) {
-                const num = parseInt(color.replace('#', ''), 16);
-                const amt = Math.round(2.55 * 30);
-                const R = (num >> 16) + amt;
-                const G = (num >> 8 & 0x00FF) + amt;
-                const B = (num & 0x0000FF) + amt;
-                const lightColor = '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-                    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
-
-                document.documentElement.style.setProperty('--primary-color', color);
-                document.documentElement.style.setProperty('--primary-light', lightColor);
-
-                const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`;
-                const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
-                document.documentElement.style.setProperty('--shadow', shadowLight);
-                document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
-            }
-
-            const fontSize = localStorage.getItem('fontSize');
-            if (fontSize !== null) {
-                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
-                const baseSize = fontSizes[parseInt(fontSize)] || 16;
-                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
-                document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
-                document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px');
-            }
-        })();
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        }
         // Daily Verse Logic
         function applyDailyVerse(data) {
             const textElement = document.getElementById('dailyVerseText');
@@ -64,6 +27,7 @@ function hexToRgb(hex) {
             // Check if we have a cached verse for today
             const today = new Date().toDateString();
             const cachedVerse = localStorage.getItem('dailyVerse');
+            let previousVerse = null;
 
             if (cachedVerse) {
                 try {
@@ -72,6 +36,7 @@ function hexToRgb(hex) {
                         applyDailyVerse(data);
                         return;
                     }
+                    previousVerse = data;
                 } catch (_error) {
                     // Fall through and fetch a fresh verse.
                 }
@@ -99,11 +64,22 @@ function hexToRgb(hex) {
                 }
             } catch (error) {
                 console.error('Error fetching daily verse:', error);
-                if (textElement && textElement.textContent.trim() === 'جارٍ التحميل…') {
+                if (previousVerse && previousVerse.text) {
+                    applyDailyVerse(previousVerse);
+                    const infoElement = document.getElementById('dailyVerseInfo');
+                    if (infoElement) infoElement.textContent += ' • آية سابقة (لا يوجد اتصال)';
+                } else if (textElement && textElement.textContent.trim() === 'جارٍ التحميل…') {
                     textElement.textContent = 'تعذّر تحميل آية اليوم. تحقق من الاتصال.';
                 }
             }
         }
+
+        // Left open across midnight: fetch the new day's verse on return.
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) return;
+            const current = window.dailyVerseData;
+            if (!current || current.date !== new Date().toDateString()) loadDailyVerse();
+        });
 
         // --- Verse of the day actions: save / listen / share ------------------
         const DAILY_VERSE_SAVE_KEY = 'savedDailyVerses';
@@ -426,7 +402,7 @@ function hexToRgb(hex) {
                 const bookmarkQuery = window.lastBookmark.id
                     ? `&bookmark=${encodeURIComponent(window.lastBookmark.id)}`
                     : '';
-                window.location.href = `quran.html?surah=${window.lastBookmark.surah}&page=${window.lastBookmark.page}${bookmarkQuery}`;
+                window.location.href = `/quran?surah=${window.lastBookmark.surah}&page=${window.lastBookmark.page}${bookmarkQuery}`;
             }
         }
 
@@ -436,7 +412,7 @@ function hexToRgb(hex) {
             if (window.lastBookmark) {
                 resumeReading();
             } else {
-                window.location.href = 'quran.html';
+                window.location.href = '/quran';
             }
         }
 
@@ -1202,7 +1178,7 @@ function hexToRgb(hex) {
                         <div class="mood-ayah-text">${verse.text}</div>
                         <div class="mood-ayah-ref">
                             <span>${verse.ref}</span>
-                            <a class="mood-ayah-link" href="quran.html?surah=${verse.surah}&ayah=${verse.ayah}">فتح الآية</a>
+                            <a class="mood-ayah-link" href="/quran?surah=${verse.surah}&ayah=${verse.ayah}">فتح الآية</a>
                         </div>
                     </div>
                 `).join('');
@@ -1304,9 +1280,12 @@ function hexToRgb(hex) {
             const today = log[localDateKey()] || {};
             const done = TRACKED_PRAYERS.filter(p => today[p.key]).length;
 
+            const focusedKey = document.activeElement && document.activeElement.closest
+                ? (document.activeElement.closest('.tracker-pill') || {}).dataset?.prayer
+                : null;
             row.innerHTML = TRACKED_PRAYERS.map(p => {
                 const isDone = Boolean(today[p.key]);
-                return `<button type="button" class="tracker-pill${isDone ? ' is-done' : ''}"
+                return `<button type="button" class="tracker-pill${isDone ? ' is-done' : ''}" data-prayer="${p.key}"
                     onclick="togglePrayerLogged('${p.key}')"
                     aria-pressed="${isDone}"
                     aria-label="${p.label}${isDone ? ' — تم' : ''}">
@@ -1314,6 +1293,11 @@ function hexToRgb(hex) {
                     <span>${p.label}</span>
                 </button>`;
             }).join('');
+
+            if (focusedKey) {
+                const again = row.querySelector(`[data-prayer="${focusedKey}"]`);
+                if (again) again.focus({ preventScroll: true });
+            }
 
             if (meta) meta.textContent = `${done} / ${TRACKED_PRAYERS.length}`;
 

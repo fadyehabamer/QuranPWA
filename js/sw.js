@@ -1,7 +1,7 @@
 importScripts('/js/notify-store.js');
 
-const CACHE_NAME = 'quran-app-v25';
-const OFFLINE_URL = '/offline.html';
+const CACHE_NAME = 'quran-app-v26';
+const OFFLINE_URL = '/offline';
 
 /* Surahs the reader has explicitly downloaded. Kept in its own cache so that:
      - the activate handler's "delete everything that isn't CACHE_NAME" sweep
@@ -13,22 +13,30 @@ const PRESERVED_CACHES = [CACHE_NAME, QURAN_OFFLINE_CACHE];
 // Long enough for a slow-but-working connection, short enough that a dead
 // one falls back to cache before the user gives up.
 const NAVIGATION_TIMEOUT_MS = 4000;
-const APP_SHELL_URLS = [
+/* Pages are precached under their extensionless URLs. The host serves
+   `/quran.html` as a 308 to `/quran`; caching the followed response under the
+   `.html` key stored a *redirected* response, which browsers refuse to hand to
+   a navigation request (redirect mode "manual") — so offline navigation to any
+   `.html` link failed with a network error. All in-app links are extensionless
+   now, and handleNavigationRequest maps either spelling onto these keys. */
+const PAGE_PATHS = [
   '/',
-  '/index.html',
-  '/offline.html',
-  '/quran.html',
-  '/khatma.html',
-  '/azkar.html',
-  '/masbaha.html',
-  '/settings.html',
-  '/bookmarks.html',
-  '/sunan.html',
-  '/prayer-times.html',
-  '/features.html',
-  '/home-more.html',
-  '/bio.html',
-  '/references.html',
+  '/offline',
+  '/quran',
+  '/khatma',
+  '/azkar',
+  '/masbaha',
+  '/settings',
+  '/bookmarks',
+  '/sunan',
+  '/prayer-times',
+  '/features',
+  '/home-more',
+  '/bio',
+  '/references'
+];
+const APP_SHELL_URLS = [
+  ...PAGE_PATHS,
   '/css/tokens.css',
   '/css/styles.css',
   '/css/components.css',
@@ -38,6 +46,8 @@ const APP_SHELL_URLS = [
   '/js/a11y.js',
   '/js/native-ui.js',
   '/css/page-styles/index.css',
+  '/css/page-styles/home.css',
+  '/css/page-styles/references.css',
   '/css/page-styles/quran.css',
   '/css/page-styles/khatma.css',
   '/css/page-styles/azkar.css',
@@ -107,7 +117,7 @@ self.addEventListener('install', event => {
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}`);
             }
-            await cache.put(request, response.clone());
+            await cache.put(request, await stripRedirect(response));
           } catch (error) {
             console.warn('[SW] Precache skip:', url, error && error.message ? error.message : error);
           }
@@ -166,23 +176,45 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  event.respondWith(staleWhileRevalidate(request));
+  event.respondWith(staleWhileRevalidate(request, event));
 });
 
-function getHtmlFallbackPath(pathname) {
-  if (!pathname || pathname === '/') {
-    return '/index.html';
-  }
-
-  if (pathname.endsWith('.html') || pathname.includes('.')) {
-    return pathname;
-  }
-
-  return `${pathname}.html`;
+/* Candidate cache keys for a navigation, most likely first. `/quran`,
+   `/quran.html` and `/quran/` all resolve to the same precached page. */
+function navigationFallbackPaths(pathname) {
+  const clean = String(pathname || '/')
+    .replace(/\/index\.html$/, '/')
+    .replace(/\.html$/, '')
+    .replace(/\/+$/, '') || '/';
+  const withExt = clean === '/' ? '/index.html' : `${clean}.html`;
+  return [clean, withExt];
 }
 
 function shouldCacheResponse(response) {
   return response && response.status === 200 && (response.type === 'basic' || response.type === 'cors');
+}
+
+/* A response that arrived via a redirect keeps `redirected: true` (and a
+   multi-entry URL list) inside the Cache. Serving such an entry to a
+   navigation request is rejected by the browser, so store a plain copy. */
+async function stripRedirect(response) {
+  if (!response.redirected) return response;
+  const body = await response.blob();
+  return new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers
+  });
+}
+
+/* Query strings are significant for API calls: aladhan's timings URL carries
+   latitude/longitude/method/school, so ignoring the search part returned
+   yesterday's *other location or method* for a whole day. Only same-origin
+   requests (where `?surah=2` style params never change the served file) match
+   loosely. */
+function matchOptionsFor(request) {
+  const sameOrigin = new URL(request.url).origin === self.location.origin;
+  return sameOrigin ? { ignoreSearch: true } : undefined;
 }
 
 async function updateCache(request, response) {
@@ -191,7 +223,7 @@ async function updateCache(request, response) {
   }
 
   const cache = await caches.open(CACHE_NAME);
-  await cache.put(request, response);
+  await cache.put(request, await stripRedirect(response));
 }
 
 // For content that never changes. Cache hit = instant and offline-capable;
@@ -199,7 +231,7 @@ async function updateCache(request, response) {
 async function cacheFirst(request) {
   // caches.match() with no cacheName searches every cache, so an explicitly
   // downloaded surah in QURAN_OFFLINE_CACHE is found here too.
-  const cachedResponse = await caches.match(request, { ignoreSearch: true });
+  const cachedResponse = await caches.match(request, matchOptionsFor(request));
   if (cachedResponse) {
     return cachedResponse;
   }
@@ -224,7 +256,7 @@ async function networkFirst(request) {
     await updateCache(request, networkResponse.clone());
     return networkResponse;
   } catch (_error) {
-    const cachedResponse = await caches.match(request, { ignoreSearch: true });
+    const cachedResponse = await caches.match(request, matchOptionsFor(request));
     if (cachedResponse) {
       return cachedResponse;
     }
@@ -236,8 +268,8 @@ async function networkFirst(request) {
   }
 }
 
-async function staleWhileRevalidate(request) {
-  const cachedResponse = await caches.match(request, { ignoreSearch: true });
+async function staleWhileRevalidate(request, event) {
+  const cachedResponse = await caches.match(request, matchOptionsFor(request));
 
   const networkPromise = fetch(request)
     .then(async networkResponse => {
@@ -247,6 +279,10 @@ async function staleWhileRevalidate(request) {
     .catch(() => null);
 
   if (cachedResponse) {
+    // Keep the worker alive until the background refresh lands; otherwise the
+    // browser may kill it right after respondWith() and the cache never
+    // updates.
+    if (event) event.waitUntil(networkPromise);
     return cachedResponse;
   }
 
@@ -286,10 +322,13 @@ async function handleNavigationRequest(request) {
     return networkResponse;
   } catch (_error) {
     const requestUrl = new URL(request.url);
-    const fallbackPath = getHtmlFallbackPath(requestUrl.pathname);
-    const cachedResponse = await caches.match(request, { ignoreSearch: true }) ||
-      await caches.match(fallbackPath) ||
-      await caches.match('/index.html');
+    let cachedResponse = await caches.match(request, { ignoreSearch: true });
+    if (!cachedResponse) {
+      for (const path of navigationFallbackPaths(requestUrl.pathname)) {
+        cachedResponse = await caches.match(path, { ignoreSearch: true });
+        if (cachedResponse) break;
+      }
+    }
 
     if (cachedResponse) {
       return cachedResponse;
@@ -435,9 +474,9 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
 
   const kind = event.notification.data && event.notification.data.kind;
-  const target = kind === 'prayer' || kind === 'iqama' ? '/prayer-times.html'
-    : kind === 'khatma' ? '/khatma.html'
-      : '/index.html';
+  const target = kind === 'prayer' || kind === 'iqama' ? '/prayer-times'
+    : kind === 'khatma' ? '/khatma'
+      : '/';
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {

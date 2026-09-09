@@ -180,8 +180,36 @@
     root.style.setProperty('--quran-font-family', font.stack);
   }
 
+  /* Font size / weight -----------------------------------------------------
+     Every page used to re-read these after common.js loaded, so the text
+     visibly jumped on each navigation. Applied here, before first paint. */
+  var FONT_SIZES = [12, 14, 16, 18, 20, 24, 28];
+  var FONT_WEIGHTS = [300, 400, 500, 600, 700];
+
+  function syncFontPrefs() {
+    var size = null, weight = null;
+    try {
+      size = localStorage.getItem('fontSize');
+      weight = localStorage.getItem('fontWeight');
+    } catch (_e) { /* storage blocked */ }
+
+    if (size !== null && size !== '') {
+      var base = FONT_SIZES[parseInt(size, 10)];
+      if (base) {
+        root.style.setProperty('--font-size-base', base + 'px');
+        root.style.setProperty('--font-size-ayah', (base + 8) + 'px');
+        root.style.setProperty('--font-size-header', (base + 6) + 'px');
+      }
+    }
+    if (weight !== null && weight !== '') {
+      var w = FONT_WEIGHTS[parseInt(weight, 10)];
+      if (w) root.style.setProperty('--font-weight', String(w));
+    }
+  }
+
   syncTheme();
   syncQuranFont();
+  syncFontPrefs();
 
   // In 'auto' the OS can flip the theme while the app is open.
   if (window.matchMedia) {
@@ -203,4 +231,5 @@
   window.resolveDarkMode = resolveDarkMode;
   window.QURAN_FONTS = QURAN_FONTS;
   window.syncQuranFont = syncQuranFont;
+  window.syncFontPrefs = syncFontPrefs;
 })();

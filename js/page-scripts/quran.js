@@ -32,7 +32,10 @@ let totalPages = 0;
 
         // Audio player state
         let currentAudio = null;
-        let currentReciter = 'ar.alafasy';
+        let currentReciter = localStorage.getItem('quranReciterV1') || 'ar.alafasy';
+        // Guards against two surah loads / tafsir loads racing each other.
+        let surahLoadToken = 0;
+        let tafsirLoadToken = 0;
         let isPlaying = false;
         let currentAyahIndex = 0;
         let allAyahs = [];
@@ -286,7 +289,7 @@ let totalPages = 0;
                 searchAbortController = null;
             }
 
-            if (query.length < 2) {
+            if (query.length < 3) {
                 latestSearchToken++;
                 clearInstantSearchResults();
                 return;
@@ -532,7 +535,7 @@ let totalPages = 0;
 
             const bookmarkCount = document.getElementById('quickBookmarkCount');
             if (bookmarkCount) {
-                try { bookmarkCount.textContent = String(getBookmarks().length); }
+                try { bookmarkCount.textContent = String(window.loadBookmarkLibrary ? window.loadBookmarkLibrary().length : 0); }
                 catch (_error) { bookmarkCount.textContent = '0'; }
             }
 
@@ -557,8 +560,9 @@ let totalPages = 0;
             const items = document.querySelectorAll('.surah-item');
 
             items.forEach(item => {
-                const name = normalizeArabicText(item.getAttribute('data-name'));
                 const number = item.getAttribute('data-number');
+                if (number === null) return; // juz / page buttons reuse the class
+                const name = normalizeArabicText(item.getAttribute('data-name'));
                 if (name.includes(searchTerm) || number.includes(searchTerm)) {
                     item.style.display = 'flex';
                 } else {
@@ -660,6 +664,7 @@ let totalPages = 0;
         function showSurahReader() {
             document.getElementById('surahListView').classList.remove('active');
             document.getElementById('surahReaderView').classList.add('active');
+            window.scrollTo(0, 0);
             document.body.classList.add('quran-reader-active');
             updateMushafFocusMode({ requestFullscreen: readerDisplayMode === READER_DISPLAY_MUSHAF });
             // Don't auto-show player anymore, let user toggle it
@@ -1065,12 +1070,31 @@ let totalPages = 0;
             const content = document.getElementById('quranContent');
             content.innerHTML = '<div class="loading"><div class="spinner"></div><p>جار التحميل...</p></div>';
 
+            // The previous surah's pages stayed live while the spinner showed,
+            // so a swipe or arrow key rendered the OLD surah over it and saved
+            // its page under the NEW surah's key. Clear them and lock the
+            // navigation until this load lands.
+            const loadToken = ++surahLoadToken;
+            pages = [];
+            textPages = [];
+            mushafPages = [];
+            currentSurahAyahs = [];
+            totalPages = 0;
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
+            if (prevBtn) prevBtn.disabled = true;
+            if (nextBtn) nextBtn.disabled = true;
+
             try {
                 const response = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/quran-uthmani`);
                 if (!response.ok) throw new Error('Failed to load surah');
 
                 const data = await response.json();
                 if (data.code !== 200 || !data.data?.ayahs) throw new Error('Invalid response');
+
+                // A newer load has started since (user tapped another surah);
+                // let that one paint.
+                if (loadToken !== surahLoadToken) return false;
 
                 const surah = surahInfo[surahNumber - 1];
                 const juz = surahToJuz[surahNumber];
@@ -1106,6 +1130,7 @@ let totalPages = 0;
                 return true;
             } catch (error) {
                 console.error('Error:', error);
+                if (loadToken !== surahLoadToken) return false;
                 // Drop the previous surah's pages. Without this the caller sees
                 // a non-zero totalPages and re-renders the OLD surah's text
                 // over this message — silently showing the wrong surah.
@@ -1452,6 +1477,7 @@ let totalPages = 0;
                 loadTafsirForCurrentPage();
                 return;
             }
+            tafsirLoadToken++; // drop any tafsir still in flight
 
             const page = pages[currentPageIndex];
             const content = document.getElementById('quranContent');
@@ -1484,6 +1510,7 @@ let totalPages = 0;
         }
 
         function nextPage() {
+            if (totalPages <= 0) return; // still loading
             if (currentPageIndex < totalPages - 1) {
                 currentPageIndex++;
                 renderCurrentPage();
@@ -1515,6 +1542,7 @@ let totalPages = 0;
         }
 
         function previousPage() {
+            if (totalPages <= 0) return; // still loading
             if (currentPageIndex > 0) {
                 currentPageIndex--;
                 renderCurrentPage();
@@ -1872,52 +1900,19 @@ let totalPages = 0;
         }
         // If no URL params, stay on surah list (don't auto-load bookmark)
 
+        const searchParam = (urlParams.get('search') || '').trim();
+        if (searchParam && !surahParam) {
+            const searchInput = document.getElementById('surahSearch');
+            if (searchInput) {
+                searchInput.value = searchParam;
+                onSearchInput();
+                searchInput.focus();
+            }
+        }
+
         // Load theme settings
         function loadThemeSettings() {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-            }
-
-            const color = localStorage.getItem('primaryColor');
-            if (color) {
-                const lightColor = adjustColor(color, 30);
-                document.documentElement.style.setProperty('--primary-color', color);
-                document.documentElement.style.setProperty('--primary-light', lightColor);
-
-                // Update shadow colors
-                const rgb = hexToRgb(color);
-                const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`;
-                const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
-                document.documentElement.style.setProperty('--shadow', shadowLight);
-                document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
-            } else if (darkMode) {
-                // Apply default dark mode shadow colors
-                const rgb = hexToRgb('#4CAF50');
-                const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`;
-                const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.45)`;
-                document.documentElement.style.setProperty('--shadow', shadowLight);
-                document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
-            }
-
-            const fontSize = localStorage.getItem('fontSize');
-            if (fontSize !== null) {
-                const fontSizes = [12, 14, 16, 18, 20, 24, 28];
-                const baseSize = fontSizes[parseInt(fontSize)] || 16;
-                document.documentElement.style.setProperty('--font-size-base', baseSize + 'px');
-                document.documentElement.style.setProperty('--font-size-ayah', (baseSize + 8) + 'px');
-                document.documentElement.style.setProperty('--font-size-header', (baseSize + 6) + 'px');
-            }
-
-
-            const fontWeight = localStorage.getItem('fontWeight');
-            if (fontWeight) {
-                const fontWeights = [300, 400, 500, 600, 700];
-                const weight = fontWeights[parseInt(fontWeight)];
-                document.documentElement.style.setProperty('--font-weight', weight);
-            }
+            /* handled by js/theme-preload.js */
         }
 
         function hexToRgb(hex) {
@@ -1946,12 +1941,6 @@ let totalPages = 0;
             loadThemeSettings();
         })();
 
-        // Register service worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                .then(reg => console.log('SW registered'))
-                .catch(err => console.error('SW registration failed', err));
-        }
 
         const contentArea = document.getElementById('quranContent');
         if (contentArea) {
@@ -2075,6 +2064,18 @@ let totalPages = 0;
 
             const ayah = allAyahs[currentAyahIndex];
             const audioUrl = `https://cdn.alquran.cloud/media/audio/ayah/${currentReciter}/${ayah.number}`;
+
+            // Playback spans the whole surah while the screen shows one page;
+            // turn the page when the recitation moves past it.
+            if (!tafsirMode) {
+                const ayahPageIndex = pages.findIndex(p => Array.isArray(p.ayahs) && p.ayahs.some(a => a.number === ayah.number));
+                if (ayahPageIndex >= 0 && ayahPageIndex !== currentPageIndex) {
+                    currentPageIndex = ayahPageIndex;
+                    renderCurrentPage();
+                    updateNavigation();
+                    scrollReaderToTop(true);
+                }
+            }
 
             // Highlight current ayah
             highlightAyah(ayah.number);
@@ -3480,6 +3481,7 @@ let totalPages = 0;
 
         function selectReciter(reciterCode, reciterName) {
             currentReciter = reciterCode;
+            try { localStorage.setItem('quranReciterV1', reciterCode); } catch (_error) { /* ignore */ }
 
             // Update button text
             const btnText = document.getElementById('currentReciterName');
@@ -3569,6 +3571,7 @@ let totalPages = 0;
 
             // Show loading
             content.innerHTML = '<div class="page-content"><div class="tafsir-loading"><div class="spinner"></div><p>جار تحميل التفسير...</p></div></div>';
+            const token = ++tafsirLoadToken;
 
             try {
                 const tafsirPromises = page.ayahs.map(async (ayah) => {
@@ -3596,6 +3599,8 @@ let totalPages = 0;
                 });
 
                 const tafsirData = await Promise.all(tafsirPromises);
+                // Page flipped or tafsir switched off while these were loading.
+                if (token !== tafsirLoadToken || !tafsirMode) return;
 
                 // Render tafsir
                 let html = '<div class="page-content">';
@@ -3639,6 +3644,7 @@ let totalPages = 0;
 
             } catch (error) {
                 console.error('Error loading tafsir:', error);
+                if (token !== tafsirLoadToken || !tafsirMode) return;
                 content.innerHTML = '<div class="page-content"><div class="tafsir-error">خطأ في تحميل التفسير. يرجى المحاولة مرة أخرى.</div></div>';
             }
         }

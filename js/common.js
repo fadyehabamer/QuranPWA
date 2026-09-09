@@ -96,34 +96,50 @@ function hideModal() {
     window.__swUpdateToastInitialized = true;
     let activeRegistration = null;
     let toastElement = null;
-    const SW_SIGNATURE_KEY = 'swScriptSignatureV1';
-    const SW_PENDING_SIGNATURE_KEY = 'swPendingSignatureV1';
     const SW_UPDATE_COOLDOWN_UNTIL_KEY = 'swUpdateCooldownUntilV1';
     const SW_UPDATE_COOLDOWN_MS = 10 * 60 * 1000;
+    // registration.update() re-fetches sw.js + js/sw.js. It used to run on
+    // load, pageshow, focus AND visibilitychange (all of which fire on a normal
+    // page open), plus a separate no-store fetch of /sw.js to hash it — the
+    // hash was of the one-line root loader, so it never changed and only cost
+    // requests. One check per interval is plenty; the browser also checks on
+    // its own at most every 24h.
+    const SW_UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+    const SW_LAST_CHECK_KEY = 'swLastUpdateCheckV1';
+
+    // A page opened with no controller is being installed for the first time.
+    // clients.claim() then fires controllerchange, and reloading on that
+    // restarted the app (and the onboarding wizard) in the user's face.
+    const hadControllerAtLoad = Boolean(navigator.serviceWorker.controller);
+
+    function readNumber(key) {
+        try {
+            const value = Number(localStorage.getItem(key));
+            return Number.isFinite(value) ? value : 0;
+        } catch (_error) {
+            return 0;
+        }
+    }
+
+    function writeNumber(key, value) {
+        try { localStorage.setItem(key, String(value)); } catch (_error) { /* storage blocked */ }
+    }
 
     function setUpdateToastCooldown() {
-        localStorage.setItem(SW_UPDATE_COOLDOWN_UNTIL_KEY, String(Date.now() + SW_UPDATE_COOLDOWN_MS));
+        writeNumber(SW_UPDATE_COOLDOWN_UNTIL_KEY, Date.now() + SW_UPDATE_COOLDOWN_MS);
     }
 
     function clearUpdateToastCooldown() {
-        localStorage.removeItem(SW_UPDATE_COOLDOWN_UNTIL_KEY);
+        try { localStorage.removeItem(SW_UPDATE_COOLDOWN_UNTIL_KEY); } catch (_error) { /* ignore */ }
     }
 
     function isUpdateToastInCooldown() {
-        const raw = localStorage.getItem(SW_UPDATE_COOLDOWN_UNTIL_KEY);
-        if (!raw) return false;
-
-        const until = Number(raw);
-        if (!Number.isFinite(until)) {
-            localStorage.removeItem(SW_UPDATE_COOLDOWN_UNTIL_KEY);
-            return false;
-        }
-
+        const until = readNumber(SW_UPDATE_COOLDOWN_UNTIL_KEY);
+        if (!until) return false;
         if (Date.now() >= until) {
-            localStorage.removeItem(SW_UPDATE_COOLDOWN_UNTIL_KEY);
+            clearUpdateToastCooldown();
             return false;
         }
-
         return true;
     }
 
@@ -200,6 +216,7 @@ function hideModal() {
 
         toastElement = document.createElement('div');
         toastElement.className = 'sw-update-toast';
+        toastElement.setAttribute('role', 'status');
         toastElement.innerHTML = `
             <div class="sw-update-title">إصدار جديد متاح</div>
             <div class="sw-update-text">تم تنزيل تحديث للتطبيق. حدّث الآن للحصول على أحدث المزايا والتحسينات.</div>
@@ -222,39 +239,15 @@ function hideModal() {
         }
 
         if (updateBtn) {
-            updateBtn.addEventListener('click', async () => {
-                try {
-                    const pendingSignature = localStorage.getItem(SW_PENDING_SIGNATURE_KEY);
-
-                    if (activeRegistration && typeof activeRegistration.update === 'function') {
-                        await activeRegistration.update();
-                    }
-
-                    if (activeRegistration && activeRegistration.waiting) {
-                        clearUpdateToastCooldown();
-                        activeRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                    } else {
-                        // If no waiting worker exists, treat the pending signature as applied
-                        // so we do not keep showing the same update toast after reload.
-                        if (pendingSignature) {
-                            localStorage.setItem(SW_SIGNATURE_KEY, pendingSignature);
-                            localStorage.removeItem(SW_PENDING_SIGNATURE_KEY);
-                        }
-                        clearUpdateToastCooldown();
-                        window.__swToastRefreshing = true;
-                        window.location.reload();
-                    }
-                } catch (_error) {
-                    const pendingSignature = localStorage.getItem(SW_PENDING_SIGNATURE_KEY);
-                    if (pendingSignature) {
-                        localStorage.setItem(SW_SIGNATURE_KEY, pendingSignature);
-                        localStorage.removeItem(SW_PENDING_SIGNATURE_KEY);
-                    }
-                    clearUpdateToastCooldown();
+            updateBtn.addEventListener('click', () => {
+                clearUpdateToastCooldown();
+                hideUpdateToast();
+                if (activeRegistration && activeRegistration.waiting) {
+                    // controllerchange reloads once the new worker takes over.
+                    activeRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                } else {
                     window.__swToastRefreshing = true;
                     window.location.reload();
-                } finally {
-                    hideUpdateToast();
                 }
             });
         }
@@ -306,16 +299,22 @@ function hideModal() {
         });
     }
 
-    function checkForWaitingUpdate() {
+    /**
+     * Ask the browser to look for a newer worker. Throttled across page loads
+     * so that navigating around the app does not re-fetch the worker scripts
+     * on every screen. `force` bypasses the throttle (settings page button).
+     */
+    function checkForUpdate(force) {
         return navigator.serviceWorker.getRegistration()
             .then((registration) => {
                 if (!registration) {
                     return null;
                 }
 
-                // Force the browser to check for a newer service worker in long-lived PWA sessions.
-                const doUpdate = typeof registration.update === 'function'
-                    ? registration.update().catch(() => { })
+                const now = Date.now();
+                const due = force || (now - readNumber(SW_LAST_CHECK_KEY)) > SW_UPDATE_CHECK_INTERVAL_MS;
+                const doUpdate = due && typeof registration.update === 'function'
+                    ? registration.update().then(() => writeNumber(SW_LAST_CHECK_KEY, now)).catch(() => { })
                     : Promise.resolve();
 
                 return doUpdate.then(() => {
@@ -328,81 +327,15 @@ function hideModal() {
             .catch(() => null);
     }
 
-    function hashString(input) {
-        let hash = 2166136261;
-        for (let i = 0; i < input.length; i++) {
-            hash ^= input.charCodeAt(i);
-            hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
-        }
-        return (hash >>> 0).toString(16);
-    }
-
-    function fetchServiceWorkerSignature() {
-        return fetch(`/sw.js?swv=${Date.now()}`, { cache: 'no-store' })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('SW signature fetch failed');
-                }
-                return response.text();
-            })
-            .then(scriptText => hashString(scriptText))
-            .catch(() => null);
-    }
-
-    function checkDeploymentSignature(registration) {
-        if (!navigator.serviceWorker.controller) {
-            return Promise.resolve(false);
-        }
-
-        return fetchServiceWorkerSignature().then((latestSignature) => {
-            if (!latestSignature) {
-                return false;
-            }
-
-            const knownSignature = localStorage.getItem(SW_SIGNATURE_KEY);
-            const pendingSignature = localStorage.getItem(SW_PENDING_SIGNATURE_KEY);
-
-            if (!knownSignature) {
-                localStorage.setItem(SW_SIGNATURE_KEY, latestSignature);
-                return false;
-            }
-
-            if (pendingSignature && pendingSignature === latestSignature) {
-                if (registration.waiting) {
-                    showUpdateToast(registration);
-                    return true;
-                }
-
-                // Signature already became current without an explicit waiting worker.
-                // Finalize state to avoid an endless "new update" loop.
-                localStorage.setItem(SW_SIGNATURE_KEY, latestSignature);
-                localStorage.removeItem(SW_PENDING_SIGNATURE_KEY);
-                return false;
-            }
-
-            if (latestSignature !== knownSignature) {
-                localStorage.setItem(SW_PENDING_SIGNATURE_KEY, latestSignature);
-                showUpdateToast(registration);
-                return true;
-            }
-
-            return false;
-        });
-    }
-
     function schedulePeriodicUpdateChecks() {
         if (window.__swUpdateCheckIntervalId) return;
 
         // Polling helps iOS standalone PWAs where update events can be delayed.
         window.__swUpdateCheckIntervalId = window.setInterval(() => {
             if (document.visibilityState === 'visible') {
-                checkForWaitingUpdate().then((registration) => {
-                    if (registration) {
-                        checkDeploymentSignature(registration);
-                    }
-                });
+                checkForUpdate(false);
             }
-        }, 120000);
+        }, SW_UPDATE_CHECK_INTERVAL_MS);
     }
 
     function clearPeriodicUpdateChecks() {
@@ -412,54 +345,20 @@ function hideModal() {
     }
 
     function bindNetworkAndLifecycleChecks() {
-        window.addEventListener('online', () => {
-            checkForWaitingUpdate().then((registration) => {
-                if (registration) {
-                    checkDeploymentSignature(registration);
-                }
-            });
-        });
+        window.addEventListener('online', () => { checkForUpdate(false); });
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 schedulePeriodicUpdateChecks();
-                checkForWaitingUpdate().then((registration) => {
-                    if (registration) {
-                        checkDeploymentSignature(registration);
-                    }
-                });
+                checkForUpdate(false);
             } else {
                 clearPeriodicUpdateChecks();
             }
         });
-
-        window.addEventListener('focus', () => {
-            checkForWaitingUpdate().then((registration) => {
-                if (registration) {
-                    checkDeploymentSignature(registration);
-                }
-            });
-        });
-
-        window.addEventListener('pageshow', () => {
-            checkForWaitingUpdate().then((registration) => {
-                if (registration) {
-                    checkDeploymentSignature(registration);
-                }
-            });
-        });
-
-        window.addEventListener('beforeunload', () => {
-            clearPeriodicUpdateChecks();
-        });
     }
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-        const pendingSignature = localStorage.getItem(SW_PENDING_SIGNATURE_KEY);
-        if (pendingSignature) {
-            localStorage.setItem(SW_SIGNATURE_KEY, pendingSignature);
-            localStorage.removeItem(SW_PENDING_SIGNATURE_KEY);
-        }
+        if (!hadControllerAtLoad) return;
         if (window.__swToastRefreshing) return;
         window.__swToastRefreshing = true;
         window.location.reload();
@@ -469,29 +368,19 @@ function hideModal() {
         .then(reg => reg || navigator.serviceWorker.register('/sw.js', { scope: '/' }))
         .then(registration => {
             watchRegistration(registration);
-            checkForWaitingUpdate().then(() => checkDeploymentSignature(registration));
-            if (registration && typeof registration.update === 'function') {
-                registration.update().catch(() => { });
-            }
+            checkForUpdate(false);
         })
         .catch(() => { });
 
     window.triggerSwUpdateCheck = async function triggerSwUpdateCheck() {
         try {
-            const registration = await checkForWaitingUpdate();
+            const registration = await checkForUpdate(true);
             if (!registration) {
                 return { success: false, reason: 'no-registration' };
             }
 
-            const byWaiting = Boolean(registration.waiting);
-            const bySignature = await checkDeploymentSignature(registration);
-            const hasUpdate = byWaiting || bySignature;
-
-            return {
-                success: true,
-                hasUpdate,
-                waiting: Boolean(registration.waiting)
-            };
+            const waiting = Boolean(registration.waiting);
+            return { success: true, hasUpdate: waiting, waiting };
         } catch (_error) {
             return { success: false, reason: 'check-failed' };
         }
@@ -1325,17 +1214,17 @@ function loadVisitorCount() {
 // `group` drives the sidebar's sections; items without one are ungrouped.
 const APP_NAV_ITEMS = [
     { key: 'home', href: '/', label: 'الرئيسية', icon: 'bi-house-fill', group: 'main', bottomLabel: 'الرئيسية', bottomIcon: 'bi-house-fill' },
-    { key: 'quran', href: 'quran.html', label: 'القرآن الكريم', icon: 'bi-book-fill', group: 'read', bottomLabel: 'القرآن', bottomIcon: 'bi-book-fill' },
-    { key: 'khatma', href: 'khatma.html', label: 'مركز الختمة', icon: 'bi-journal-check', group: 'read' },
-    { key: 'bookmarks', href: 'bookmarks.html', label: 'المواضع المحفوظة', icon: 'bi-bookmark-fill', group: 'read' },
-    { key: 'azkar', href: 'azkar.html', label: 'الأذكار', icon: 'bi-moon-stars-fill', group: 'worship', bottomLabel: 'الأذكار', bottomIcon: 'bi-moon-stars-fill' },
-    { key: 'masbaha', href: 'masbaha.html', label: 'المسبحة', icon: 'bi-circle-fill', group: 'worship', bottomLabel: 'المسبحة', bottomIcon: 'bi-circle-fill' },
-    { key: 'prayer', href: 'prayer-times.html', label: 'مواقيت الصلاة', icon: 'bi-clock-fill', group: 'worship', bottomLabel: 'الصلاة', bottomIcon: 'bi-clock-fill' },
-    { key: 'sunan', href: 'sunan.html', label: 'سنن النبي', icon: 'bi-stars', group: 'worship' },
-    { key: 'features', href: 'features.html', label: 'كل الميزات', icon: 'bi-grid-fill', group: 'app' },
-    { key: 'settings', href: 'settings.html', label: 'الإعدادات', icon: 'bi-gear-fill', group: 'app', bottomLabel: 'الإعدادات', bottomIcon: 'bi-gear-fill' },
-    { key: 'references', href: 'references.html', label: 'المصادر والمراجع', icon: 'bi-link-45deg', group: 'app' },
-    { key: 'bio', href: 'bio.html', label: 'عن المطور', icon: 'bi-person-fill', group: 'app' }
+    { key: 'quran', href: '/quran', label: 'القرآن الكريم', icon: 'bi-book-fill', group: 'read', bottomLabel: 'القرآن', bottomIcon: 'bi-book-fill' },
+    { key: 'khatma', href: '/khatma', label: 'مركز الختمة', icon: 'bi-journal-check', group: 'read' },
+    { key: 'bookmarks', href: '/bookmarks', label: 'المواضع المحفوظة', icon: 'bi-bookmark-fill', group: 'read' },
+    { key: 'azkar', href: '/azkar', label: 'الأذكار', icon: 'bi-moon-stars-fill', group: 'worship', bottomLabel: 'الأذكار', bottomIcon: 'bi-moon-stars-fill' },
+    { key: 'masbaha', href: '/masbaha', label: 'المسبحة', icon: 'bi-circle-fill', group: 'worship', bottomLabel: 'المسبحة', bottomIcon: 'bi-circle-fill' },
+    { key: 'prayer', href: '/prayer-times', label: 'مواقيت الصلاة', icon: 'bi-clock-fill', group: 'worship', bottomLabel: 'الصلاة', bottomIcon: 'bi-clock-fill' },
+    { key: 'sunan', href: '/sunan', label: 'سنن النبي', icon: 'bi-stars', group: 'worship' },
+    { key: 'features', href: '/features', label: 'كل الميزات', icon: 'bi-grid-fill', group: 'app' },
+    { key: 'settings', href: '/settings', label: 'الإعدادات', icon: 'bi-gear-fill', group: 'app', bottomLabel: 'الإعدادات', bottomIcon: 'bi-gear-fill' },
+    { key: 'references', href: '/references', label: 'المصادر والمراجع', icon: 'bi-link-45deg', group: 'app' },
+    { key: 'bio', href: '/bio', label: 'عن المطور', icon: 'bi-person-fill', group: 'app' }
 ];
 
 const APP_NAV_GROUPS = [
@@ -1364,21 +1253,13 @@ function getNavKeyFromPath(pathname) {
         .split('?')[0]
         .toLowerCase();
 
-    if (!path || path === '/' || path.endsWith('/index.html') || path.endsWith('/home-more.html')) {
-        return 'home';
-    }
-    if (path.endsWith('/quran.html')) return 'quran';
-    if (path.endsWith('/khatma.html') || path.endsWith('/khatma')) return 'khatma';
-    if (path.endsWith('/bookmarks.html')) return 'bookmarks';
-    if (path.endsWith('/azkar.html')) return 'azkar';
-    if (path.endsWith('/masbaha.html')) return 'masbaha';
-    if (path.endsWith('/sunan.html')) return 'sunan';
-    if (path.endsWith('/prayer-times.html')) return 'prayer';
-    if (path.endsWith('/features.html')) return 'features';
-    if (path.endsWith('/bio.html')) return 'bio';
-    if (path.endsWith('/references.html')) return 'references';
-    if (path.endsWith('/settings.html')) return 'settings';
-    return 'home';
+    // The host serves pages extensionless (`/quran`), so match on the last
+    // path segment with any `.html` stripped rather than on the suffix — the
+    // old suffix checks only ever matched in local file-based testing.
+    const last = path.replace(/\/+$/, '').split('/').pop().replace(/\.html$/, '');
+    if (!last || last === 'index' || last === 'home-more') return 'home';
+    const key = normalizeNavKey(last);
+    return APP_NAV_ITEMS.some(item => item.key === key) ? key : 'home';
 }
 
 function resolveNavActiveKey(preferredKey) {
@@ -1474,7 +1355,7 @@ function buildHeaderMarkup(opts) {
         ? `<button class="header-back-btn" onclick="window.location.href='${opts.backHref}'" aria-label="رجوع"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>`
         : '';
     const settingsBtn = opts.showSettings
-        ? `<button class="settings-btn" onclick="window.location.href='settings.html'" aria-label="الإعدادات"><i class="bi bi-gear-fill" aria-hidden="true"></i></button>`
+        ? `<button class="settings-btn" onclick="window.location.href='/settings'" aria-label="الإعدادات"><i class="bi bi-gear-fill" aria-hidden="true"></i></button>`
         : '';
 
     return `
@@ -1642,10 +1523,16 @@ if (window.customElements && !customElements.get('app-sidebar')) {
             meta.name = 'theme-color';
             document.head.appendChild(meta);
         }
+        // The header is a translucent bar over the page background, so the OS
+        // chrome should take the background colour in both themes. Painting
+        // the accent there in light mode put a green status bar over an
+        // off-white app bar.
         const styles = getComputedStyle(document.documentElement);
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const color = (isDark ? styles.getPropertyValue('--bg-color') : styles.getPropertyValue('--primary-color')).trim();
+        const color = styles.getPropertyValue('--bg-color').trim();
         if (color) meta.setAttribute('content', color);
+        // The static tags carry a `media` attribute each; the one we update
+        // must apply unconditionally or the other keeps winning.
+        meta.removeAttribute('media');
     }
 
     function onReady() {
@@ -1670,14 +1557,18 @@ if (window.customElements && !customElements.get('app-sidebar')) {
 // Theme & Settings Management
 function toggleTheme() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    // `themeMode` is what theme-preload.js reads first; writing only the
+    // legacy `darkMode` flag meant a toggle was reverted on the next page.
     if (isDark) {
         document.documentElement.removeAttribute('data-theme');
         document.documentElement.style.colorScheme = 'light';
         localStorage.setItem('darkMode', 'false');
+        localStorage.setItem('themeMode', 'light');
     } else {
         document.documentElement.setAttribute('data-theme', 'dark');
         document.documentElement.style.colorScheme = 'dark';
         localStorage.setItem('darkMode', 'true');
+        localStorage.setItem('themeMode', 'dark');
     }
 
     // A custom accent is tuned against the active theme (dark accents get
@@ -1782,13 +1673,23 @@ function normalizeBookmarkEntry(bookmark, index = 0) {
     };
 }
 
+// localStorage writes are synchronous and these run on hot paths (every
+// reader page flip, every keystroke in the bookmark search), so only touch
+// storage when the serialised value actually differs.
+function writeStorageIfChanged(key, value) {
+    const serialized = JSON.stringify(value);
+    if (localStorage.getItem(key) !== serialized) {
+        localStorage.setItem(key, serialized);
+    }
+}
+
 function saveBookmarkFolders(folders) {
     const cleaned = Array.from(new Set((folders || [])
         .map(folder => String(folder || '').trim())
         .filter(Boolean)
     ));
 
-    localStorage.setItem(APP_STORAGE_KEYS.bookmarkFolders, JSON.stringify(cleaned));
+    writeStorageIfChanged(APP_STORAGE_KEYS.bookmarkFolders, cleaned);
     return cleaned;
 }
 
@@ -1805,7 +1706,7 @@ function loadBookmarkLibrary() {
         return true;
     });
 
-    localStorage.setItem(APP_STORAGE_KEYS.bookmarks, JSON.stringify(uniqueBookmarks));
+    writeStorageIfChanged(APP_STORAGE_KEYS.bookmarks, uniqueBookmarks);
 
     // Sync known folders from bookmarks.
     const storedFolders = safeParseJSON(localStorage.getItem(APP_STORAGE_KEYS.bookmarkFolders), []);
@@ -1973,7 +1874,7 @@ function loadHabitLogs() {
         logs[habit] = Array.from(new Set(days.filter(isValidIsoDate))).sort();
     });
 
-    localStorage.setItem(APP_STORAGE_KEYS.habitLogs, JSON.stringify(logs));
+    writeStorageIfChanged(APP_STORAGE_KEYS.habitLogs, logs);
     return logs;
 }
 
@@ -2116,7 +2017,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') {
                 const query = e.target.value.trim();
                 if (query) {
-                    location.href = `quran.html?search=${encodeURIComponent(query)}`;
+                    location.href = `/quran?search=${encodeURIComponent(query)}`;
                 }
             }
         });
@@ -2365,7 +2266,7 @@ async function requestUserLocation() {
                         <i class="bi bi-geo-alt-fill"></i>
                         إعادة المحاولة
                     </button>
-                    <button class="detect-location-btn" style="margin-top:8px" onclick="location.href='prayer-times.html'">
+                    <button class="detect-location-btn" style="margin-top:8px" onclick="location.href='/prayer-times'">
                         <i class="bi bi-globe2"></i>
                         اختيار الدولة يدوياً
                     </button>

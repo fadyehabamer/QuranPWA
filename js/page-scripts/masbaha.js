@@ -57,8 +57,42 @@ function updateTodayCount(delta) {
     const todayKey = getTodayKey();
     const current = dailyCounts[todayKey] || 0;
     dailyCounts[todayKey] = Math.max(0, current + delta);
-    localStorage.setItem(DAILY_COUNTS_KEY, JSON.stringify(dailyCounts));
+    queuePersist();
 }
+
+// Keep the per-day history bounded; it grew by one key per day forever and
+// was re-serialised on every tap.
+function pruneDailyCounts() {
+    const keys = Object.keys(dailyCounts).sort();
+    while (keys.length > 60) {
+        delete dailyCounts[keys.shift()];
+    }
+}
+
+let persistTimer = null;
+let habitRecordedThisSession = false;
+
+function flushPersist() {
+    persistTimer = null;
+    localStorage.setItem(DAILY_COUNTS_KEY, JSON.stringify(dailyCounts));
+    localStorage.setItem('masbahaLifetime', lifetimeCount);
+    localStorage.setItem(CURRENT_STATE_KEY, JSON.stringify({
+        count,
+        target,
+        selectedDhikrKey,
+        selectedDhikrLabel
+    }));
+}
+
+function queuePersist() {
+    if (persistTimer) return;
+    persistTimer = setTimeout(flushPersist, 250);
+}
+
+window.addEventListener('pagehide', () => { if (persistTimer) { clearTimeout(persistTimer); flushPersist(); } });
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && persistTimer) { clearTimeout(persistTimer); flushPersist(); }
+});
 
 function initAudio() {
     if (!audioContext) {
@@ -141,7 +175,7 @@ function triggerVibration(duration = 30) {
 }
 
 function saveLifetimeCount() {
-    localStorage.setItem('masbahaLifetime', lifetimeCount);
+    queuePersist();
     const lifetimeCounter = document.querySelector('#lifetimeCounter span');
     if (lifetimeCounter) {
         lifetimeCounter.textContent = `مجموع التسبيحات: ${lifetimeCount}`;
@@ -222,34 +256,45 @@ function updateDisplay() {
     syncQuickTapVisibility();
 }
 
+// Observed once instead of measured on every tap (which forced a layout
+// right after the DOM writes above).
+let quickTapObserver = null;
+
 function syncQuickTapVisibility() {
     const mainButton = document.getElementById('tapButton');
     const quickButton = document.getElementById('quickTapFab');
     if (!mainButton || !quickButton) return;
 
-    const rect = mainButton.getBoundingClientRect();
-    const visibleTop = rect.top < (window.innerHeight - 90);
-    const visibleBottom = rect.bottom > 80;
-    const isMainVisible = visibleTop && visibleBottom;
+    if (quickTapObserver || !('IntersectionObserver' in window)) {
+        if (!quickTapObserver) {
+            const rect = mainButton.getBoundingClientRect();
+            quickButton.classList.toggle('hidden', rect.top < (window.innerHeight - 90) && rect.bottom > 80);
+        }
+        return;
+    }
 
-    quickButton.classList.toggle('hidden', isMainVisible);
+    quickTapObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            quickButton.classList.toggle('hidden', entry.isIntersecting);
+        });
+    }, { rootMargin: '-80px 0px -90px 0px', threshold: 0.2 });
+    quickTapObserver.observe(mainButton);
 }
 
 function persistCurrentState() {
-    localStorage.setItem(CURRENT_STATE_KEY, JSON.stringify({
-        count,
-        target,
-        selectedDhikrKey,
-        selectedDhikrLabel
-    }));
+    queuePersist();
 }
+
+let rippleTimer = null;
 
 function animateTapButton() {
     const button = document.getElementById('tapButton');
     if (!button) return;
+    // Restart the animation without a forced synchronous layout.
     button.classList.remove('ripple');
-    void button.offsetWidth;
-    button.classList.add('ripple');
+    clearTimeout(rippleTimer);
+    requestAnimationFrame(() => button.classList.add('ripple'));
+    rippleTimer = setTimeout(() => button.classList.remove('ripple'), 400);
 }
 
 function applyIncrement(amount = 1, options = {}) {
@@ -270,7 +315,13 @@ function applyIncrement(amount = 1, options = {}) {
     }
 
     const appliedDelta = nextCount - previousCount;
-    if (appliedDelta <= 0) return;
+    if (appliedDelta <= 0) {
+        // Target already reached: say so rather than swallowing the tap.
+        if (animate) animateTapButton();
+        if (vibrate) triggerVibration(15);
+        if (window.A11y) window.A11y.announce(`اكتمل الهدف ${target}. اضغط إعادة التعيين للبدء من جديد.`);
+        return;
+    }
 
     count = nextCount;
     lifetimeCount += appliedDelta;
@@ -293,8 +344,15 @@ function applyIncrement(amount = 1, options = {}) {
         triggerVibration();
     }
 
-    if (recordHabit && window.recordHabitActivity) {
+    if (recordHabit && window.recordHabitActivity && !habitRecordedThisSession) {
+        habitRecordedThisSession = true;
         window.recordHabitActivity('masbaha');
+    }
+
+    // The counter is no longer an aria-live region (five taps a second queued
+    // dozens of announcements); announce round numbers instead.
+    if (window.A11y && (count % 10 === 0 || count === target)) {
+        window.A11y.announce(target > 0 ? `${count} من ${target}` : String(count));
     }
 
     if (target > 0 && previousCount < target && count >= target) {
@@ -312,8 +370,15 @@ function applyIncrement(amount = 1, options = {}) {
             confirmText: 'نعم',
             cancelText: 'لا',
             onConfirm: () => {
-                saveCount();
-                reset();
+                const saved = count;
+                saveCount({ silent: true });
+                performReset();
+                showModal({
+                    type: 'success',
+                    icon: '',
+                    title: 'تم الحفظ',
+                    message: `حُفظت ${saved} تسبيحة في السجل، وبدأ عدّ جديد.`
+                });
             }
         });
     }
@@ -352,7 +417,16 @@ function undoLastIncrement() {
     persistCurrentState();
 }
 
+function performReset() {
+    count = 0;
+    lastIncrementAmount = 0;
+    stopAutoCount();
+    updateDisplay();
+    persistCurrentState();
+}
+
 function reset() {
+    if (count === 0) return;
     showModal({
         type: 'warning',
         icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
@@ -360,13 +434,7 @@ function reset() {
         message: 'هل تريد إعادة تعيين العداد؟',
         confirmText: 'نعم',
         cancelText: 'لا',
-        onConfirm: () => {
-            count = 0;
-            lastIncrementAmount = 0;
-            stopAutoCount();
-            updateDisplay();
-            persistCurrentState();
-        }
+        onConfirm: performReset
     });
 }
 
@@ -379,16 +447,17 @@ function setTarget(value) {
         count = target;
     }
 
-    document.querySelectorAll('.preset-btn').forEach((button) => {
-        if (parseInt(button.textContent, 10) === numericValue) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
-    });
-
+    highlightPresetForTarget();
     updateDisplay();
     persistCurrentState();
+}
+
+function highlightPresetForTarget() {
+    document.querySelectorAll('.preset-btn').forEach((button) => {
+        const isActive = parseInt(button.textContent, 10) === target;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+    });
 }
 
 function setCustomTarget() {
@@ -401,9 +470,7 @@ function setCustomTarget() {
         count = target;
     }
 
-    document.querySelectorAll('.preset-btn').forEach((button) => {
-        button.classList.remove('active');
-    });
+    highlightPresetForTarget();
 
     input.value = '';
     updateDisplay();
@@ -420,8 +487,24 @@ function setActiveDhikrChip(value) {
     });
 }
 
-function selectDhikr(value, element) {
+function selectDhikr(value, element, options = {}) {
     const config = dhikrConfig[value] || dhikrConfig.custom;
+    if (value === selectedDhikrKey) return;
+
+    // A brush against a neighbouring chip used to wipe 80/100 with no way back.
+    if (count > 0 && value !== 'custom' && !options.confirmed) {
+        showModal({
+            type: 'warning',
+            icon: '<i class="bi bi-exclamation-triangle-fill"></i>',
+            title: 'تغيير الذكر',
+            message: `سيبدأ عدّ جديد لـ «${config.label}» ويُفقد العدّ الحالي (${count}). هل تريد المتابعة؟`,
+            confirmText: 'نعم',
+            cancelText: 'لا',
+            onConfirm: () => selectDhikr(value, element, { confirmed: true })
+        });
+        return;
+    }
+
     selectedDhikrKey = value;
     selectedDhikrLabel = config.label;
 
@@ -497,19 +580,21 @@ function toggleAutoCount() {
     }
 }
 
+// The button labelled "الصوت" only ever opened the type picker and could
+// switch sound ON but never off. It now toggles mute; the picker is shown
+// while sound is on.
 function toggleSoundMenu() {
+    toggleSound();
+    syncSoundMenu();
+}
+
+function syncSoundMenu() {
     const selector = document.getElementById('soundSelector');
-    if (!selector) return;
-
-    const isOpen = selector.classList.toggle('show');
-
     const toggle = document.getElementById('soundToggle');
+    if (selector) selector.classList.toggle('show', soundEnabled);
     if (toggle) {
-        toggle.setAttribute('aria-expanded', String(isOpen));
-    }
-
-    if (isOpen && !soundEnabled) {
-        toggleSound();
+        toggle.setAttribute('aria-expanded', String(soundEnabled));
+        toggle.setAttribute('aria-pressed', String(soundEnabled));
     }
 }
 
@@ -539,16 +624,6 @@ function changeSound(value) {
     selectedSound = value;
     localStorage.setItem('masbahaSoundType', value);
     playClickSound();
-
-    const selector = document.getElementById('soundSelector');
-    if (selector) {
-        selector.classList.remove('show');
-    }
-
-    const toggle = document.getElementById('soundToggle');
-    if (toggle) {
-        toggle.setAttribute('aria-expanded', 'false');
-    }
 }
 
 function toggleVibration() {
@@ -563,7 +638,7 @@ function toggleVibration() {
     localStorage.setItem('masbahaVibration', String(vibrationEnabled));
 }
 
-function saveCount() {
+function saveCount(options = {}) {
     if (count === 0) {
         showModal({
             type: 'info',
@@ -598,6 +673,7 @@ function saveCount() {
     localStorage.setItem('masbahaHistory', JSON.stringify(history));
     renderHistory();
 
+    if (options.silent) return;
     showModal({
         type: 'success',
         icon: '',
@@ -690,6 +766,7 @@ function loadCurrentSessionState() {
         selectedDhikrKey = parsedState.selectedDhikrKey || 'custom';
         selectedDhikrLabel = parsedState.selectedDhikrLabel || (dhikrConfig[selectedDhikrKey]?.label || 'مخصص');
         setActiveDhikrChip(selectedDhikrKey);
+        highlightPresetForTarget();
     } catch (error) {
         console.error('Error loading masbaha session state:', error);
     }
@@ -704,6 +781,7 @@ function loadData() {
     const soundToggle = document.getElementById('soundToggle');
     if (soundToggle) soundToggle.classList.toggle('active', soundEnabled);
     setSoundIcon(soundEnabled);
+    syncSoundMenu();
 
     const savedSoundType = localStorage.getItem('masbahaSoundType');
     if (savedSoundType) {
@@ -749,6 +827,18 @@ function loadData() {
         } catch (error) {
             dailyCounts = {};
         }
+    }
+    pruneDailyCounts();
+
+    // Enter in the custom-target field saves it (there is no <form>).
+    const customInput = document.getElementById('customTargetInput');
+    if (customInput) {
+        customInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                setCustomTarget();
+            }
+        });
     }
 
     loadCurrentSessionState();
@@ -833,53 +923,7 @@ function hexToRgb(hex) {
 loadData();
 updateDisplay();
 
-// Load theme settings
-(function () {
-    const darkMode = localStorage.getItem('darkMode') === 'true';
-    if (darkMode) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-    }
+/* Theme, accent colour and font preferences are applied before first paint by
+   js/theme-preload.js. The block that used to live here re-set --primary-color
+   to the raw stored hex, undoing the contrast tuning. */
 
-    const color = localStorage.getItem('primaryColor');
-    if (color) {
-        const num = parseInt(color.replace('#', ''), 16);
-        const amount = Math.round(2.55 * 30);
-
-        const red = (num >> 16) + amount;
-        const green = ((num >> 8) & 0x00FF) + amount;
-        const blue = (num & 0x0000FF) + amount;
-
-        const lightColor = '#'
-            + (
-                0x1000000
-                + (red < 255 ? (red < 1 ? 0 : red) : 255) * 0x10000
-                + (green < 255 ? (green < 1 ? 0 : green) : 255) * 0x100
-                + (blue < 255 ? (blue < 1 ? 0 : blue) : 255)
-            )
-                .toString(16)
-                .slice(1);
-
-        document.documentElement.style.setProperty('--primary-color', color);
-        document.documentElement.style.setProperty('--primary-light', lightColor);
-
-        const rgb = hexToRgb(color);
-        const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`;
-        const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
-
-        document.documentElement.style.setProperty('--shadow', shadowLight);
-        document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
-    }
-
-    const fontSize = localStorage.getItem('fontSize');
-    if (fontSize !== null) {
-        const fontSizes = [12, 14, 16, 18, 20, 24, 28];
-        const baseSize = fontSizes[parseInt(fontSize, 10)] || 16;
-        document.documentElement.style.setProperty('--font-size-base', `${baseSize}px`);
-        document.documentElement.style.setProperty('--font-size-ayah', `${baseSize + 8}px`);
-        document.documentElement.style.setProperty('--font-size-header', `${baseSize + 6}px`);
-    }
-})();
-
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' });
-}

@@ -34,7 +34,7 @@
       "name": "القرآن الكريم",
       "short_name": "القرآن",
       "description": "فتح صفحة قراءة القرآن",
-      "url": "/quran.html",
+      "url": "/quran",
       "icons": [
         {
           "src": "/assets/icons/icon-192.png",
@@ -47,7 +47,7 @@
       "name": "مواقيت الصلاة",
       "short_name": "الصلاة",
       "description": "فتح مواقيت الصلاة والقبلة",
-      "url": "/prayer-times.html",
+      "url": "/prayer-times",
       "icons": [
         {
           "src": "/assets/icons/icon-192.png",
@@ -60,7 +60,7 @@
       "name": "الأذكار",
       "short_name": "الأذكار",
       "description": "فتح صفحة الأذكار",
-      "url": "/azkar.html",
+      "url": "/azkar",
       "icons": [
         {
           "src": "/assets/icons/icon-192.png",
@@ -73,7 +73,7 @@
       "name": "المسبحة",
       "short_name": "المسبحة",
       "description": "فتح المسبحة الإلكترونية",
-      "url": "/masbaha.html",
+      "url": "/masbaha",
       "icons": [
         {
           "src": "/assets/icons/icon-192.png",

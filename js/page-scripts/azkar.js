@@ -471,16 +471,17 @@ function showCategory(categoryKey) {
     document.getElementById('azkarList').classList.add('active');
     document.getElementById('headerTitle').textContent = azkarData[categoryKey].name;
     document.getElementById('backBtn').style.display = 'flex';
-    document.getElementById('menuBtn').style.display = 'none';
+    setMenuButtonVisible(false);
 
     setViewModeButtonVisibility(true);
     updateViewModeButton();
     renderCurrentCategoryView();
+    enterDrillDown(categoryKey);
 }
 
-function showFavorites() {
+function showFavorites(keepIndex) {
     currentCategory = 'favorites';
-    currentSwipeIndex = 0;
+    if (!keepIndex) currentSwipeIndex = 0;
 
     document.getElementById('categoryList').style.display = 'none';
 
@@ -488,11 +489,12 @@ function showFavorites() {
     document.getElementById('azkarList').classList.add('active');
     document.getElementById('headerTitle').textContent = 'المفضلة';
     document.getElementById('backBtn').style.display = 'flex';
-    document.getElementById('menuBtn').style.display = 'none';
+    setMenuButtonVisible(false);
 
     setViewModeButtonVisibility(true);
     updateViewModeButton();
     renderCurrentCategoryView();
+    enterDrillDown('favorites');
 }
 
 function showCategories() {
@@ -505,11 +507,47 @@ function showCategories() {
     document.getElementById('azkarList').classList.remove('active');
     document.getElementById('headerTitle').textContent = 'الأذكار';
     document.getElementById('backBtn').style.display = 'none';
-    document.getElementById('menuBtn').style.display = 'flex';
+    setMenuButtonVisible(true);
 
     setViewModeButtonVisibility(false);
     renderCategories();
+    leaveDrillDown();
 }
+
+// The shared header's drawer toggle carries a class, not an id.
+function setMenuButtonVisible(visible) {
+    const btn = document.querySelector('.app-header .menu-toggle-btn');
+    if (btn) btn.style.display = visible ? '' : 'none';
+}
+
+/* Drill-down views live on the same URL, so the hardware/browser Back button
+   used to leave the page instead of returning to the category grid. Push a
+   history entry on the way in and pop back to the grid on the way out. */
+let drillDownDepth = 0;
+
+function enterDrillDown(key) {
+    window.scrollTo(0, 0);
+    if (history.state && history.state.azkarView) {
+        history.replaceState({ azkarView: key }, '');
+        return;
+    }
+    history.pushState({ azkarView: key }, '');
+    drillDownDepth = 1;
+}
+
+function leaveDrillDown() {
+    window.scrollTo(0, 0);
+    if (drillDownDepth && history.state && history.state.azkarView) {
+        drillDownDepth = 0;
+        history.back();
+    }
+}
+
+window.addEventListener('popstate', () => {
+    if (!currentCategory) return;
+    drillDownDepth = 0;
+    showCategories();
+});
 
 function getTargetCount(repeatText) {
     if (!repeatText) return 1;
@@ -604,7 +642,8 @@ function removeFromFavorites(index) {
         currentSwipeIndex = Math.max(0, favorites.length - 1);
     }
 
-    showFavorites();
+    // Stay on the neighbouring card instead of jumping back to the first.
+    showFavorites(true);
 }
 
 function getCurrentItemsLength() {
@@ -681,16 +720,9 @@ loadUserData();
 updateViewModeButton();
 loadAzkarData();
 
-// Load theme settings
+// Font size (theme and accent are applied by theme-preload.js before paint;
+// re-setting --primary-color here overrode its contrast-tuned value).
 (function () {
-    const darkMode = localStorage.getItem('darkMode') === 'true';
-    if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
-
-    const color = localStorage.getItem('primaryColor');
-    if (color) {
-        document.documentElement.style.setProperty('--primary-color', color);
-    }
-
     const fontSize = localStorage.getItem('fontSize');
     if (fontSize !== null) {
         const fontSizes = [12, 14, 16, 18, 20, 24, 28];
@@ -699,7 +731,3 @@ loadAzkarData();
         document.documentElement.style.setProperty('--font-size-ayah', `${baseSize + 8}px`);
     }
 })();
-
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' });
-}

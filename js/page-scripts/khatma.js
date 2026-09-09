@@ -7,46 +7,10 @@ function hexToRgb(hex) {
     } : { r: 27, g: 94, b: 32 };
 }
 
-(function applyKhatmaThemeSettings() {
-    const darkMode = localStorage.getItem('darkMode') === 'true';
-    if (darkMode) document.documentElement.setAttribute('data-theme', 'dark');
+/* Theme, accent colour and font preferences are applied before first paint by
+   js/theme-preload.js. The block that used to live here re-set --primary-color
+   to the raw stored hex, undoing the contrast tuning. */
 
-    const color = localStorage.getItem('primaryColor');
-    const rgb = hexToRgb(color || '#1B5E20');
-    document.documentElement.style.setProperty('--primary-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
-
-    if (color) {
-        const num = parseInt(color.replace('#', ''), 16);
-        const amt = Math.round(2.55 * 30);
-        const R = (num >> 16) + amt;
-        const G = (num >> 8 & 0x00FF) + amt;
-        const B = (num & 0x0000FF) + amt;
-        const lightColor = '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-            (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-            (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
-
-        document.documentElement.style.setProperty('--primary-color', color);
-        document.documentElement.style.setProperty('--primary-light', lightColor);
-
-        const shadowLight = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.25 : 0.15})`;
-        const shadowHeavy = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${darkMode ? 0.45 : 0.35})`;
-        document.documentElement.style.setProperty('--shadow', shadowLight);
-        document.documentElement.style.setProperty('--shadow-heavy', shadowHeavy);
-    }
-
-    const fontSize = localStorage.getItem('fontSize');
-    if (fontSize !== null) {
-        const fontSizes = [12, 14, 16, 18, 20, 24, 28];
-        const baseSize = fontSizes[parseInt(fontSize, 10)] || 16;
-        document.documentElement.style.setProperty('--font-size-base', `${baseSize}px`);
-        document.documentElement.style.setProperty('--font-size-ayah', `${baseSize + 8}px`);
-        document.documentElement.style.setProperty('--font-size-header', `${baseSize + 6}px`);
-    }
-})();
-
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' });
-}
 
 function applyHabitRing(habitId, summary) {
     const ringEl = document.getElementById(`habitRing${habitId}`);
@@ -163,7 +127,7 @@ function diffDaysInclusive(startDate, endDate) {
     const end = new Date(endDate);
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
-    return Math.floor((end - start) / msPerDay) + 1;
+    return Math.round((end - start) / msPerDay) + 1;
 }
 
 function loadKhatmaPlan() {
@@ -224,8 +188,12 @@ function getKhatmaStatus(plan) {
     const finishedWindow = today > end;
 
     const elapsedDays = started ? Math.min(totalDays, diffDaysInclusive(start, today)) : 0;
-    const expectedByToday = started ? Math.ceil((plan.totalPages * elapsedDays) / totalDays) : 0;
+    // Pages that should have been finished by the END of yesterday; today's
+    // own share is not a backlog until the day is over.
+    const fullDaysElapsed = finishedWindow ? totalDays : Math.max(0, elapsedDays - 1);
+    const expectedByToday = started ? Math.ceil((plan.totalPages * fullDaysElapsed) / totalDays) : 0;
     const backlogPages = Math.max(0, expectedByToday - completedPages);
+    const todayDone = plan.lastCompletedDate === toDateInputValue(today);
 
     let remainingDays = 0;
     let todayTargetPages = 0;
@@ -257,7 +225,8 @@ function getKhatmaStatus(plan) {
         todayTargetPages,
         todayStartPage,
         todayEndPage,
-        progressPercent
+        progressPercent,
+        todayDone
     };
 }
 
@@ -285,8 +254,10 @@ function markTodayKhatmaDone() {
     if (!plan) return;
 
     const status = getKhatmaStatus(plan);
-    if (status.todayTargetPages <= 0) return;
+    if (status.todayTargetPages <= 0 || status.todayDone) return;
 
+    plan.lastCompletedDate = toDateInputValue(new Date());
+    saveKhatmaPlan(plan);
     addKhatmaProgress(status.todayTargetPages);
 }
 
@@ -346,9 +317,18 @@ function renderKhatmaPlanner() {
         textEl.textContent = `لم تبدأ الخطة بعد. الهدف اليومي سيكون ${status.todayTargetPages} صفحات.`;
     } else if (status.finishedWindow && status.remainingPages > 0) {
         textEl.textContent = `انتهت المدة. للتعويض الآن تحتاج ${status.todayTargetPages} صفحات.`;
+    } else if (status.todayDone) {
+        textEl.textContent = `أنجزت ورد اليوم، بارك الله فيك. غداً: من صفحة ${status.todayStartPage} إلى ${status.todayEndPage}.`;
     } else {
         const backlogText = status.backlogPages > 0 ? ` • تعويض متراكم: ${status.backlogPages}` : '';
         textEl.textContent = `هدف اليوم: من صفحة ${status.todayStartPage} إلى ${status.todayEndPage} (${status.todayTargetPages} صفحات)${backlogText}`;
+    }
+
+    const doneBtn = document.querySelector('[onclick*="markTodayKhatmaDone"]');
+    if (doneBtn) {
+        const disabled = status.todayDone || status.completedPages >= plan.totalPages;
+        doneBtn.disabled = disabled;
+        doneBtn.setAttribute('aria-disabled', String(disabled));
     }
 }
 
@@ -367,7 +347,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.addEventListener('storage', (event) => {
-    if (event.key === KHATMA_PLAN_KEY || event.key === 'habitTrackerV1' || event.key === 'zikrCounts') {
+    if (event.key === KHATMA_PLAN_KEY || event.key === 'appHabitLogsV1' || event.key === 'zikrCounts') {
         renderHabitDashboard();
         renderKhatmaPlanner();
     }
