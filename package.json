@@ -5,7 +5,8 @@
     "scripts": {
         "deploy": "vercel deploy --force --prod",
         "dev": "vercel dev",
-        "download:mushaf": "node scripts/download-mushaf-pages.js"
+        "download:mushaf": "node scripts/download-mushaf-pages.js",
+        "test": "node --test \"test/**/*.test.js\""
     },
     "keywords": [],
     "author": "Fady Ehab Amer",

@@ -1,5 +1,7 @@
 # القرآن الكريم - تطبيق إسلامي شامل PWA
 
+[![CI](https://github.com/fadyehabamer/QuranPWA/actions/workflows/ci.yml/badge.svg)](https://github.com/fadyehabamer/QuranPWA/actions/workflows/ci.yml)
+
 ## المميزات الرئيسية
 
 ### 📖 القرآن الكريم
