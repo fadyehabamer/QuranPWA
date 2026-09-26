@@ -137,7 +137,18 @@ QURAN/
 - ✅ Opera
 
 ## الترخيص
-مفتوح المصدر للاستخدام الشخصي والتعليمي
+الكود البرمجي مرخّص بموجب [رخصة MIT](LICENSE).
+
+## محتوى من أطراف أخرى (Third-party content)
+- **صور صفحات المصحف** (`assets/mushaf-pages/`، 604 صفحة): منزّلة من مشروع المصحف الإلكتروني بجامعة الملك سعود
+  ([quran.ksu.edu.sa](https://quran.ksu.edu.sa/)) عبر `scripts/download-mushaf-pages.js`.
+  هذه الصور ليست مشمولة برخصة MIT وتبقى خاضعة لشروط مصدرها.
+- نصوص القرآن والتفسير والتلاوات ومواقيت الصلاة تُجلب وقت التشغيل من واجهات خارجية
+  (انظر `docs/apis_used.md` و`references.html`) وتخضع لشروط مزوديها.
+
+The code is MIT-licensed. The Mushaf page images in `assets/mushaf-pages/` were downloaded from
+King Saud University's Electronic Mushaf (https://quran.ksu.edu.sa/) and stay under their source's own terms;
+they are not covered by this repository's MIT license.
 
 ---
 بارك الله فيكم
